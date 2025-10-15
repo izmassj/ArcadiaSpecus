@@ -98,7 +98,7 @@ InitTestScene*.unity*
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
-# --- Allow image and 3D model assets ---
+# Allow image and 3D model assets 
 !/[Aa]ssets/**/*.png
 !/[Aa]ssets/**/*.jpg
 !/[Aa]ssets/**/*.jpeg
