@@ -1,62 +1,61 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-
 public class ClickableObjectManager : MonoBehaviour
 {
     [SerializeField] MeshRenderer rend;
     [SerializeField] Color hoverColor;
     [SerializeField] Color clickColor;
 
-    private InputAction clickInputAction; 
-
     private Color originalEmission;
-
     private bool isClicked;
+    private bool isHovering;
 
-    private void Awake()
-    {
-
-    }
-
-    void Start()
+    private void Start()
     {
         rend.material.EnableKeyword("_EMISSION");
-
         originalEmission = rend.material.GetColor("_EmissionColor");
+    }
+
+    void Update()
+    {
+        if (isClicked && Mouse.current.leftButton.wasReleasedThisFrame)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            if (!Physics.Raycast(ray, out RaycastHit hit) || hit.transform != transform)
+            {
+                // cursor released outside
+                isClicked = false;
+                rend.material.SetColor("_EmissionColor", originalEmission);
+            }
+        }
     }
 
     void OnMouseEnter()
     {
+        isHovering = true;
         if (!isClicked)
-        {
             rend.material.SetColor("_EmissionColor", hoverColor);
-        }
     }
 
     void OnMouseExit()
     {
+        isHovering = false;
         if (!isClicked)
-        {
             rend.material.SetColor("_EmissionColor", originalEmission);
-        }
     }
 
     void OnMouseDown()
     {
-        isClicked = !isClicked;
-
-        if (isClicked)
-        {
-            rend.material.SetColor("_EmissionColor", clickColor);
-        }
+        isClicked = true;
+        rend.material.SetColor("_EmissionColor", clickColor);
     }
 
-    private void OnMouseUp()
+    void OnMouseUp()
     {
-        if (isClicked)
+        if (isHovering)
         {
-            isClicked = !isClicked;
+            isClicked = false;
             rend.material.SetColor("_EmissionColor", hoverColor);
         }
     }
