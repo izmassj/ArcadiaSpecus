@@ -24,7 +24,6 @@ public class ClickableObjectManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
             if (!Physics.Raycast(ray, out RaycastHit hit) || hit.transform != transform)
             {
-                // cursor released outside
                 isClicked = false;
                 rend.material.SetColor("_EmissionColor", originalEmission);
             }
@@ -42,7 +41,13 @@ public class ClickableObjectManager : MonoBehaviour
     {
         isHovering = false;
         if (!isClicked)
+        {
             rend.material.SetColor("_EmissionColor", originalEmission);
+        }
+        else if (isClicked) 
+        { 
+            rend.material.SetColor("_EmissionColor", originalEmission);
+        }
     }
 
     void OnMouseDown()
