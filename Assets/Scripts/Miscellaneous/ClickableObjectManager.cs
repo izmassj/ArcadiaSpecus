@@ -1,63 +1,63 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
 public class ClickableObjectManager : MonoBehaviour
 {
-    [SerializeField] private Material material;
-    [SerializeField] private InputActionAsset clickableInputActionMapping;
+    [SerializeField] MeshRenderer rend;
+    [SerializeField] Color hoverColor;
+    [SerializeField] Color clickColor;
 
-    private InputAction clickInputAction;
-    private Color originalColor, hoverColor, clickedOnColor;
-    public Ray ray;
+    private InputAction clickInputAction; 
 
-    private void SetUpInputActions()
-    {
-        clickableInputActionMapping.Enable();
-        clickInputAction = clickableInputActionMapping.FindActionMap("Screen").FindAction("Click");
-    }
+    private Color originalEmission;
+
+    private bool isClicked;
 
     private void Awake()
     {
-        SetUpInputActions();
 
-        if (material != null)
+    }
+
+    void Start()
+    {
+        rend.material.EnableKeyword("_EMISSION");
+
+        originalEmission = rend.material.GetColor("_EmissionColor");
+    }
+
+    void OnMouseEnter()
+    {
+        if (!isClicked)
         {
-            originalColor = material.color;
-            hoverColor = originalColor * 1.5f;
-            clickedOnColor = originalColor * 2f;
+            rend.material.SetColor("_EmissionColor", hoverColor);
         }
     }
 
-    void HoverOnObject()
+    void OnMouseExit()
     {
-        if (Physics.Raycast(ray) && clickInputAction.ReadValue<float>() == 0)
+        if (!isClicked)
         {
-            material.color = Color.white * 1.5f;
+            rend.material.SetColor("_EmissionColor", originalEmission);
         }
     }
 
-    void ClickOnObject()
+    void OnMouseDown()
     {
-        if (Physics.Raycast(ray) && clickInputAction.ReadValue<float>() != 0)
+        isClicked = !isClicked;
+
+        if (isClicked)
         {
-            material.color = Color.white * 2f;
+            rend.material.SetColor("_EmissionColor", clickColor);
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnMouseUp()
     {
-        ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        material.color = Color.white;
-
-        HoverOnObject();
-
-        ClickOnObject();
+        if (isClicked)
+        {
+            isClicked = !isClicked;
+            rend.material.SetColor("_EmissionColor", hoverColor);
+        }
     }
 }
