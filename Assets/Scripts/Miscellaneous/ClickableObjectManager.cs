@@ -3,22 +3,31 @@ using UnityEngine.InputSystem;
 
 public class ClickableObjectManager : MonoBehaviour
 {
+    // variables serializadas para customizacion de colores a parte de necesitar la referencia al MeshRenderer adyacente a la jerarquia
     [SerializeField] MeshRenderer rend;
     [SerializeField] Color hoverColor;
     [SerializeField] Color clickColor;
 
+    // el valor de emission original del objeto
     private Color originalEmission;
+    // variables booleanas para saber si esta clicando o haciendo hover
     private bool isClicked;
     private bool isHovering;
 
     private void Start()
     {
+        // habilitamos la emission en el material del GameObject
         rend.material.EnableKeyword("_EMISSION");
+        // guardamos el color original
         originalEmission = rend.material.GetColor("_EmissionColor");
     }
 
     void Update()
     {
+        /*
+         * Si el jugador está clicando el objeto fuera del propio collider del objeto,
+         * no dejes que tenga ni el color de hover ni el color de clicked.
+         */
         if (isClicked && Mouse.current.leftButton.wasReleasedThisFrame)
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
@@ -29,6 +38,8 @@ public class ClickableObjectManager : MonoBehaviour
             }
         }
     }
+
+    // logica restante al hacer click sobre el objeto
 
     void OnMouseEnter()
     {
