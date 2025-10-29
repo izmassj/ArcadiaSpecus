@@ -13,6 +13,16 @@ public class ModularRoomSystemUI : MonoBehaviour
 
     [SerializeField] GameObject[] roomPrefabs;
 
+    private void OnEnable()
+    {
+        
+    }
+
+    private void OnDisable()
+    {
+        
+    }
+
     void Start()
     {
         

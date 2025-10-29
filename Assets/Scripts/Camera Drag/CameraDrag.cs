@@ -14,6 +14,11 @@ public class CameraDrag : MonoBehaviour
 
     public void OnDrag(InputAction.CallbackContext ctx)
     {
+        if (ctx.ReadValue<float>() == 0)
+        {
+            _isDragging = false;
+            return;
+        }
         if (ctx.started)
         {
             _origin = GetMousePosition();

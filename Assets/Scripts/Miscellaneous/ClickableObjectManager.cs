@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 public class ClickableObjectManager : MonoBehaviour
 {
@@ -24,6 +25,8 @@ public class ClickableObjectManager : MonoBehaviour
 
     void Update()
     {
+        if (IsPlayerDragging()) return;
+
         /*
          * Si el jugador está clicando el objeto fuera del propio collider del objeto,
          * no dejes que tenga ni el color de hover ni el color de clicked.
@@ -43,6 +46,8 @@ public class ClickableObjectManager : MonoBehaviour
 
     void OnMouseEnter()
     {
+        if (IsPlayerDragging()) return;
+
         isHovering = true;
         if (!isClicked)
             rend.material.SetColor("_EmissionColor", hoverColor);
@@ -50,6 +55,8 @@ public class ClickableObjectManager : MonoBehaviour
 
     void OnMouseExit()
     {
+        if (IsPlayerDragging()) return;
+
         isHovering = false;
         if (!isClicked)
         {
@@ -63,16 +70,36 @@ public class ClickableObjectManager : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (IsPlayerDragging()) return;
+
         isClicked = true;
         rend.material.SetColor("_EmissionColor", clickColor);
     }
 
     void OnMouseUp()
     {
+        if (IsPlayerDragging()) return;
+
         if (isHovering)
         {
             isClicked = false;
             rend.material.SetColor("_EmissionColor", hoverColor);
         }
+    }
+
+    // chapuzeria
+
+    private bool IsPlayerDragging()
+    {
+        if (PlayerManager.Instance.GetCurrentPlayerState() == PlayerManager.PlayerStates.BUNKER_DRAGGING && (isHovering || isClicked)) 
+        {
+            rend.material.SetColor("_EmissionColor", originalEmission);
+            return true;
+        }
+        else if (PlayerManager.Instance.GetCurrentPlayerState() == PlayerManager.PlayerStates.BUNKER_DRAGGING)
+        {
+            return true;
+        }
+        return false;
     }
 }
