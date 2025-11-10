@@ -1,39 +1,35 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerManager : MonoBehaviour
 {
-    // input
-
+    [Header("Inputs")]
     [SerializeField] private PlayerInput playerInput;
 
     private InputActionMap _gameplayMap;
     private InputAction _clickAction;
 
-
     // Singleton
+    public static PlayerManager Instance { get; private set; }
 
-    public static PlayerManager Instance;
-
-    // enums
+    // Events for state changes
+    public static event Action<PlayerStates> OnPlayerStateChanged;
 
     public enum PlayerStates
     {
-        NONE, UI_MENU, BUNKER_DRAGGING, BUNKER_INTERACT,
+        NONE,
+        UI, UI_MENU, UI_SETTINGS, UI_ROBOT, UI_ROOMBUILDING,
+        BUNKER, BUNKER_DRAGGING, BUNKER_ROOMBUILDING,
         ROBOT
     }
 
-    private PlayerStates currentPlayerState;
-
+    private PlayerStates _currentPlayerState = PlayerStates.NONE;
 
     private void Awake()
     {
-        currentPlayerState = PlayerStates.NONE;
-
         if (Instance == null)
         {
             Instance = this;
@@ -42,7 +38,10 @@ public class PlayerManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
+
+        _currentPlayerState = PlayerStates.NONE;
 
         _gameplayMap = playerInput.actions.FindActionMap("Gameplay");
         _clickAction = _gameplayMap.FindAction("Drag");
@@ -58,22 +57,11 @@ public class PlayerManager : MonoBehaviour
     {
         _clickAction.performed -= ToDragging;
         _clickAction.canceled -= ToDraggingRelease;
-
     }
 
-    // States
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
-        switch (currentPlayerState)
+        switch (_currentPlayerState)
         {
             case PlayerStates.NONE:
                 break;
@@ -82,26 +70,30 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    // transition functions
-
+    // Transition functions
     private void ToDragging(InputAction.CallbackContext ctx)
     {
-        currentPlayerState = PlayerStates.BUNKER_DRAGGING;
+        SetCurrentPlayerState(PlayerStates.BUNKER_DRAGGING);
     }
 
     private void ToDraggingRelease(InputAction.CallbackContext ctx)
     {
-        if (ctx.ReadValue<float>() == 0 && currentPlayerState == PlayerStates.BUNKER_DRAGGING)
+        if (ctx.ReadValue<float>() == 0 && _currentPlayerState == PlayerStates.BUNKER_DRAGGING)
         {
-            currentPlayerState = PlayerStates.NONE;
+            SetCurrentPlayerState(PlayerStates.NONE);
         }
     }
 
     // Getters
+    public PlayerStates GetCurrentPlayerState() => _currentPlayerState;
 
-    public PlayerStates GetCurrentPlayerState()
+    // Setter with event notification
+    public void SetCurrentPlayerState(PlayerStates state)
     {
-        return currentPlayerState;
-    }
+        if (_currentPlayerState == state) return;
 
+        var previousState = _currentPlayerState;
+        _currentPlayerState = state;
+        OnPlayerStateChanged?.Invoke(state);
+    }
 }
