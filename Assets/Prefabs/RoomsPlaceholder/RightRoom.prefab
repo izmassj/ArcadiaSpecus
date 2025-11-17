@@ -1,5 +1,74 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &124747790402739870
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6323147957750465262}
+  - component: {fileID: 3683028007754635814}
+  - component: {fileID: 8196049820932548680}
+  m_Layer: 6
+  m_Name: RoomCollider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6323147957750465262
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 124747790402739870}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1631362260286205025}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3683028007754635814
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 124747790402739870}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.3452773, y: 1.5710472, z: 1.2550963}
+  m_Center: {x: -0.01840923, y: -0.000000005591371, z: -0.015734706}
+--- !u!114 &8196049820932548680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 124747790402739870}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 472513dd6232f7e40a59349a3e5b8dd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rend: {fileID: 497911133538719502}
+  hoverColor: {r: 0.5660378, g: 0.5660378, b: 0.5660378, a: 1}
+  clickColor: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
 --- !u!1 &2268374121675815776
 GameObject:
   m_ObjectHideFlags: 0
@@ -42,15 +111,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 142.64763
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -116.22526
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 439.29016
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -90,9 +159,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6323147957750465262}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
+--- !u!23 &497911133538719502 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
+  m_PrefabInstance: {fileID: 1236653886633872266}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1631362260286205025 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}

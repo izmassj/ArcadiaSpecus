@@ -91,12 +91,12 @@ public class ClickableObjectManager : MonoBehaviour
 
     private bool IsPlayerDragging()
     {
-        if (PlayerManager.Instance.GetCurrentPlayerState() == PlayerManager.PlayerStates.BUNKER_DRAGGING && (isHovering || isClicked)) 
+        if (PlayerManager.Instance.GetCurrentPlayerState() == PlayerManager.PlayerStates.DRAGGING && (isHovering || isClicked)) 
         {
             rend.material.SetColor("_EmissionColor", originalEmission);
             return true;
         }
-        else if (PlayerManager.Instance.GetCurrentPlayerState() == PlayerManager.PlayerStates.BUNKER_DRAGGING)
+        else if (PlayerManager.Instance.GetCurrentPlayerState() == PlayerManager.PlayerStates.DRAGGING)
         {
             return true;
         }

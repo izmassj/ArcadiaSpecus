@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4922891972466030004}
   - component: {fileID: 8642618055240758952}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: RoomCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -96,15 +96,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 27.693787
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -130.73022
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 436.57635
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
       propertyPath: m_LocalRotation.w
