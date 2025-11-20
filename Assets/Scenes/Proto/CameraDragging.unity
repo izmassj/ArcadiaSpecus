@@ -304,6 +304,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 769760773227514053, guid: e03bf5a597dfc864c81ce027995a84a5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 57.7
+      objectReference: {fileID: 0}
     - target: {fileID: 1643827383906853123, guid: e03bf5a597dfc864c81ce027995a84a5, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -700,7 +704,7 @@ MonoBehaviour:
   roomLayerMask:
     serializedVersion: 2
     m_Bits: 64
-  cornerCheckSize: 20
+  cornerCheckSize: 100
   snapDistance: 1
   showCornerDebug: 1
   cornerMarkerSize: 20

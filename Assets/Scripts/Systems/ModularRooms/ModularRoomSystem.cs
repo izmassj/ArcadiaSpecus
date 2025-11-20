@@ -23,8 +23,8 @@ public class ModularRoomSystem : MonoBehaviour
     [Header("Room Setup")]
     [SerializeField] private List<RoomPrefab> roomPrefabs;
     [SerializeField] private LayerMask roomLayerMask;
-    [SerializeField] private float cornerCheckSize = 0.5f;
-    [SerializeField] private float snapDistance = 1f;
+    [SerializeField] private float cornerCheckSize;
+    [SerializeField] private float snapDistance;
 
     [Header("Debug Corner Markers")]
     [SerializeField] private bool showCornerDebug;
@@ -34,6 +34,7 @@ public class ModularRoomSystem : MonoBehaviour
     private Transform[] cornerMarkers = new Transform[8];
 
     private GameObject currentRoom;
+    private Collider possibleRoom;
     private bool isBuilding = false;
     private RoomKind roomKind;
     private bool canPlaceRoom = false;
@@ -131,15 +132,49 @@ public class ModularRoomSystem : MonoBehaviour
     {
         if (!isBuilding || currentRoom == null || !canPlaceRoom) return;
 
+
         BoxCollider collider = currentRoom.transform.GetChild(0).GetChild(0).gameObject.GetComponent<BoxCollider>();
         if (collider != null)
             collider.isTrigger = false;
+
+        if (possibleRoom != null)
+        {
+            // Get bounds of both rooms
+            BoxCollider targetCollider = possibleRoom.GetComponent<BoxCollider>();
+            BoxCollider selfCollider = currentRoom.transform.GetChild(0).GetChild(0).GetComponent<BoxCollider>();
+
+            Vector3[] targetCorners = GetCorners(targetCollider.bounds);
+            Vector3[] selfCorners = GetCorners(selfCollider.bounds);
+
+            // Find the closest pair of corners
+            float minDistance = float.MaxValue;
+            Vector3 bestSelfCorner = Vector3.zero;
+            Vector3 bestTargetCorner = Vector3.zero;
+
+            foreach (var selfCorner in selfCorners)
+            {
+                foreach (var targetCorner in targetCorners)
+                {
+                    float dist = Vector3.Distance(selfCorner, targetCorner);
+                    if (dist < minDistance)
+                    {
+                        minDistance = dist;
+                        bestSelfCorner = selfCorner;
+                        bestTargetCorner = targetCorner;
+                    }
+                }
+            }
+
+            // Move current room so its corner aligns with the target corner
+            Vector3 offset = bestSelfCorner - currentRoom.transform.position;
+            currentRoom.transform.position = bestTargetCorner - offset;
+        }
+
 
         currentRoom = null;
         isBuilding = false;
         canPlaceRoom = false;
     }
-
 
     void FollowMouse()
     {
@@ -181,8 +216,13 @@ public class ModularRoomSystem : MonoBehaviour
 
                 if (CanPlaceNextToRoom(hit.bounds, b))
                 {
+                    possibleRoom = hit;
                     foundValidPlacement = true;
                     break;
+                }
+                else
+                {
+                    possibleRoom = null; 
                 }
             }
 
@@ -220,6 +260,7 @@ public class ModularRoomSystem : MonoBehaviour
             new Vector3(b.max.x, b.max.y, b.max.z)
         };
     }
+
 
     void UpdateVisualFeedback()
     {
