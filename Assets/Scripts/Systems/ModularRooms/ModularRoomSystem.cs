@@ -139,14 +139,12 @@ public class ModularRoomSystem : MonoBehaviour
 
         if (possibleRoom != null)
         {
-            // Get bounds of both rooms
             BoxCollider targetCollider = possibleRoom.GetComponent<BoxCollider>();
             BoxCollider selfCollider = currentRoom.transform.GetChild(0).GetChild(0).GetComponent<BoxCollider>();
 
             Vector3[] targetCorners = GetCorners(targetCollider.bounds);
             Vector3[] selfCorners = GetCorners(selfCollider.bounds);
 
-            // Find the closest pair of corners
             float minDistance = float.MaxValue;
             Vector3 bestSelfCorner = Vector3.zero;
             Vector3 bestTargetCorner = Vector3.zero;
@@ -165,7 +163,6 @@ public class ModularRoomSystem : MonoBehaviour
                 }
             }
 
-            // Move current room so its corner aligns with the target corner
             Vector3 offset = bestSelfCorner - currentRoom.transform.position;
             currentRoom.transform.position = bestTargetCorner - offset;
         }

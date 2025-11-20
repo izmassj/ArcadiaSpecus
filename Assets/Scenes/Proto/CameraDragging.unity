@@ -704,8 +704,8 @@ MonoBehaviour:
   roomLayerMask:
     serializedVersion: 2
     m_Bits: 64
-  cornerCheckSize: 100
-  snapDistance: 1
+  cornerCheckSize: 5
+  snapDistance: 20
   showCornerDebug: 1
   cornerMarkerSize: 20
   cornerMarkerPrefab: {fileID: 893339065}
