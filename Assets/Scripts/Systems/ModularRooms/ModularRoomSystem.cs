@@ -1,9 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Tilemaps;
 
 public class ModularRoomSystem : MonoBehaviour
 {
@@ -23,81 +20,219 @@ public class ModularRoomSystem : MonoBehaviour
         }
     }
 
+    [Header("Room Setup")]
     [SerializeField] private List<RoomPrefab> roomPrefabs;
     [SerializeField] private LayerMask roomLayerMask;
+    [SerializeField] private float cornerCheckSize = 0.5f;
+    [SerializeField] private float snapDistance = 1f;
 
-    private RoomKind roomKind;
+    [Header("Debug Corner Markers")]
+    [SerializeField] private bool showCornerDebug;
+    [SerializeField] private float cornerMarkerSize;
+    [SerializeField] private GameObject cornerMarkerPrefab;
 
-    private bool isBuilding = false;
+    private Transform[] cornerMarkers = new Transform[8];
+
     private GameObject currentRoom;
-    private Dictionary<RoomKind, GameObject> roomPrefabDict;
+    private bool isBuilding = false;
+    private RoomKind roomKind;
+    private bool canPlaceRoom = false;
 
-    // Start is called before the first frame update
-    void Start()
+    private Dictionary<RoomKind, GameObject> prefabDict;
+
+    private void Start()
     {
-        roomPrefabDict = new Dictionary<RoomKind, GameObject>();
-        foreach (var roomPrefab in roomPrefabs)
+        // Convert your serialized list to a lookup table
+        prefabDict = new Dictionary<RoomKind, GameObject>();
+        foreach (var p in roomPrefabs)
         {
-            roomPrefabDict[roomPrefab.kind] = roomPrefab.prefab;
+            if (!prefabDict.ContainsKey(p.kind))
+                prefabDict.Add(p.kind, p.prefab);
         }
     }
 
-    // Update is called once per frame
+    private void Update()
+    {
+        if (!isBuilding || currentRoom == null) return;
+
+        FollowMouse();
+        TryDetectOtherRooms();
+        UpdateVisualFeedback();
+
+        if (showCornerDebug)
+            UpdateCornerMarkerPositions();
+
+        if (Mouse.current.leftButton.wasPressedThisFrame && canPlaceRoom)
+        {
+            PlaceRoom();
+        }
+    }
+
     public void SpawnRoomPrefab(RoomKind room)
     {
         GameObject prefab = GetPrefab(room);
         if (prefab == null) return;
 
-        // Instantiate and assign to currentRoom
-        currentRoom = Instantiate(prefab);
+        if (currentRoom != null)
+            Destroy(currentRoom);
+
+        Vector3 spawnPos = GetMouseWorldPosition();
+        currentRoom = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+        if (showCornerDebug)
+            CreateCornerMarkers(currentRoom);
+
+        BoxCollider collider = currentRoom.transform.GetChild(0).GetChild(0).gameObject.GetComponent<BoxCollider>();
+        if (collider != null)
+            collider.isTrigger = true;
+
+        roomKind = room;
         isBuilding = true;
+        canPlaceRoom = false;
+
+        SetRoomColor(Color.red);
     }
 
-    void Update()
+    private void CreateCornerMarkers(GameObject room)
     {
-        if (isBuilding && currentRoom != null)
+        if (cornerMarkerPrefab == null)
         {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
+            cornerMarkerPrefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Destroy(cornerMarkerPrefab.GetComponent<Collider>()); 
+        }
 
-            // Convert screen position to world position
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 10f));
+        for (int i = 0; i < 8; i++)
+        {
+            GameObject marker = Instantiate(cornerMarkerPrefab, room.transform);
+            marker.name = "CornerMarker_" + i;
+            marker.transform.localScale = Vector3.one * cornerMarkerSize;
 
-            currentRoom.transform.position = worldPos;
+            cornerMarkers[i] = marker.transform;
         }
     }
 
-
-    private GameObject GetPrefab(RoomKind target)
+    private void UpdateCornerMarkerPositions()
     {
-        for (int i = 0; i < roomPrefabs.Count; i++)
-        {
-            if (roomPrefabs[i].kind == target)
-                return roomPrefabs[i].prefab;
-        }
-        return null;
-    }
+        if (currentRoom == null || cornerMarkers == null) return;
 
-
-    bool CubeCornerTouch(BoxCollider col, LayerMask mask)
-    {
+        BoxCollider col = currentRoom.transform.GetChild(0).GetChild(0).gameObject.GetComponent<BoxCollider>();
         Bounds b = col.bounds;
 
-        Vector3[] corners = {
-        new(b.min.x, b.min.y, b.min.z),
-        new(b.min.x, b.min.y, b.max.z),
-        new(b.min.x, b.max.y, b.min.z),
-        new(b.min.x, b.max.y, b.max.z),
-        new(b.max.x, b.min.y, b.min.z),
-        new(b.max.x, b.min.y, b.max.z),
-        new(b.max.x, b.max.y, b.min.z),
-        new(b.max.x, b.max.y, b.max.z)
-    };
+        Vector3[] corners = GetCorners(b);
 
-        foreach (var c in corners)
-            if (Physics.CheckSphere(c, 0.001f, mask))
-                return true;
-
-        return false;
+        for (int i = 0; i < 8; i++)
+        {
+            if (cornerMarkers[i] != null)
+                cornerMarkers[i].position = corners[i];
+        }
     }
 
+    public void PlaceRoom()
+    {
+        if (!isBuilding || currentRoom == null || !canPlaceRoom) return;
+
+        BoxCollider collider = currentRoom.transform.GetChild(0).GetChild(0).gameObject.GetComponent<BoxCollider>();
+        if (collider != null)
+            collider.isTrigger = false;
+
+        currentRoom = null;
+        isBuilding = false;
+        canPlaceRoom = false;
+    }
+
+
+    void FollowMouse()
+    {
+        Vector3 pos = GetMouseWorldPosition();
+        pos.z = 500f;
+        currentRoom.transform.position = pos;
+    }
+
+    Vector3 GetMouseWorldPosition()
+    {
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 500f));
+        world.z = 0f;
+        return world;
+    }
+
+
+    void TryDetectOtherRooms()
+    {
+        BoxCollider self = currentRoom.transform.GetChild(0).GetChild(0).GetComponent<BoxCollider>();
+        Bounds b = self.bounds;
+
+        Vector3[] corners = GetCorners(b);
+        bool foundValidPlacement = false;
+
+        foreach (var corner in corners)
+        {
+            Collider[] hits = Physics.OverlapBox(
+                corner,
+                Vector3.one * cornerCheckSize,
+                Quaternion.identity,
+                roomLayerMask
+            );
+
+            foreach (var hit in hits)
+            {
+                if (hit.transform.IsChildOf(currentRoom.transform))
+                    continue;
+
+                if (CanPlaceNextToRoom(hit.bounds, b))
+                {
+                    foundValidPlacement = true;
+                    break;
+                }
+            }
+
+            if (foundValidPlacement)
+                break;
+        }
+
+        canPlaceRoom = foundValidPlacement;
+        SetRoomColor(foundValidPlacement ? Color.green : Color.red);
+    }
+
+    bool CanPlaceNextToRoom(Bounds target, Bounds self)
+    {
+        float verticalDistance = Mathf.Abs(self.center.y - target.center.y);
+        if (verticalDistance > snapDistance) return false;
+
+        float horizontalDistance = Mathf.Abs(self.center.x - target.center.x);
+        float totalWidth = self.extents.x + target.extents.x;
+
+        return horizontalDistance - totalWidth <= snapDistance;
+    }
+
+
+    Vector3[] GetCorners(Bounds b)
+    {
+        return new Vector3[]
+        {
+            new Vector3(b.min.x, b.min.y, b.min.z),
+            new Vector3(b.min.x, b.min.y, b.max.z),
+            new Vector3(b.min.x, b.max.y, b.min.z),
+            new Vector3(b.min.x, b.max.y, b.max.z),
+            new Vector3(b.max.x, b.min.y, b.min.z),
+            new Vector3(b.max.x, b.min.y, b.max.z),
+            new Vector3(b.max.x, b.max.y, b.min.z),
+            new Vector3(b.max.x, b.max.y, b.max.z)
+        };
+    }
+
+    void UpdateVisualFeedback()
+    {
+    }
+
+    void SetRoomColor(Color c)
+    {
+        foreach (Renderer r in currentRoom.GetComponentsInChildren<Renderer>())
+            r.material.color = c;
+    }
+
+    GameObject GetPrefab(RoomKind kind)
+    {
+        return prefabDict.ContainsKey(kind) ? prefabDict[kind] : null;
+    }
 }
