@@ -706,7 +706,7 @@ MonoBehaviour:
     m_Bits: 64
   cornerCheckSize: 5
   snapDistance: 20
-  showCornerDebug: 1
+  showCornerDebug: 0
   cornerMarkerSize: 20
   cornerMarkerPrefab: {fileID: 893339065}
 --- !u!114 &431263408
@@ -1930,6 +1930,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerInput: {fileID: 1377911871}
+--- !u!1 &1192384757 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7758384805321254931, guid: dd95ad49cc0ecf645ab749faa5704aed, type: 3}
+  m_PrefabInstance: {fileID: 1517402699}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &1192384759 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 8118773724042856902, guid: dd95ad49cc0ecf645ab749faa5704aed, type: 3}
+  m_PrefabInstance: {fileID: 1517402699}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1192384761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1192384757}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 472513dd6232f7e40a59349a3e5b8dd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rend: {fileID: 1192384759}
+  hoverColor: {r: 1, g: 1, b: 1, a: 1}
+  clickColor: {r: 0.49056602, g: 0.49056602, b: 0.49056602, a: 1}
 --- !u!1 &1235602504
 GameObject:
   m_ObjectHideFlags: 0
@@ -2197,7 +2222,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7758384805321254931, guid: dd95ad49cc0ecf645ab749faa5704aed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1192384761}
   m_SourcePrefab: {fileID: 100100000, guid: dd95ad49cc0ecf645ab749faa5704aed, type: 3}
 --- !u!1 &1534889482
 GameObject:
