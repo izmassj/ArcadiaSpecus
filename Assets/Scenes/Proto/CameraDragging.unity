@@ -538,14 +538,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 126352929}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2fba25a5cd15594e8f050a11e386c80, type: 3}
+  m_Script: {fileID: 11500000, guid: f453f694addf4275988fac205bc91968, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ConfineMode: 0
-  m_BoundingVolume: {fileID: 0}
   m_BoundingShape2D: {fileID: 181340539}
-  m_ConfineScreenEdges: 1
   m_Damping: 0
+  m_MaxWindowSize: -1
+  m_Padding: 0
 --- !u!1 &159067144
 GameObject:
   m_ObjectHideFlags: 0
@@ -650,7 +649,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1000}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 0.43, y: 0.43, z: 0.43}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -684,7 +683,7 @@ PolygonCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
@@ -954,7 +953,7 @@ MonoBehaviour:
     m_Bits: 64
   cornerCheckSize: 5
   snapDistance: 20
-  roomPlacementDistance: 0
+  roomPlacementDistance: 600
   showCornerDebug: 0
   cornerMarkerSize: 20
   cornerMarkerPrefab: {fileID: 0}
@@ -1208,7 +1207,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   virtualCamera: {fileID: 126352930}
-  dragSpeed: 50
+  confiner2D: {fileID: 126352932}
+  _mainCamera: {fileID: 457737974}
 --- !u!114 &457737977
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3061,7 +3061,6 @@ GameObject:
   - component: {fileID: 2133589189}
   - component: {fileID: 2133589192}
   - component: {fileID: 2133589193}
-  - component: {fileID: 2133589194}
   m_Layer: 0
   m_Name: cm
   m_TagString: Untagged
@@ -3097,19 +3096,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &2133589193
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2133589188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4c41ac9245b87c4192012080077d830, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Damping: 0
---- !u!114 &2133589194
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
