@@ -1320,7 +1320,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &206500812
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1847,10 +1847,21 @@ MonoBehaviour:
   midRoomBtn: {fileID: 192506518}
   leftRoomBtn: {fileID: 1744745852}
   intersectionBtn: {fileID: 1571976574}
+  waterMachineBtn: {fileID: 0}
+  foodMachineBtn: {fileID: 0}
+  energyMachineBtn: {fileID: 0}
+  scrapMachineBtn: {fileID: 0}
+  bedBtn: {fileID: 0}
+  waterDispenserBtn: {fileID: 0}
+  foodDispenserBtn: {fileID: 0}
   enterModularRoomUIBtn: {fileID: 779518450}
   exitModularRoomUIBtn: {fileID: 1978386656}
+  enterMachineRoomUIBtn: {fileID: 0}
+  exitMachineRoomUIBtn: {fileID: 0}
   modularRoomButtonsGameObj: {fileID: 996427139}
   modularRoomEnterButtonGameObj: {fileID: 574085268}
+  machinesButtonsGameObj: {fileID: 0}
+  machinesEnterButtonGameObj: {fileID: 0}
 --- !u!1 &448923559
 GameObject:
   m_ObjectHideFlags: 0
@@ -2326,7 +2337,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &574085269
 RectTransform:
   m_ObjectHideFlags: 0
