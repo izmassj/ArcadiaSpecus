@@ -152,7 +152,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 321983eb4971fe44d8738d7e4bb8bd84, type: 2}
+      objectReference: {fileID: 2100000, guid: 6a7c6479ce94cba45a6ebbb69f27fb3c, type: 2}
     - target: {fileID: 919132149155446097, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
       propertyPath: m_Name
       value: Intersection
