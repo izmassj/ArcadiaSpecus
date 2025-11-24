@@ -1,43 +1,51 @@
+using Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class CameraDrag : MonoBehaviour
+public class CameraDragCinemachine : MonoBehaviour
 {
-    private Vector3 _origin;
-    private Vector3 _difference;
+    [SerializeField] private CinemachineVirtualCamera virtualCamera;
+    [SerializeField] private float dragSpeed;
 
-    private Camera _mainCamera;
+    private CinemachineFramingTransposer framingTransposer;
+    private Vector3 lastMousePosition;
 
-    private bool _isDragging;
-
-    private void Awake() => _mainCamera = Camera.main;
-
-    public void OnDrag(InputAction.CallbackContext ctx)
+    private void Start()
     {
-        if (ctx.ReadValue<float>() == 0)
-        {
-            _isDragging = false;
-            return;
-        }
-        if (ctx.started)
-        {
-            _origin = GetMousePosition();
-        }
-        _isDragging = ctx.started || ctx.performed;
+        framingTransposer = virtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
     }
 
-    private void LateUpdate()
+    private void Update()
     {
-        if (!_isDragging) return;
-
-        Debug.Log(_mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue()));
-
-        _difference = GetMousePosition() - transform.position;
-        transform.position = _origin - _difference;
+        HandleDrag();
     }
 
-    private Vector3 GetMousePosition() 
+    private void HandleDrag()
     {
-        return _mainCamera.ScreenToWorldPoint(new Vector3(Mouse.current.position.ReadValue().x, Mouse.current.position.ReadValue().y, 730f));
+        if (Mouse.current.leftButton.isPressed)
+        {
+            Vector3 currentMousePos = GetMousePosition();
+
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                lastMousePosition = currentMousePos;
+                return;
+            }
+
+            Vector3 difference = lastMousePosition - currentMousePos;
+            difference.z = 0;
+
+            // Move the virtual camera
+            virtualCamera.transform.position += difference * dragSpeed * Time.deltaTime;
+
+            lastMousePosition = currentMousePos;
+        }
+    }
+
+    private Vector3 GetMousePosition()
+    {
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        Camera mainCamera = Camera.main;
+        return mainCamera.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 773f));
     }
 }

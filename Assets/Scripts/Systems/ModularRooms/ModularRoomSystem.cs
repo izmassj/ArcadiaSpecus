@@ -26,6 +26,9 @@ public class ModularRoomSystem : MonoBehaviour
     [SerializeField] private float cornerCheckSize;
     [SerializeField] private float snapDistance;
 
+    [Header("Room Parameters")]
+    public float roomPlacementDistance;
+
     [Header("Debug Corner Markers")]
     [SerializeField] private bool showCornerDebug;
     [SerializeField] private float cornerMarkerSize;
@@ -176,7 +179,7 @@ public class ModularRoomSystem : MonoBehaviour
     void FollowMouse()
     {
         Vector3 pos = GetMouseWorldPosition();
-        pos.z = 500f;
+        pos.z = roomPlacementDistance;
         currentRoom.transform.position = pos;
     }
 
