@@ -12,13 +12,30 @@ public class ModularRoomSystemUI : MonoBehaviour
     [SerializeField] private Button leftRoomBtn;
     [SerializeField] private Button intersectionBtn;
 
+    [Header("Modular Room Buttons UI")]
+    [SerializeField] private Button waterMachineBtn;
+    [SerializeField] private Button foodMachineBtn;
+    [SerializeField] private Button energyMachineBtn;
+    [SerializeField] private Button scrapMachineBtn;
+    [SerializeField] private Button bedBtn;
+    [SerializeField] private Button waterDispenserBtn;
+    [SerializeField] private Button foodDispenserBtn;
+
     [Header("Enter/Exit Modular Room Buttons UI")]
     [SerializeField] private Button enterModularRoomUIBtn;
     [SerializeField] private Button exitModularRoomUIBtn;
 
+    [Header("Enter/Exit Machine Buttons UI")]
+    [SerializeField] private Button enterMachineRoomUIBtn;
+    [SerializeField] private Button exitMachineRoomUIBtn;
+
     [Header("Modular Room UI GameObjects")]
     [SerializeField] private GameObject modularRoomButtonsGameObj;
     [SerializeField] private GameObject modularRoomEnterButtonGameObj;
+
+    [Header("Machine UI GameObjects")]
+    [SerializeField] private GameObject machinesButtonsGameObj;
+    [SerializeField] private GameObject machinesEnterButtonGameObj;
 
     private ModularRoomSystem roomSystem;
 
