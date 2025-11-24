@@ -32,6 +32,7 @@ public class ModularRoomSystemUI : MonoBehaviour
 
         enterModularRoomUIBtn.onClick.AddListener(() => ActivateDeactivateUIObjects(modularRoomEnterButtonGameObj, modularRoomButtonsGameObj));
         exitModularRoomUIBtn.onClick.AddListener(() => ActivateDeactivateUIObjects(modularRoomButtonsGameObj, modularRoomEnterButtonGameObj));
+        exitModularRoomUIBtn.onClick.AddListener(DisableCurrentGhostRoom);
     }
 
     void Awake()
@@ -48,6 +49,12 @@ public class ModularRoomSystemUI : MonoBehaviour
     {
 
     }
+
+    private void DisableCurrentGhostRoom()
+    {
+        ModularRoomSystem.Instance.SetCurrentRoom(null);
+    }
+
     private void ActivateDeactivateUIObjects(GameObject obj1, GameObject obj2)
     {
         if (obj1.activeInHierarchy) 

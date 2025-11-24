@@ -67,8 +67,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rend: {fileID: 497911133538719502}
-  hoverColor: {r: 0.5660378, g: 0.5660378, b: 0.5660378, a: 1}
-  clickColor: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  clickColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
 --- !u!1 &2268374121675815776
 GameObject:
   m_ObjectHideFlags: 0
