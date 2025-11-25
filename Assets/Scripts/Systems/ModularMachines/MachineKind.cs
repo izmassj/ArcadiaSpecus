@@ -1,0 +1,10 @@
+public enum MachineKind
+{
+    WATER_MACHINE,
+    FOOD_MACHINE,
+    ENERGY_MACHINE,
+    SCRAP_MACHINE,
+    BED,
+    WATER_DISPENSER,
+    FOOD_DISPENSER
+}
