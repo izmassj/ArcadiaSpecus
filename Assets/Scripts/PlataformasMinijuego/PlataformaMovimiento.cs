@@ -48,7 +48,32 @@ public class PlataformaMovimiento : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             // Le asignamos la misma posición Z de la plataforma
-            collision.transform.position = new Vector3(collision.transform.position.x, collision.transform.position.y, transform.position.z);
+            // También podemos hacerlo solo en el eje Z, sin afectar X o Y del jugador
+            Vector3 nuevaPosicion = collision.transform.position;
+            nuevaPosicion.z = transform.position.z; // Sin cambiar el resto de la posición
+            collision.transform.position = nuevaPosicion;
+
+            // Si el jugador tiene un Rigidbody, evitamos que se resbale usando "isKinematic"
+            Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                // Ponemos el Rigidbody en kinematic temporalmente para que no se resbale
+                rb.isKinematic = true;
+            }
+        }
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        // Si el jugador sale de la plataforma, restablecemos el Rigidbody a su estado original
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                // Restablecemos el Rigidbody para que la física vuelva a ser controlada normalmente
+                rb.isKinematic = false;
+            }
         }
     }
 }
