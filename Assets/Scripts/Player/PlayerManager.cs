@@ -20,10 +20,8 @@ public class PlayerManager : MonoBehaviour
 
     public enum PlayerStates
     {
-        NONE,
-        UI, UI_MENU, UI_SETTINGS, UI_ROBOT, UI_ROOMBUILDING,
-        BUNKER, BUNKER_DRAGGING, BUNKER_ROOMBUILDING,
-        ROBOT
+        NONE, DRAGGING, 
+        ROOMBUILDING, ROBOT
     }
 
     private PlayerStates _currentPlayerState = PlayerStates.NONE;
@@ -65,7 +63,7 @@ public class PlayerManager : MonoBehaviour
         {
             case PlayerStates.NONE:
                 break;
-            case PlayerStates.BUNKER_DRAGGING:
+            case PlayerStates.DRAGGING:
                 break;
         }
     }
@@ -73,12 +71,12 @@ public class PlayerManager : MonoBehaviour
     // Transition functions
     private void ToDragging(InputAction.CallbackContext ctx)
     {
-        SetCurrentPlayerState(PlayerStates.BUNKER_DRAGGING);
+        SetCurrentPlayerState(PlayerStates.DRAGGING);
     }
 
     private void ToDraggingRelease(InputAction.CallbackContext ctx)
     {
-        if (ctx.ReadValue<float>() == 0 && _currentPlayerState == PlayerStates.BUNKER_DRAGGING)
+        if (ctx.ReadValue<float>() == 0 && _currentPlayerState == PlayerStates.DRAGGING)
         {
             SetCurrentPlayerState(PlayerStates.NONE);
         }
