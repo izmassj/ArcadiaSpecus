@@ -320,98 +320,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 12879089}
   m_CullTransparentMesh: 1
---- !u!1 &68153222
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 68153223}
-  - component: {fileID: 68153224}
-  - component: {fileID: 68153225}
-  m_Layer: 0
-  m_Name: MachineSpawnerManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &68153223
+--- !u!4 &68153223 stripped
 Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+  m_PrefabInstance: {fileID: 1297685290613334531}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 68153222}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1534889483}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &68153224
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 68153222}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e885e427065ca942990ffd6745837cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  machinePrefabs:
-  - kind: 0
-    prefab: {fileID: 9045225221641630160, guid: 93528dc741d287f428bdb23f5ca7687e, type: 3}
-  - kind: 1
-    prefab: {fileID: 8451113151953200276, guid: 0fe60770c691bec44ae32058a77a09a9, type: 3}
-  - kind: 2
-    prefab: {fileID: 3108889395359120763, guid: 17d99896f115f3c4cb501fe4714a6008, type: 3}
-  - kind: 3
-    prefab: {fileID: 633329187605327391, guid: 97624465e485837449bd296af5658953, type: 3}
-  - kind: 4
-    prefab: {fileID: 1967292362293464120, guid: 6c4ef5c6df183a04381d845d65252844, type: 3}
-  - kind: 5
-    prefab: {fileID: 172731919545428681, guid: 4f9ed5f70c7a0df4cb8aebff73fcd40a, type: 3}
-  - kind: 6
-    prefab: {fileID: 6154146583008010169, guid: 8a0fe728254c94d4896301457a0780e8, type: 3}
-  machineLayerMask:
-    serializedVersion: 2
-    m_Bits: 128
-  cornerCheckSize: 5
-  snapDistance: 20
-  machinePlacementDistance: 600
-  showCornerDebug: 0
-  cornerMarkerSize: 0
-  cornerMarkerPrefab: {fileID: 0}
---- !u!114 &68153225
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 68153222}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0efc1ce7e66cba43936d6b235f69d75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  waterMachineBtn: {fileID: 492868317}
-  foodMachineBtn: {fileID: 682004732}
-  energyMachineBtn: {fileID: 1768268019}
-  scrapMachineBtn: {fileID: 131262539}
-  bedBtn: {fileID: 699366971}
-  waterDispenserBtn: {fileID: 1908699789}
-  foodDispenserBtn: {fileID: 1169022840}
-  enterMachineUIBtn: {fileID: 829210606}
-  exitMachineUIBtn: {fileID: 1336547009}
-  machinesButtonsGameObj: {fileID: 276009087}
-  machinesEnterButtonGameObj: {fileID: 322167411}
 --- !u!1 &76375200
 GameObject:
   m_ObjectHideFlags: 0
@@ -1010,12 +923,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 140731534}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.3041, y: 140.1319, z: 609.3878}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 117.7613, y: 21.897171, z: 6.7194214}
   m_LocalScale: {x: 2051.8098, y: 4.5895386, z: 164.78625}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1839243982}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &159067144
 GameObject:
@@ -1558,7 +1471,7 @@ GameObject:
   - component: {fileID: 303361602}
   - component: {fileID: 303361601}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Entrance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1643,12 +1556,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 303361600}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -91.723, y: 252.9705, z: 610.6622}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 25.7342, y: 134.73578, z: 7.9937744}
   m_LocalScale: {x: 327.67038, y: 218.1632, z: 147.65428}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1839243982}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &322167411
 GameObject:
@@ -7184,7 +7097,9 @@ Transform:
   m_LocalPosition: {x: -117.4572, y: 118.234726, z: 602.6684}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 303361604}
+  - {fileID: 140731538}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1908699787
@@ -8258,6 +8173,107 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 665724618837266489e1927fd47b377f, type: 3}
+--- !u!1001 &1297685290613334531
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1534889483}
+    m_Modifications:
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: bedBtn
+      value: 
+      objectReference: {fileID: 699366971}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: foodMachineBtn
+      value: 
+      objectReference: {fileID: 682004732}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: scrapMachineBtn
+      value: 
+      objectReference: {fileID: 131262539}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: waterMachineBtn
+      value: 
+      objectReference: {fileID: 492868317}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: energyMachineBtn
+      value: 
+      objectReference: {fileID: 1768268019}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: exitMachineUIBtn
+      value: 
+      objectReference: {fileID: 1336547009}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: foodDispenserBtn
+      value: 
+      objectReference: {fileID: 1169022840}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: enterMachineUIBtn
+      value: 
+      objectReference: {fileID: 829210606}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: waterDispenserBtn
+      value: 
+      objectReference: {fileID: 1908699789}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: machinesButtonsGameObj
+      value: 
+      objectReference: {fileID: 276009087}
+    - target: {fileID: 3251613266223459347, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: machinesEnterButtonGameObj
+      value: 
+      objectReference: {fileID: 322167411}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4734093111281926997, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4739581459027718193, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
+      propertyPath: m_Name
+      value: MachineSpawnerManager
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b8abc07392836354cabe1d6ffc467a4f, type: 3}
 --- !u!1001 &2581442158044406923
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8368,5 +8384,3 @@ SceneRoots:
   - {fileID: 1062068880}
   - {fileID: 1839243982}
   - {fileID: 406493442}
-  - {fileID: 140731538}
-  - {fileID: 303361604}

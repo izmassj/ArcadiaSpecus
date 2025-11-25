@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4739581459027718193
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4734093111281926997}
+  - component: {fileID: 5017056400522646731}
+  - component: {fileID: 3251613266223459347}
+  m_Layer: 0
+  m_Name: MachineSpawnerManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4734093111281926997
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739581459027718193}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5017056400522646731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739581459027718193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e885e427065ca942990ffd6745837cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  machinePrefabs:
+  - kind: 0
+    prefab: {fileID: 9045225221641630160, guid: 93528dc741d287f428bdb23f5ca7687e, type: 3}
+  - kind: 1
+    prefab: {fileID: 8451113151953200276, guid: 0fe60770c691bec44ae32058a77a09a9, type: 3}
+  - kind: 2
+    prefab: {fileID: 3108889395359120763, guid: 17d99896f115f3c4cb501fe4714a6008, type: 3}
+  - kind: 3
+    prefab: {fileID: 633329187605327391, guid: 97624465e485837449bd296af5658953, type: 3}
+  - kind: 4
+    prefab: {fileID: 1967292362293464120, guid: 6c4ef5c6df183a04381d845d65252844, type: 3}
+  - kind: 5
+    prefab: {fileID: 172731919545428681, guid: 4f9ed5f70c7a0df4cb8aebff73fcd40a, type: 3}
+  - kind: 6
+    prefab: {fileID: 6154146583008010169, guid: 8a0fe728254c94d4896301457a0780e8, type: 3}
+  machineLayerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  cornerCheckSize: 10
+  snapDistance: 50
+  machinePlacementDistance: 600
+  showCornerDebug: 0
+  cornerMarkerSize: 0
+  cornerMarkerPrefab: {fileID: 0}
+--- !u!114 &3251613266223459347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739581459027718193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0efc1ce7e66cba43936d6b235f69d75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waterMachineBtn: {fileID: 0}
+  foodMachineBtn: {fileID: 0}
+  energyMachineBtn: {fileID: 0}
+  scrapMachineBtn: {fileID: 0}
+  bedBtn: {fileID: 0}
+  waterDispenserBtn: {fileID: 0}
+  foodDispenserBtn: {fileID: 0}
+  enterMachineUIBtn: {fileID: 0}
+  exitMachineUIBtn: {fileID: 0}
+  machinesButtonsGameObj: {fileID: 0}
+  machinesEnterButtonGameObj: {fileID: 0}

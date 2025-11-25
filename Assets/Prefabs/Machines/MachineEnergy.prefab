@@ -143,4 +143,4 @@ MonoBehaviour:
   resourceType: 2
   amountPerCycle: 5
   cycleDuration: 30
-  machineRenderer: {fileID: 0}
+  machineRenderer: {fileID: 4920295281471215633}
