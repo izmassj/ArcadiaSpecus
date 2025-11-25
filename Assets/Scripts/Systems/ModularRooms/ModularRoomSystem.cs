@@ -6,25 +6,14 @@ public class ModularRoomSystem : MonoBehaviour
 {
     public static ModularRoomSystem Instance;
 
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-    }
-
     [Header("Room Setup")]
     [SerializeField] private List<RoomPrefab> roomPrefabs;
     [SerializeField] private LayerMask roomLayerMask;
     [SerializeField] private float cornerCheckSize;
     [SerializeField] private float snapDistance;
+
+    [Header("Room Parameters")]
+    public float roomPlacementDistance;
 
     [Header("Debug Corner Markers")]
     [SerializeField] private bool showCornerDebug;
@@ -40,6 +29,20 @@ public class ModularRoomSystem : MonoBehaviour
     private bool canPlaceRoom = false;
 
     private Dictionary<RoomKind, GameObject> prefabDict;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
 
     private void Start()
     {
@@ -58,7 +61,6 @@ public class ModularRoomSystem : MonoBehaviour
 
         FollowMouse();
         TryDetectOtherRooms();
-        UpdateVisualFeedback();
 
         if (showCornerDebug)
             UpdateCornerMarkerPositions();
@@ -132,6 +134,7 @@ public class ModularRoomSystem : MonoBehaviour
     {
         if (!isBuilding || currentRoom == null || !canPlaceRoom) return;
 
+        SetRoomColor(Color.white);
 
         BoxCollider collider = currentRoom.transform.GetChild(0).GetChild(0).gameObject.GetComponent<BoxCollider>();
         if (collider != null)
@@ -173,10 +176,12 @@ public class ModularRoomSystem : MonoBehaviour
         canPlaceRoom = false;
     }
 
+
+
     void FollowMouse()
     {
         Vector3 pos = GetMouseWorldPosition();
-        pos.z = 500f;
+        pos.z = roomPlacementDistance;
         currentRoom.transform.position = pos;
     }
 
@@ -258,15 +263,27 @@ public class ModularRoomSystem : MonoBehaviour
         };
     }
 
-
-    void UpdateVisualFeedback()
-    {
-    }
-
     void SetRoomColor(Color c)
     {
         foreach (Renderer r in currentRoom.GetComponentsInChildren<Renderer>())
             r.material.color = c;
+    }
+
+    public void SetCurrentRoom(GameObject newRoom)
+    {
+        if (newRoom == null)
+        {
+            Destroy(currentRoom);
+            currentRoom = null;
+
+            currentRoom = null;
+            isBuilding = false;
+            canPlaceRoom = false;
+        }
+        else
+        {
+            currentRoom = newRoom;
+        }
     }
 
     GameObject GetPrefab(RoomKind kind)

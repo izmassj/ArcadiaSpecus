@@ -67,8 +67,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rend: {fileID: 497911133538719502}
-  hoverColor: {r: 0.5660378, g: 0.5660378, b: 0.5660378, a: 1}
-  clickColor: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  clickColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
 --- !u!1 &2268374121675815776
 GameObject:
   m_ObjectHideFlags: 0
@@ -101,6 +101,59 @@ Transform:
   - {fileID: 1631362260286205025}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4811129641062485674
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3875962599169588150}
+  - component: {fileID: 6383403129383904885}
+  m_Layer: 7
+  m_Name: MachineCollider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3875962599169588150
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4811129641062485674}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.00096963375, y: 0.0048362277, z: 0.0008185862, w: 0.99998754}
+  m_LocalPosition: {x: 0.052, y: -0.692, z: 0.008}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1631362260286205025}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &6383403129383904885
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4811129641062485674}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.5, y: 0.1, z: 0.5}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &1236653886633872266
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -152,7 +205,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 321983eb4971fe44d8738d7e4bb8bd84, type: 2}
+      objectReference: {fileID: 2100000, guid: 859f76c79a2104948a5ff2c1893b091d, type: 2}
     - target: {fileID: 919132149155446097, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
       propertyPath: m_Name
       value: RightRoom
@@ -167,6 +220,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6323147957750465262}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3875962599169588150}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5eeb5761d09ed914ba0cd91bfd6421c3, type: 3}
 --- !u!23 &497911133538719502 stripped

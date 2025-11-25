@@ -42,6 +42,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1377582086980766497}
   - component: {fileID: 6737342953528053683}
+  - component: {fileID: 2217647095994949888}
   m_Layer: 6
   m_Name: RoomCollider
   m_TagString: Untagged
@@ -85,6 +86,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.004996405, y: 0.08514283, z: 0.106576234}
   m_Center: {x: -0.00035708075, y: 0.00067725213, z: 0.028286021}
+--- !u!114 &2217647095994949888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6585140666967616308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 472513dd6232f7e40a59349a3e5b8dd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rend: {fileID: 8457298151133558928}
+  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  clickColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
 --- !u!1001 &7106625776690177044
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -136,7 +152,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: efd18757bdb891f4f89e95cce7a1e794, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 321983eb4971fe44d8738d7e4bb8bd84, type: 2}
+      objectReference: {fileID: 2100000, guid: 03bd13b2da0f5d246a5dfadbfd97f576, type: 2}
     - target: {fileID: 919132149155446097, guid: efd18757bdb891f4f89e95cce7a1e794, type: 3}
       propertyPath: m_Name
       value: DoorWall
@@ -156,5 +172,10 @@ PrefabInstance:
 --- !u!4 &7283858817278657535 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: efd18757bdb891f4f89e95cce7a1e794, type: 3}
+  m_PrefabInstance: {fileID: 7106625776690177044}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &8457298151133558928 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: efd18757bdb891f4f89e95cce7a1e794, type: 3}
   m_PrefabInstance: {fileID: 7106625776690177044}
   m_PrefabAsset: {fileID: 0}
