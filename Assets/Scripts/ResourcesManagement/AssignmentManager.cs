@@ -29,6 +29,53 @@ public class AssignmentManager : MonoBehaviour
         FindAllDwellersAndStations();
         // Asignación automática después de un breve delay
         Invoke("AutoAssignAll", 2f);
+
+        // NUEVO: Suscribir a eventos de muerte de NPCs
+        ResourceManager.OnNPCDied += HandleNPCDied;
+    }
+
+    void OnDestroy()
+    {
+        // NUEVO: Limpiar suscripción
+        ResourceManager.OnNPCDied -= HandleNPCDied;
+    }
+
+    /// <summary>
+    /// NUEVO: Maneja la muerte de un NPC - remueve sus asignaciones
+    /// </summary>
+    private void HandleNPCDied(DwellerNPC deadNPC)
+    {
+        if (deadNPC == null) return;
+
+        // Remover asignaciones del NPC muerto
+        if (currentAssignments.ContainsKey(deadNPC))
+        {
+            WorkStation assignedStation = currentAssignments[deadNPC];
+            if (assignedStation != null)
+            {
+                assignedStation.RemoveWorker(deadNPC);
+            }
+            currentAssignments.Remove(deadNPC);
+            Debug.Log($"🗑️ Removidas asignaciones de {deadNPC.dwellerName} (MUERTO)");
+        }
+
+        // Remover de la lista de NPCs
+        if (allDwellers.Contains(deadNPC))
+        {
+            allDwellers.Remove(deadNPC);
+        }
+
+        // Reasignar trabajadores restantes si es necesario
+        Invoke("ReassignAfterDeath", 1f);
+    }
+
+    /// <summary>
+    /// NUEVO: Reasigna trabajadores después de una muerte
+    /// </summary>
+    private void ReassignAfterDeath()
+    {
+        Debug.Log($"🔄 Reasignando trabajadores después de muerte. NPCs vivos: {allDwellers.Count}");
+        AutoAssignAll();
     }
 
     /// <summary>
@@ -39,7 +86,20 @@ public class AssignmentManager : MonoBehaviour
         allDwellers.Clear();
         allWorkStations.Clear();
 
-        allDwellers.AddRange(FindObjectsOfType<DwellerNPC>());
+        DwellerNPC[] allFoundDwellers = FindObjectsOfType<DwellerNPC>();
+
+        // NUEVO: Filtrar NPCs muertos - solo incluir NPCs vivos
+        foreach (var dweller in allFoundDwellers)
+        {
+            if (!dweller.IsDead)
+            {
+                allDwellers.Add(dweller);
+            }
+            else
+            {
+                Debug.Log($"🚫 Excluyendo {dweller.dwellerName} de asignaciones (MUERTO)");
+            }
+        }
 
         WorkStation[] allStations = FindObjectsOfType<WorkStation>();
         foreach (var station in allStations)
@@ -51,7 +111,7 @@ public class AssignmentManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"Encontrados {allDwellers.Count} NPCs y {allWorkStations.Count} máquinas de trabajo (excluyendo camas)");
+        Debug.Log($"Encontrados {allDwellers.Count} NPCs vivos y {allWorkStations.Count} máquinas de trabajo (excluyendo camas)");
     }
 
     /// <summary>
@@ -59,6 +119,13 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     public void AssignDwellerToStation(DwellerNPC dweller, WorkStation station)
     {
+        // NUEVO: Verificar si el NPC está muerto
+        if (dweller != null && dweller.IsDead)
+        {
+            Debug.LogWarning($"No se puede asignar {dweller.dwellerName} - ESTÁ MUERTO");
+            return;
+        }
+
         if (dweller == null || station == null) return;
 
         // Prevenir asignación a camas mediante este manager
@@ -95,11 +162,19 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     public void UnassignDweller(DwellerNPC dweller)
     {
+        // NUEVO: Verificar si el NPC está muerto
+        if (dweller != null && dweller.IsDead)
+        {
+            Debug.LogWarning($"No se puede desasignar {dweller.dwellerName} - ESTÁ MUERTO");
+            return;
+        }
+
         if (currentAssignments.ContainsKey(dweller))
         {
             currentAssignments[dweller].RemoveWorker(dweller);
             currentAssignments.Remove(dweller);
             dweller.AssignToWorkStation(null);
+            Debug.Log($"{dweller.dwellerName} desasignado de trabajo");
         }
     }
 
@@ -108,6 +183,7 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     public void AutoAssignAll()
     {
+        // NUEVO: Actualizar lista de NPCs vivos
         FindAllDwellersAndStations();
 
         var unassignedDwellers = new List<DwellerNPC>(allDwellers);
@@ -118,10 +194,16 @@ public class AssignmentManager : MonoBehaviour
 
         Debug.Log($"Iniciando auto-asignación: {unassignedDwellers.Count} NPCs libres, {availableStations.Count} máquinas disponibles");
 
+        // NUEVO: Filtrar NPCs muertos otra vez por seguridad
+        unassignedDwellers.RemoveAll(d => d.IsDead);
+
         // Asignación por tipo de recurso necesario
         foreach (var dweller in unassignedDwellers)
         {
             if (availableStations.Count == 0) break;
+
+            // NUEVO: Verificar que el NPC no haya muerto durante el proceso
+            if (dweller.IsDead) continue;
 
             WorkStation bestStation = FindBestStationForDweller(dweller, availableStations);
             if (bestStation != null)
@@ -139,6 +221,9 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     private WorkStation FindBestStationForDweller(DwellerNPC dweller, List<WorkStation> availableStations)
     {
+        // NUEVO: Verificar que el NPC esté vivo
+        if (dweller.IsDead) return null;
+
         // Si el NPC tiene una necesidad crítica, priorizar estaciones que produzcan ese recurso
         if (dweller.NeedsRecovery())
         {
@@ -177,6 +262,13 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     public WorkStation GetAssignedStation(DwellerNPC dweller)
     {
+        // NUEVO: Verificar si el NPC está muerto
+        if (dweller != null && dweller.IsDead)
+        {
+            Debug.LogWarning($"No se puede obtener asignación de {dweller.dwellerName} - ESTÁ MUERTO");
+            return null;
+        }
+
         return currentAssignments.ContainsKey(dweller) ? currentAssignments[dweller] : null;
     }
 
@@ -185,6 +277,12 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     public bool IsDwellerAssigned(DwellerNPC dweller)
     {
+        // NUEVO: Verificar si el NPC está muerto
+        if (dweller != null && dweller.IsDead)
+        {
+            return false; // NPCs muertos no están asignados
+        }
+
         return currentAssignments.ContainsKey(dweller);
     }
 
@@ -193,7 +291,16 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     public Dictionary<DwellerNPC, WorkStation> GetAllAssignments()
     {
-        return new Dictionary<DwellerNPC, WorkStation>(currentAssignments);
+        // NUEVO: Devolver solo asignaciones de NPCs vivos
+        var aliveAssignments = new Dictionary<DwellerNPC, WorkStation>();
+        foreach (var assignment in currentAssignments)
+        {
+            if (!assignment.Key.IsDead)
+            {
+                aliveAssignments.Add(assignment.Key, assignment.Value);
+            }
+        }
+        return aliveAssignments;
     }
 
     /// <summary>
@@ -201,9 +308,19 @@ public class AssignmentManager : MonoBehaviour
     /// </summary>
     public void ReassignAllDwellers()
     {
+        // NUEVO: Solo desasignar NPCs vivos
+        var aliveDwellersToUnassign = new List<DwellerNPC>();
         foreach (var assignment in currentAssignments)
         {
-            assignment.Key.AssignToWorkStation(null);
+            if (!assignment.Key.IsDead)
+            {
+                aliveDwellersToUnassign.Add(assignment.Key);
+            }
+        }
+
+        foreach (var dweller in aliveDwellersToUnassign)
+        {
+            dweller.AssignToWorkStation(null);
         }
         currentAssignments.Clear();
 
@@ -220,6 +337,9 @@ public class AssignmentManager : MonoBehaviour
 
         foreach (var dweller in allDwellers)
         {
+            // NUEVO: Excluir NPCs muertos
+            if (dweller.IsDead) continue;
+
             if (dweller.NeedsRecovery() && !dweller.IsRecovering())
             {
                 problematicDwellers.Add(dweller);
@@ -235,5 +355,39 @@ public class AssignmentManager : MonoBehaviour
 
         // Reasignar después de un breve delay
         Invoke("AutoAssignAll", 1f);
+    }
+
+    /// <summary>
+    /// NUEVO: Obtiene la cantidad de NPCs asignados actualmente
+    /// </summary>
+    public int GetAssignedDwellerCount()
+    {
+        int count = 0;
+        foreach (var assignment in currentAssignments)
+        {
+            if (!assignment.Key.IsDead)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// NUEVO: Obtiene la cantidad de NPCs vivos totales
+    /// </summary>
+    public int GetAliveDwellerCount()
+    {
+        return allDwellers.Count;
+    }
+
+    /// <summary>
+    /// NUEVO: Reinicia todas las asignaciones (para reinicio de juego)
+    /// </summary>
+    public void ResetAllAssignments()
+    {
+        currentAssignments.Clear();
+        FindAllDwellersAndStations();
+        Debug.Log("🔄 Todas las asignaciones reiniciadas");
     }
 }
