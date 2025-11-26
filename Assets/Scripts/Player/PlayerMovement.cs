@@ -1,81 +1,209 @@
-using System.Collections;
-using System.Collections.Generic;
+//PlayerMovement 
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
+/*
+    This script provides jumping and movement in Unity 3D - Gatsby
+*/
+
 public class PlayerMovement : MonoBehaviour
 {
-    public Camera playerCamera;
-    public float walkSpeed = 6f;
-    public float runSpeed = 12f;
-    public float jumpPower = 7f;
-    public float gravity = 10f;
-    public float lookSpeed = 2f;
-    public float lookXLimit = 45f;
-    public float defaultHeight = 2f;
-    public float crouchHeight = 1f;
-    public float crouchSpeed = 3f;
+    // Camera Rotation
+    public float mouseSensitivity = 2f;
+    private float verticalRotation = 0f;
+    [SerializeField] private Transform cameraTransform;
+    [SerializeField] private string groundTag = "Ground";
 
-    private Vector3 moveDirection = Vector3.zero;
-    private float rotationX = 0;
-    private CharacterController characterController;
+    // Ground Movement
+    private Rigidbody rb;
+    public float MoveSpeed = 5f;
+    private float moveHorizontal;
+    private float moveForward;
 
-    private bool canMove = true;
+    // Jumping
+    public float jumpForce = 10f;
+    public float fallMultiplier = 2.5f; // Multiplies gravity when falling down
+    public float ascendMultiplier = 2f; // Multiplies gravity for ascending to peak of jump
+    private bool isGrounded = true;
+    public LayerMask groundLayer;
+    private float groundCheckTimer = 0f;
+    private float groundCheckDelay = 0.3f;
+    private float playerHeight;
+    private float raycastDistance;
+
+    // Platform movement
+    private Transform currentPlatform;
+    private Vector3 lastPlatformPosition;
+    private Vector3 platformVelocity;
 
     void Start()
     {
-        characterController = GetComponent<CharacterController>();
+        rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
+        cameraTransform = Camera.main.gameObject.transform;
+
+        // Set the raycast to be slightly beneath the player's feet
+        playerHeight = GetComponent<CapsuleCollider>().height * transform.localScale.y;
+        raycastDistance = (playerHeight / 2) + 0.2f;
+
+        // Hides the mouse
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
     void Update()
     {
-        Vector3 forward = transform.TransformDirection(Vector3.forward);
-        Vector3 right = transform.TransformDirection(Vector3.right);
+        moveHorizontal = Input.GetAxisRaw("Horizontal");
+        moveForward = Input.GetAxisRaw("Vertical");
 
-        bool isRunning = Input.GetKey(KeyCode.LeftShift);
-        float curSpeedX = canMove ? (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Vertical") : 0;
-        float curSpeedY = canMove ? (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Horizontal") : 0;
-        float movementDirectionY = moveDirection.y;
-        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+        RotateCamera();
 
-        if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
-            moveDirection.y = jumpPower;
+            Jump();
+        }
+
+        // Checking when we're on the ground and keeping track of our ground check delay
+        if (!isGrounded && groundCheckTimer <= 0f)
+        {
+            Vector3 rayOrigin = transform.position + Vector3.up * 0.1f;
+            isGrounded = Physics.Raycast(rayOrigin, Vector3.down, raycastDistance, groundLayer);
         }
         else
         {
-            moveDirection.y = movementDirectionY;
+            groundCheckTimer -= Time.deltaTime;
+        }
+    }
+
+    void FixedUpdate()
+    {
+        // Calculate platform movement before applying player movement
+        CalculatePlatformMovement();
+
+        MovePlayer();
+        ApplyJumpPhysics();
+    }
+
+    void MovePlayer()
+    {
+        Vector3 movement = (transform.right * moveHorizontal + transform.forward * moveForward).normalized;
+        Vector3 targetVelocity = movement * MoveSpeed;
+
+        // Apply movement to the Rigidbody
+        Vector3 velocity = rb.velocity;
+        velocity.x = targetVelocity.x;
+        velocity.z = targetVelocity.z;
+
+        // Add platform velocity to maintain relative movement
+        if (currentPlatform != null)
+        {
+            velocity.x += platformVelocity.x;
+            velocity.z += platformVelocity.z;
         }
 
-        if (!characterController.isGrounded)
+        rb.velocity = velocity;
+
+        // If we aren't moving and are on the ground, stop velocity so we don't slide
+        // But preserve platform movement
+        if (isGrounded && moveHorizontal == 0 && moveForward == 0)
         {
-            moveDirection.y -= gravity * Time.deltaTime;
+            if (currentPlatform != null)
+            {
+                rb.velocity = new Vector3(platformVelocity.x, rb.velocity.y, platformVelocity.z);
+            }
+            else
+            {
+                rb.velocity = new Vector3(0, rb.velocity.y, 0);
+            }
+        }
+    }
+
+    void RotateCamera()
+    {
+        float horizontalRotation = Input.GetAxis("Mouse X") * mouseSensitivity;
+        transform.Rotate(0, horizontalRotation, 0);
+
+        verticalRotation -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+        verticalRotation = Mathf.Clamp(verticalRotation, -90f, 90f);
+
+        cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
+    }
+
+    void Jump()
+    {
+        isGrounded = false;
+        groundCheckTimer = groundCheckDelay;
+
+        // Preserve platform velocity when jumping
+        Vector3 jumpVelocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
+
+        // If on platform, add platform velocity to maintain momentum
+        if (currentPlatform != null)
+        {
+            jumpVelocity.x += platformVelocity.x;
+            jumpVelocity.z += platformVelocity.z;
         }
 
-        if (Input.GetKey(KeyCode.R) && canMove)
-        {
-            characterController.height = crouchHeight;
-            walkSpeed = crouchSpeed;
-            runSpeed = crouchSpeed;
+        rb.velocity = jumpVelocity;
+    }
 
+    void ApplyJumpPhysics()
+    {
+        if (rb.velocity.y < 0)
+        {
+            // Falling: Apply fall multiplier to make descent faster
+            rb.velocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.fixedDeltaTime;
+        } // Rising
+        else if (rb.velocity.y > 0)
+        {
+            // Rising: Change multiplier to make player reach peak of jump faster
+            rb.velocity += Vector3.up * Physics.gravity.y * ascendMultiplier * Time.fixedDeltaTime;
+        }
+    }
+
+    void CalculatePlatformMovement()
+    {
+        if (currentPlatform != null)
+        {
+            platformVelocity = (currentPlatform.position - lastPlatformPosition) / Time.fixedDeltaTime;
+            lastPlatformPosition = currentPlatform.position;
         }
         else
         {
-            characterController.height = defaultHeight;
-            walkSpeed = 6f;
-            runSpeed = 12f;
+            platformVelocity = Vector3.zero;
         }
+    }
 
-        characterController.Move(moveDirection * Time.deltaTime);
-
-        if (canMove)
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag(groundTag))
         {
-            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
-            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+            // Only set as parent if it's actually a moving platform
+            Rigidbody platformRb = collision.gameObject.GetComponent<Rigidbody>();
+            if (platformRb != null && !platformRb.isKinematic)
+            {
+                currentPlatform = collision.transform;
+                lastPlatformPosition = currentPlatform.position;
+            }
+            else
+            {
+                // For static ground, just set transform parent normally
+                transform.SetParent(collision.transform);
+            }
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag(groundTag))
+        {
+            // Only unparent if leaving the current platform
+            if (currentPlatform == collision.transform)
+            {
+                currentPlatform = null;
+                platformVelocity = Vector3.zero;
+            }
+
+            transform.SetParent(null);
         }
     }
 }
