@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameOverMiniGame : MonoBehaviour
 {
@@ -14,5 +15,14 @@ public class GameOverMiniGame : MonoBehaviour
     void Update()
     {
         
+    }
+
+    private void OnTriggerEnter(Collider collider)
+    {
+        if (collider.CompareTag("Player"))
+        {
+            Debug.Log("Funciona el collider");
+            //Faltaria la parte de cargar escena de game over o volver al hud principal
+        }
     }
 }

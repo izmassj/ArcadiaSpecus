@@ -17,11 +17,11 @@ public class WinMiniGame : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider collider)
     {
-        if (other.CompareTag("Player"))
+        if (collider.CompareTag("Player"))
         {
-            Debug.Log("Player entered trigger!");
+            Debug.Log("Funciona el collider");
             SceneManager.LoadScene("MainScene");
         }
     }
