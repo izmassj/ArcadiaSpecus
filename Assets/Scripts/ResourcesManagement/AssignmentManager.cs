@@ -68,6 +68,9 @@ public class AssignmentManager : MonoBehaviour
             // Excluir estaciones de descanso
             if (station is RestStation) continue;
 
+            // VERIFICAR SI EL GAMEOBJECT Y SUS COMPONENTES ESTÁN ACTIVOS
+            if (!station.gameObject.activeInHierarchy || !station.enabled) continue;
+
             // Si la máquina no está en la lista, agregarla
             if (!allWorkStations.Contains(station))
             {
@@ -81,7 +84,6 @@ public class AssignmentManager : MonoBehaviour
         {
             Debug.Log($"Se encontraron {newMachinesCount} nuevas máquinas. Total: {allWorkStations.Count}");
 
-            // Opcional: reasignar NPCs si se añadieron nuevas máquinas
             AutoAssignAll();
         }
     }

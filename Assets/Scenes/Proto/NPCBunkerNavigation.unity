@@ -8520,6 +8520,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 1534889483}
     m_Modifications:
     - target: {fileID: 587347535738594334, guid: 69c000ddf936091469cfd29ca3080694, type: 3}
+      propertyPath: machineSearchInterval
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 587347535738594334, guid: 69c000ddf936091469cfd29ca3080694, type: 3}
       propertyPath: allDwellers.Array.size
       value: 0
       objectReference: {fileID: 0}
