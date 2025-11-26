@@ -1850,6 +1850,72 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &1513453471
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1513453474}
+  - component: {fileID: 1513453473}
+  - component: {fileID: 1513453472}
+  m_Layer: 0
+  m_Name: WinZone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1513453472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513453471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fd069263bd235448b8afaf7ff6c1e36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &1513453473
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513453471}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9.448694, y: 1, z: 5.986061}
+  m_Center: {x: -3.1258974, y: 0, z: -10.837986}
+--- !u!4 &1513453474
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513453471}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.68, y: 0.504, z: 107.842}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1568581646
 GameObject:
   m_ObjectHideFlags: 0
@@ -2177,6 +2243,7 @@ GameObject:
   - component: {fileID: 1753372462}
   - component: {fileID: 1753372461}
   - component: {fileID: 1753372460}
+  - component: {fileID: 1753372464}
   m_Layer: 8
   m_Name: Suelo
   m_TagString: Untagged
@@ -2271,6 +2338,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1753372464
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753372459}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 2.220446e-16, z: 6.3454585}
+  m_Center: {x: 0, y: 0, z: -0.13920097}
 --- !u!1 &1842526501
 GameObject:
   m_ObjectHideFlags: 0
@@ -2944,6 +3032,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 3483590073445519274, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 6316377903801967641, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: MoveSpeed
       value: 7
@@ -2958,11 +3050,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.58
+      value: 4.81
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -31.83
+      value: 76.66
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3029,3 +3121,4 @@ SceneRoots:
   - {fileID: 1612195555}
   - {fileID: 2120804460}
   - {fileID: 98819947}
+  - {fileID: 1513453474}
