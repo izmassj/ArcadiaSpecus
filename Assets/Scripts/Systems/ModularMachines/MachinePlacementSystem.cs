@@ -81,6 +81,9 @@ public class MachinePlacementSystem : MonoBehaviour
         Vector3 spawnPos = GetMouseWorldPosition();
         currentMachine = Instantiate(prefab, spawnPos, Quaternion.identity);
 
+        // Disable all machine scripts and behaviors during placement
+        DisableMachineComponents(currentMachine);
+
         if (showCornerDebug)
             CreateCornerMarkers(currentMachine);
 
@@ -93,6 +96,92 @@ public class MachinePlacementSystem : MonoBehaviour
         canPlaceMachine = false;
 
         SetMachineColor(Color.red);
+    }
+
+    private void DisableMachineComponents(GameObject machine)
+    {
+        // Disable all MonoBehaviour scripts except this one and transform
+        MonoBehaviour[] scripts = machine.GetComponentsInChildren<MonoBehaviour>();
+        foreach (MonoBehaviour script in scripts)
+        {
+            if (script != null && script != this && !(script is MachinePlacementSystem))
+            {
+                script.enabled = false;
+            }
+        }
+
+        // Optionally disable other components that might cause issues during placement
+        Rigidbody[] rigidbodies = machine.GetComponentsInChildren<Rigidbody>();
+        foreach (Rigidbody rb in rigidbodies)
+        {
+            if (rb != null)
+            {
+                rb.isKinematic = true; // Keep kinematic to prevent physics during placement
+            }
+        }
+
+        // Disable any particle systems, audio sources, etc. that shouldn't play during placement
+        ParticleSystem[] particleSystems = machine.GetComponentsInChildren<ParticleSystem>();
+        foreach (ParticleSystem ps in particleSystems)
+        {
+            if (ps != null)
+            {
+                ps.Stop();
+                ps.Clear();
+            }
+        }
+
+        AudioSource[] audioSources = machine.GetComponentsInChildren<AudioSource>();
+        foreach (AudioSource audioSource in audioSources)
+        {
+            if (audioSource != null)
+            {
+                audioSource.enabled = false;
+            }
+        }
+    }
+
+    private void EnableMachineComponents(GameObject machine)
+    {
+        // Enable all MonoBehaviour scripts
+        MonoBehaviour[] scripts = machine.GetComponentsInChildren<MonoBehaviour>();
+        foreach (MonoBehaviour script in scripts)
+        {
+            if (script != null && script != this && !(script is MachinePlacementSystem))
+            {
+                script.enabled = true;
+            }
+        }
+
+        // Re-enable other components
+        Rigidbody[] rigidbodies = machine.GetComponentsInChildren<Rigidbody>();
+        foreach (Rigidbody rb in rigidbodies)
+        {
+            if (rb != null)
+            {
+                // You might want to set isKinematic based on your game's needs
+                rb.isKinematic = false;
+            }
+        }
+
+        // Re-enable particle systems, audio sources, etc.
+        ParticleSystem[] particleSystems = machine.GetComponentsInChildren<ParticleSystem>();
+        foreach (ParticleSystem ps in particleSystems)
+        {
+            if (ps != null)
+            {
+                ps.Play();
+            }
+        }
+
+        AudioSource[] audioSources = machine.GetComponentsInChildren<AudioSource>();
+        foreach (AudioSource audioSource in audioSources)
+        {
+            if (audioSource != null)
+            {
+                audioSource.enabled = true;
+            }
+        }
     }
 
     private void CreateCornerMarkers(GameObject machine)
@@ -132,6 +221,9 @@ public class MachinePlacementSystem : MonoBehaviour
     public void PlaceMachine()
     {
         if (!isBuilding || currentMachine == null || !canPlaceMachine) return;
+
+        // Enable all machine components before finalizing placement
+        EnableMachineComponents(currentMachine);
 
         SetMachineColor(Color.white);
 

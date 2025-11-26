@@ -1,6 +1,7 @@
 ﻿// AssignmentManager.cs
-using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class AssignmentManager : MonoBehaviour
 {
@@ -10,7 +11,11 @@ public class AssignmentManager : MonoBehaviour
     public List<DwellerNPC> allDwellers = new List<DwellerNPC>();
     public List<WorkStation> allWorkStations = new List<WorkStation>();
 
+    [Header("Búsqueda Automática de Máquinas")]
+    public float machineSearchInterval = 5f;
+
     private Dictionary<DwellerNPC, WorkStation> currentAssignments = new Dictionary<DwellerNPC, WorkStation>();
+    private Coroutine searchCoroutine;
 
     void Awake()
     {
@@ -27,8 +32,67 @@ public class AssignmentManager : MonoBehaviour
     void Start()
     {
         FindAllDwellersAndStations();
+
+        // Iniciar búsqueda automática de máquinas
+        if (machineSearchInterval > 0)
+        {
+            searchCoroutine = StartCoroutine(AutoFindMachinesRoutine());
+        }
+
         // Asignación automática después de un breve delay
         Invoke("AutoAssignAll", 2f);
+    }
+
+    /// <summary>
+    /// Corrutina que busca y agrega nuevas máquinas automáticamente
+    /// </summary>
+    private IEnumerator AutoFindMachinesRoutine()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(machineSearchInterval);
+            FindAndAddNewMachines();
+        }
+    }
+
+    /// <summary>
+    /// Busca en la escena máquinas que no estén en la lista y las agrega
+    /// </summary>
+    private void FindAndAddNewMachines()
+    {
+        WorkStation[] allSceneStations = FindObjectsOfType<WorkStation>();
+        int newMachinesCount = 0;
+
+        foreach (WorkStation station in allSceneStations)
+        {
+            // Excluir estaciones de descanso
+            if (station is RestStation) continue;
+
+            // Si la máquina no está en la lista, agregarla
+            if (!allWorkStations.Contains(station))
+            {
+                allWorkStations.Add(station);
+                newMachinesCount++;
+                Debug.Log($"Nueva máquina añadida: {station.stationName}");
+            }
+        }
+
+        if (newMachinesCount > 0)
+        {
+            Debug.Log($"Se encontraron {newMachinesCount} nuevas máquinas. Total: {allWorkStations.Count}");
+
+            // Opcional: reasignar NPCs si se añadieron nuevas máquinas
+            AutoAssignAll();
+        }
+    }
+
+    void OnDestroy()
+    {
+        // Detener corrutina si el objeto es destruido
+        if (searchCoroutine != null)
+        {
+            StopCoroutine(searchCoroutine);
+        }
     }
 
     /// <summary>
