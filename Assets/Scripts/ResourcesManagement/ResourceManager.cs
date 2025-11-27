@@ -1,5 +1,4 @@
-﻿// ResourceManager.cs
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -20,10 +19,11 @@ public class ResourceManager : MonoBehaviour
     [Header("Configuración de Recursos")]
     public List<ResourceConfig> resourcesConfig = new List<ResourceConfig>();
 
-    // Eventos estáticos para notificar cambios en los recursos
     public static event Action<ResourceType> OnResourceCritical;
     public static event Action<ResourceType> OnResourceSafe;
     public static event Action OnGameOver;
+
+    public static event Action<DwellerNPC> OnNPCDied;
 
     private Dictionary<ResourceType, int> resources = new Dictionary<ResourceType, int>();
     public static event Action<ResourceType, int> OnResourceChanged;
@@ -33,6 +33,11 @@ public class ResourceManager : MonoBehaviour
     [SerializeField] private int foodConsumptionRate = 5;
     [SerializeField] private int energyConsumptionRate = 3;
     [SerializeField] private int waterConsumptionRate = 4;
+
+    [Header("Configuración Game Over")]
+    [SerializeField] private int maxAllowedDeaths = 3;
+    private List<DwellerNPC> deadNPCs = new List<DwellerNPC>();
+    private bool gameOverTriggered = false;
 
     void Awake()
     {
@@ -51,11 +56,190 @@ public class ResourceManager : MonoBehaviour
     void Start()
     {
         StartCoroutine(AutoConsumptionLoop());
+        FindAllDwellersAndSubscribe();
+        InvokeRepeating("FindAndSubscribeNewDwellers", 5f, 5f);
     }
 
-    /// <summary>
-    /// Inicializa los recursos basado en la configuración
-    /// </summary>
+    void OnDestroy()
+    {
+        UnsubscribeAllDwellers();
+    }
+
+    private void FindAllDwellersAndSubscribe()
+    {
+        DwellerNPC[] allDwellers = FindObjectsOfType<DwellerNPC>();
+        foreach (DwellerNPC dweller in allDwellers)
+        {
+            SubscribeToDweller(dweller);
+        }
+        Debug.Log($"Suscrito a {allDwellers.Length} NPCs para detección de muertes");
+    }
+
+    private void FindAndSubscribeNewDwellers()
+    {
+        DwellerNPC[] allDwellers = FindObjectsOfType<DwellerNPC>();
+        foreach (DwellerNPC dweller in allDwellers)
+        {
+            if (!deadNPCs.Contains(dweller))
+            {
+                SubscribeToDweller(dweller);
+            }
+        }
+    }
+
+    private void SubscribeToDweller(DwellerNPC dweller)
+    {
+        if (dweller != null && !deadNPCs.Contains(dweller))
+        {
+            dweller.OnDeath += HandleNPCDied;
+        }
+    }
+
+    private void UnsubscribeAllDwellers()
+    {
+        DwellerNPC[] allDwellers = FindObjectsOfType<DwellerNPC>();
+        foreach (DwellerNPC dweller in allDwellers)
+        {
+            if (dweller != null)
+            {
+                dweller.OnDeath -= HandleNPCDied;
+            }
+        }
+    }
+
+    private void HandleNPCDied(DwellerNPC deadNPC)
+    {
+        if (deadNPCs.Contains(deadNPC)) return;
+
+        deadNPCs.Add(deadNPC);
+        Debug.Log($"Muerte registrada: {deadNPC.dwellerName}. Total muertos: {deadNPCs.Count}/{maxAllowedDeaths}");
+
+        OnNPCDied?.Invoke(deadNPC);
+        CheckGameOverCondition();
+    }
+
+    private void CheckGameOverCondition()
+    {
+        if (gameOverTriggered) return;
+
+        if (deadNPCs.Count >= maxAllowedDeaths)
+        {
+            TriggerGameOver("Demasiados habitantes han fallecido");
+            return;
+        }
+
+        int criticalCount = 0;
+        foreach (var resource in resources)
+        {
+            if (resource.Value <= GetMinimumLevel(resource.Key))
+            {
+                criticalCount++;
+            }
+        }
+
+        if (criticalCount >= resources.Count)
+        {
+            TriggerGameOver("Todos los recursos están en nivel crítico");
+            return;
+        }
+
+        DwellerNPC[] allDwellers = FindObjectsOfType<DwellerNPC>();
+        int aliveCount = 0;
+        foreach (DwellerNPC dweller in allDwellers)
+        {
+            if (!dweller.IsDead)
+            {
+                aliveCount++;
+            }
+        }
+
+        if (aliveCount == 0)
+        {
+            TriggerGameOver("Todos los habitantes han fallecido");
+            return;
+        }
+    }
+
+    public void TriggerGameOver()
+    {
+        if (gameOverTriggered) return;
+
+        gameOverTriggered = true;
+        Debug.LogError("GAME OVER ACTIVADO MANUALMENTE");
+
+        OnGameOver?.Invoke();
+    }
+
+    private void TriggerGameOver(string reason)
+    {
+        if (gameOverTriggered) return;
+
+        gameOverTriggered = true;
+        Debug.LogError($"GAME OVER: {reason}");
+
+        OnGameOver?.Invoke();
+
+        Debug.Log($"ESTADÍSTICAS FINALES - NPCs Muertos: {deadNPCs.Count}");
+    }
+
+    private string GetResourcesStatus()
+    {
+        string status = "";
+        foreach (var resource in resources)
+        {
+            status += $"{resource.Key}: {resource.Value} ";
+        }
+        return status;
+    }
+
+    public void ResetGameOver()
+    {
+        gameOverTriggered = false;
+        deadNPCs.Clear();
+        Time.timeScale = 1f;
+        Debug.Log("Estado de Game Over reiniciado");
+    }
+
+    public int GetDeadNPCCount()
+    {
+        return deadNPCs.Count;
+    }
+
+    public int GetMaxAllowedDeaths()
+    {
+        return maxAllowedDeaths;
+    }
+
+    public bool IsGameOverTriggered()
+    {
+        return gameOverTriggered;
+    }
+
+    public void DebugDeathStatus()
+    {
+        Debug.Log("=== DEBUG MUERTES NPCs ===");
+        Debug.Log($"Muertes registradas: {deadNPCs.Count}");
+        Debug.Log($"Límite para Game Over: {maxAllowedDeaths}");
+        Debug.Log($"Game Over activado: {gameOverTriggered}");
+
+        DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
+        int actualDeadCount = 0;
+
+        foreach (DwellerNPC npc in allNPCs)
+        {
+            if (npc.IsDead) actualDeadCount++;
+        }
+
+        Debug.Log($"NPCs muertos en escena: {actualDeadCount}");
+        Debug.Log("=== FIN DEBUG ===");
+    }
+
+    public void ForceCheckGameOver()
+    {
+        Debug.Log("Forzando verificación de Game Over...");
+        CheckGameOverCondition();
+    }
+
     void InitializeResources()
     {
         foreach (var config in resourcesConfig)
@@ -66,14 +250,13 @@ public class ResourceManager : MonoBehaviour
         CheckAllResources();
     }
 
-    /// <summary>
-    /// Bucle de consumo automático de recursos
-    /// </summary>
     private IEnumerator AutoConsumptionLoop()
     {
         while (true)
         {
             yield return new WaitForSeconds(consumptionInterval);
+
+            if (gameOverTriggered) continue;
 
             ConsumeResource(ResourceType.Food, foodConsumptionRate);
             ConsumeResource(ResourceType.Water, waterConsumptionRate);
@@ -83,11 +266,10 @@ public class ResourceManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Añade una cantidad específica de un recurso
-    /// </summary>
     public void AddResource(ResourceType type, int amount)
     {
+        if (gameOverTriggered) return;
+
         if (!resources.ContainsKey(type))
             resources[type] = 0;
 
@@ -97,19 +279,16 @@ public class ResourceManager : MonoBehaviour
         Debug.Log($"{type}: +{amount} = {resources[type]}");
         OnResourceChanged?.Invoke(type, resources[type]);
 
-        // Verificar si el recurso salió de estado crítico
         if (oldValue <= GetMinimumLevel(type) && resources[type] > GetMinimumLevel(type))
         {
             OnResourceSafe?.Invoke(type);
         }
     }
 
-    /// <summary>
-    /// Consume una cantidad específica de un recurso
-    /// </summary>
-    /// <returns>True si se pudo consumir, false si no hay suficientes recursos</returns>
     public bool ConsumeResource(ResourceType type, int amount)
     {
+        if (gameOverTriggered) return false;
+
         if (!resources.ContainsKey(type) || resources[type] < amount)
         {
             Debug.LogWarning($"No hay suficientes {type}. Necesitas {amount}, tienes {GetResourceAmount(type)}");
@@ -126,9 +305,6 @@ public class ResourceManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Verifica el estado del recurso después de un consumo
-    /// </summary>
     void CheckResourceState(ResourceType type, int oldValue)
     {
         int current = resources[type];
@@ -143,11 +319,10 @@ public class ResourceManager : MonoBehaviour
         CheckAllResources();
     }
 
-    /// <summary>
-    /// Verifica el estado de todos los recursos
-    /// </summary>
     void CheckAllResources()
     {
+        if (gameOverTriggered) return;
+
         int criticalCount = 0;
         foreach (var resource in resources)
         {
@@ -160,13 +335,10 @@ public class ResourceManager : MonoBehaviour
         if (criticalCount >= resources.Count)
         {
             Debug.LogError("GAME OVER - Todos los recursos están en nivel crítico!");
-            OnGameOver?.Invoke();
+            TriggerGameOver("Todos los recursos están en nivel crítico");
         }
     }
 
-    /// <summary>
-    /// Resetea todos los recursos a sus valores iniciales
-    /// </summary>
     public void ResetAllResources()
     {
         foreach (var config in resourcesConfig)
@@ -177,51 +349,33 @@ public class ResourceManager : MonoBehaviour
         Debug.Log("Todos los recursos fueron reseteados");
     }
 
-    /// <summary>
-    /// Obtiene la configuración de un recurso específico
-    /// </summary>
     public ResourceConfig GetResourceConfig(ResourceType type)
     {
         return resourcesConfig.Find(c => c.type == type);
     }
 
-    /// <summary>
-    /// Obtiene la cantidad actual de un recurso
-    /// </summary>
     public int GetResourceAmount(ResourceType type)
     {
         return resources.ContainsKey(type) ? resources[type] : 0;
     }
 
-    /// <summary>
-    /// Verifica si hay suficientes recursos de un tipo
-    /// </summary>
     public bool HasEnoughResources(ResourceType type, int amount)
     {
         return GetResourceAmount(type) >= amount;
     }
 
-    /// <summary>
-    /// Obtiene el nivel mínimo seguro de un recurso
-    /// </summary>
     public int GetMinimumLevel(ResourceType type)
     {
         var config = GetResourceConfig(type);
         return config != null ? config.minimumSafeLevel : 0;
     }
 
-    /// <summary>
-    /// Obtiene el nivel de advertencia de un recurso
-    /// </summary>
     public int GetWarningLevel(ResourceType type)
     {
         var config = GetResourceConfig(type);
         return config != null ? config.warningLevel : 0;
     }
 
-    /// <summary>
-    /// Añade recursos de debug para testing
-    /// </summary>
     public void DebugAddResources()
     {
         AddResource(ResourceType.Food, 50);
@@ -230,9 +384,6 @@ public class ResourceManager : MonoBehaviour
         AddResource(ResourceType.Materials, 20);
     }
 
-    /// <summary>
-    /// Datos para guardar el estado de los recursos
-    /// </summary>
     [System.Serializable]
     public class ResourceSaveData
     {
@@ -240,11 +391,10 @@ public class ResourceManager : MonoBehaviour
         public int water;
         public int energy;
         public int materials;
+        public int deadNPCCount;
+        public bool gameOverTriggered;
     }
 
-    /// <summary>
-    /// Carga los recursos desde datos guardados
-    /// </summary>
     public void LoadFromSave(ResourceSaveData saveData)
     {
         resources[ResourceType.Food] = saveData.food;
@@ -252,10 +402,18 @@ public class ResourceManager : MonoBehaviour
         resources[ResourceType.Energy] = saveData.energy;
         resources[ResourceType.Materials] = saveData.materials;
 
+        gameOverTriggered = saveData.gameOverTriggered;
+
         foreach (var resource in resources)
         {
             OnResourceChanged?.Invoke(resource.Key, resource.Value);
         }
+
+        if (gameOverTriggered)
+        {
+            TriggerGameOver("Partida cargada en estado de Game Over");
+        }
+
         CheckAllResources();
     }
 }

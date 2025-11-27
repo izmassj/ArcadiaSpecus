@@ -32,7 +32,5 @@ public enum DwellerState
     Eating,
     Drinking,
     Resting,
-    MovingToEat,
-    MovingToDrink,
-    MovingToRest
+    Dead // NUEVO: Estado de muerte
 }
