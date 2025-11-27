@@ -166,13 +166,13 @@ public class NPCNeeds
     // NUEVO: Método para acelerar sin matar inmediatamente
     public void AccelerateNeedsWithoutKilling()
     {
-        hungerRate = 25f;
+        hungerRate = 10f;
         thirstRate = 30f;
         fatigueRate = 20f;
 
-        hunger = Mathf.Min(hunger + 80f, 100f);
-        thirst = Mathf.Min(thirst + 90f, 100f);
-        fatigue = Mathf.Min(fatigue + 85f, 100f);
+        //hunger = Mathf.Min(hunger + 80f, 100f);
+        //thirst = Mathf.Min(thirst + 90f, 100f);
+        //fatigue = Mathf.Min(fatigue + 85f, 100f);
 
         if (currentOwner != null)
         {
