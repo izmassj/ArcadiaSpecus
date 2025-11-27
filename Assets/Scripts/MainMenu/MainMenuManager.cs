@@ -38,7 +38,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void PlayGame()
     {
-        SceneManager.LoadScene("ResourcesManagement"); // Cambia al nombre real de tu escena
+        SceneManager.LoadScene("NPCBunkerNavigation"); // Cambia al nombre real de tu escena
     }
 
     public void OpenSettings()

@@ -19,6 +19,8 @@ public class MachinePlacementSystemUI : MonoBehaviour
     [Header("Machine UI GameObjects")]
     [SerializeField] private GameObject machinesButtonsGameObj;
     [SerializeField] private GameObject machinesEnterButtonGameObj;
+    [SerializeField] private GameObject modularRoomEnterButtonGameObj;
+
 
     public void SetUpUI()
     {
@@ -30,14 +32,30 @@ public class MachinePlacementSystemUI : MonoBehaviour
         waterDispenserBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.WATER_DISPENSER));
         foodDispenserBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.FOOD_DISPENSER));
 
-        enterMachineUIBtn.onClick.AddListener(() => ActivateDeactivateUIObjects(machinesEnterButtonGameObj, machinesButtonsGameObj));
-        exitMachineUIBtn.onClick.AddListener(() => ActivateDeactivateUIObjects(machinesButtonsGameObj, machinesEnterButtonGameObj));
-        exitMachineUIBtn.onClick.AddListener(DisableCurrentGhostMachine);
+        enterMachineUIBtn.onClick.AddListener(EnterMachineUI);
+        exitMachineUIBtn.onClick.AddListener(ExitMachineUI);
     }
 
     void Awake()
     {
         SetUpUI();
+    }
+
+    private void EnterMachineUI()
+    {
+        // Deactivate modular room button and activate machine UI
+        modularRoomEnterButtonGameObj.SetActive(false);
+        machinesButtonsGameObj.SetActive(true);
+        machinesEnterButtonGameObj.SetActive(false);
+    }
+
+    private void ExitMachineUI()
+    {
+        // Activate modular room button and deactivate machine UI
+        modularRoomEnterButtonGameObj.SetActive(true);
+        machinesButtonsGameObj.SetActive(false);
+        machinesEnterButtonGameObj.SetActive(true);
+        DisableCurrentGhostMachine();
     }
 
     private void DisableCurrentGhostMachine()

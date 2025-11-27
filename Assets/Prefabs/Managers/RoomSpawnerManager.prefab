@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5842761658947128912}
   - component: {fileID: 2635004079555644670}
-  - component: {fileID: 2535883142855765040}
   m_Layer: 0
   m_Name: RoomSpawnerManager
   m_TagString: Untagged
@@ -65,35 +64,3 @@ MonoBehaviour:
   showCornerDebug: 0
   cornerMarkerSize: 20
   cornerMarkerPrefab: {fileID: 0}
---- !u!114 &2535883142855765040
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3948211463868526293}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f64588d6b6ed614abe5b4c47e26dc54, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  doorWallBtn: {fileID: 0}
-  rightRoomBtn: {fileID: 0}
-  midRoomBtn: {fileID: 0}
-  leftRoomBtn: {fileID: 0}
-  intersectionBtn: {fileID: 0}
-  waterMachineBtn: {fileID: 0}
-  foodMachineBtn: {fileID: 0}
-  energyMachineBtn: {fileID: 0}
-  scrapMachineBtn: {fileID: 0}
-  bedBtn: {fileID: 0}
-  waterDispenserBtn: {fileID: 0}
-  foodDispenserBtn: {fileID: 0}
-  enterModularRoomUIBtn: {fileID: 0}
-  exitModularRoomUIBtn: {fileID: 0}
-  enterMachineRoomUIBtn: {fileID: 0}
-  exitMachineRoomUIBtn: {fileID: 0}
-  modularRoomButtonsGameObj: {fileID: 0}
-  modularRoomEnterButtonGameObj: {fileID: 0}
-  machinesButtonsGameObj: {fileID: 0}
-  machinesEnterButtonGameObj: {fileID: 0}
