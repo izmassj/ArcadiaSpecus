@@ -3139,8 +3139,8 @@ MonoBehaviour:
   collectibleText: {fileID: 624242868}
   textFormat: '{0} / {1}'
   sceneChangeCollider: {fileID: 999670771}
-  requiredCollectibles: 3
-  nextSceneName: MainScene
+  requiredCollectibles: 1
+  nextSceneName: NPCBunkerNavigation
 --- !u!1 &906436235
 GameObject:
   m_ObjectHideFlags: 0
@@ -10334,7 +10334,7 @@ Transform:
   m_GameObject: {fileID: 1314864401}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -10.67, y: 10.8, z: 19.92}
+  m_LocalPosition: {x: -10.59, y: 10.73, z: 49.04}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24209,7 +24209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -33.2
+      value: 25.3
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalRotation.w
