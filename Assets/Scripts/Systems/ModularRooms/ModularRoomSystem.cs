@@ -166,6 +166,8 @@ public class ModularRoomSystem : MonoBehaviour
                 }
             }
 
+            selfCollider.gameObject.SetActive(false);
+
             Vector3 offset = bestSelfCorner - currentRoom.transform.position;
             currentRoom.transform.position = bestTargetCorner - offset;
         }

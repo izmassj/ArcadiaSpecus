@@ -20,10 +20,23 @@ public class DwellerNPC : MonoBehaviour
     public NPCNeeds needs = new NPCNeeds();
     [SerializeField] private NPCStateMachine stateMachine;
 
+    // NUEVO: Propiedad para controlar estado de muerte
+    public bool IsDead { get; private set; } = false;
+
+    // NUEVO: Evento para notificar muerte del NPC
+    public System.Action<DwellerNPC> OnDeath;
+
     void Start()
     {
         if (stateMachine == null)
             stateMachine = GetComponent<NPCStateMachine>();
+
+        // NUEVO: Configurar owner en las necesidades
+        if (needs != null)
+        {
+            needs.SetOwner(this);
+            needs.OnDeath += HandleDeath;
+        }
 
         // Inicializar necesidades con valores aleatorios para variedad
         if (needs != null)
@@ -34,8 +47,20 @@ public class DwellerNPC : MonoBehaviour
         }
     }
 
+    void OnDestroy()
+    {
+        // NUEVO: Limpiar suscripción
+        if (needs != null)
+        {
+            needs.OnDeath -= HandleDeath;
+        }
+    }
+
     void Update()
     {
+        // Si está muerto, no hacer nada
+        if (IsDead) return;
+
         // Debug visual de necesidades (opcional)
         if (Input.GetKeyDown(KeyCode.F1) && gameObject.name.Contains("Dweller"))
         {
@@ -44,10 +69,64 @@ public class DwellerNPC : MonoBehaviour
     }
 
     /// <summary>
+    /// NUEVO: Maneja la muerte del NPC
+    /// </summary>
+    private void HandleDeath(DwellerNPC deadNPC)
+    {
+        if (IsDead) return; // Evitar múltiples llamadas
+
+        IsDead = true;
+        Debug.Log($"💀 {dwellerName} ha fallecido por necesidades extremas");
+
+        // Cambiar estado a muerto
+        currentState = DwellerState.Dead;
+
+        // Desasignar de estación de trabajo
+        if (assignedWorkStation != null)
+        {
+            assignedWorkStation.RemoveWorker(this);
+            assignedWorkStation = null;
+            isAssigned = false;
+        }
+
+        // NUEVO: Desactivar máquina de estados si existe
+        if (stateMachine != null)
+        {
+            stateMachine.enabled = false;
+        }
+
+        // NUEVO: Desactivar colliders para evitar interacciones
+        Collider2D collider = GetComponent<Collider2D>();
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+
+        // NUEVO: Cambiar color a gris (visualmente muerto)
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = Color.gray;
+        }
+
+        // NUEVO: Notificar muerte a través del evento
+        OnDeath?.Invoke(this);
+
+        Debug.Log($"📢 {dwellerName} notificó su muerte al sistema");
+    }
+
+    /// <summary>
     /// Asigna este NPC a una estación de trabajo específica
     /// </summary>
     public void AssignToWorkStation(WorkStation station)
     {
+        // NUEVO: No asignar si está muerto
+        if (IsDead)
+        {
+            Debug.LogWarning($"No se puede asignar {dwellerName} - ESTÁ MUERTO");
+            return;
+        }
+
         if (assignedWorkStation != null)
             assignedWorkStation.RemoveWorker(this);
 
@@ -94,6 +173,9 @@ public class DwellerNPC : MonoBehaviour
     /// </summary>
     private void ChangeState(DwellerState newState)
     {
+        // NUEVO: No cambiar estado si está muerto
+        if (IsDead) return;
+
         currentState = newState;
     }
 
@@ -110,11 +192,15 @@ public class DwellerNPC : MonoBehaviour
         }
 
         string status = "OK";
-        if (needs.hunger >= needs.criticalHunger) status = "HAMBRE";
+        if (needs.IsDead())
+        {
+            status = "MUERTO";
+        }
+        else if (needs.hunger >= needs.criticalHunger) status = "HAMBRE";
         else if (needs.thirst >= needs.criticalThirst) status = "SED";
         else if (needs.fatigue >= needs.criticalFatigue) status = "FATIGA";
 
-        Debug.Log($"{dwellerName} - {status} | H:{(int)needs.hunger} S:{(int)needs.thirst} F:{(int)needs.fatigue} | Estado: {currentState}");
+        Debug.Log($"{dwellerName} - {status} | H:{(int)needs.hunger} S:{(int)needs.thirst} F:{(int)needs.fatigue} | Estado: {currentState} | Muerto: {IsDead}");
     }
 
     /// <summary>
@@ -148,7 +234,41 @@ public class DwellerNPC : MonoBehaviour
     /// </summary>
     public bool CanWorkEffectively()
     {
-        return !NeedsRecovery() && assignedWorkStation != null;
+        // NUEVO: No puede trabajar si está muerto
+        return !IsDead && !NeedsRecovery() && assignedWorkStation != null;
+    }
+
+    /// <summary>
+    /// NUEVO: Reinicia el NPC (para reinicio de juego)
+    /// </summary>
+    public void Revive()
+    {
+        IsDead = false;
+        needs.ResetNeeds();
+
+        if (stateMachine != null)
+        {
+            stateMachine.enabled = true;
+            // Llamar método de reinicio si existe en NPCStateMachine
+            var restartMethod = stateMachine.GetType().GetMethod("RestartStateMachine");
+            restartMethod?.Invoke(stateMachine, null);
+        }
+
+        Collider2D collider = GetComponent<Collider2D>();
+        if (collider != null)
+        {
+            collider.enabled = true;
+        }
+
+        // Restaurar color original
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = Color.white;
+        }
+
+        currentState = DwellerState.Idle;
+        Debug.Log($"{dwellerName} ha sido revivido");
     }
 
     /// <summary>
@@ -162,6 +282,7 @@ public class DwellerNPC : MonoBehaviour
         public string assignedStationId;
         public float workEfficiency;
         public NPCNeeds needs;
+        public bool isDead; // NUEVO: Guardar estado de muerte
     }
 
     /// <summary>
@@ -175,7 +296,8 @@ public class DwellerNPC : MonoBehaviour
             position = transform.position,
             assignedStationId = assignedWorkStation != null ? assignedWorkStation.stationId : "",
             workEfficiency = this.workEfficiency,
-            needs = this.needs
+            needs = this.needs,
+            isDead = this.IsDead // NUEVO: Guardar estado de muerte
         };
     }
 
@@ -188,11 +310,57 @@ public class DwellerNPC : MonoBehaviour
         transform.position = data.position;
         workEfficiency = data.workEfficiency;
 
+        // NUEVO: Cargar estado de muerte
+        IsDead = data.isDead;
+
         if (data.needs != null && needs != null)
         {
             needs.hunger = data.needs.hunger;
             needs.thirst = data.needs.thirst;
             needs.fatigue = data.needs.fatigue;
+        }
+
+        // NUEVO: Si está muerto, aplicar estado de muerte
+        if (IsDead)
+        {
+            HandleDeath(this);
+        }
+    }
+
+    /// <summary>
+    /// NUEVO: Mata instantáneamente a este NPC (para testing)
+    /// </summary>
+    [ContextMenu("💀 Matar NPC Instantáneamente")]
+    public void KillInstantly()
+    {
+        if (IsDead)
+        {
+            Debug.LogWarning($"{dwellerName} ya está muerto");
+            return;
+        }
+
+        Debug.LogWarning($"💀 MATANDO {dwellerName} INSTANTÁNEAMENTE...");
+
+        if (needs != null)
+        {
+            needs.KillInstantly();
+        }
+        else
+        {
+            // Fallback si needs es null
+            HandleDeath(this);
+        }
+    }
+
+    /// <summary>
+    /// NUEVO: Acelera necesidades para testing
+    /// </summary>
+    [ContextMenu("⚡ Acelerar Necesidades")]
+    public void AccelerateNeeds()
+    {
+        if (needs != null)
+        {
+            needs.AccelerateNeedsForTesting();
         }
     }
 }

@@ -6,12 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/MainScene.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
     path: Assets/Scenes/Proto/CameraDragging.unity
     guid: 6b74ad9c733e0ff4b861ba921baf55db
   - enabled: 1
     path: Assets/Scenes/Proto/MiniGameDesign1.unity
     guid: 5a325d43e12829246a75e69febddf5cf
-  - enabled: 1
-    path: Assets/Scenes/MainScene.unity
-    guid: 9fc0d4010bbf28b4594072e72b8655ab
   m_configObjects: {}

@@ -3792,6 +3792,7 @@ GameObject:
   - component: {fileID: 999670775}
   - component: {fileID: 999670774}
   - component: {fileID: 999670773}
+  - component: {fileID: 999670776}
   - component: {fileID: 999670772}
   m_Layer: 8
   m_Name: rampa_final (2)
@@ -3886,6 +3887,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 906436236}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &999670776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 999670771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 413fc15da2e7ff4418ec837a7c124efe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerTag: Player
 --- !u!1 &1002519558
 GameObject:
   m_ObjectHideFlags: 0
