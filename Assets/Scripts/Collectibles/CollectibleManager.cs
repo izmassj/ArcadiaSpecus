@@ -106,4 +106,13 @@ public class CollectibleManager : MonoBehaviour
             sceneChangeCollider.SetActive(false);
         }
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("sads");
+        if (other.CompareTag("Player")) 
+        {
+            SceneManager.LoadScene(nextSceneName);
+        }
+    }
 }
