@@ -8,6 +8,7 @@ public class SceneChangeTrigger : MonoBehaviour
     {
         if (other.CompareTag(playerTag))
         {
+            GetComponent<SceneSwitchManager>().points = 40;
             // Call the scene change from the CollectibleManager
             CollectibleManager.Instance.ChangeScene();
         }

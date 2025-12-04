@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class SceneSwitchManager : MonoBehaviour
 {
     private static SceneSwitchManager instance;
+    public int points;
 
     void Awake()
     {
@@ -25,6 +26,11 @@ public class SceneSwitchManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (points != 0)
+        {
+
+        }
+
         switch (SceneManager.GetActiveScene().name) 
         {
             case "MiniGameDesign2":

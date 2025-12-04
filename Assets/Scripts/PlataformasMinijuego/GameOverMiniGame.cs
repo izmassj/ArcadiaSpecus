@@ -21,8 +21,7 @@ public class GameOverMiniGame : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Funciona el collider");
-            //Faltaria la parte de cargar escena de game over o volver al hud principal
+            SceneManager.LoadScene("NPCBunkerNavigation");
         }
     }
 
@@ -30,8 +29,7 @@ public class GameOverMiniGame : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            Debug.Log("Funciona el collider");
-            //Faltaria la parte de cargar escena de game over o volver al hud principal
+            SceneManager.LoadScene("NPCBunkerNavigation");
         }
     }
 
