@@ -12,7 +12,7 @@ public class GuillotinaController : MonoBehaviour
     {
         // Guardamos la posición inicial
         puntoInicial = transform.position;
-        puntoFinal = puntoInicial + new Vector3(0f, distancia, 0f); // Movimiento en el eje y
+        puntoFinal = puntoInicial + new Vector3(distancia, 0f, 0f); // Movimiento en el eje y
     }
 
     void Update()

@@ -8,15 +8,23 @@ public class PlataformaMovimiento : MonoBehaviour
     private Vector3 puntoFinal;   // Posición final de la plataforma
     private bool moviendoHaciaDelante = true;  // Dirección del movimiento
 
+    // Para llevar un registro del jugador en la plataforma
+    private Transform playerOnPlatform;
+    private Vector3 lastPlatformPosition;
+
     void Start()
     {
         // Guardamos la posición inicial
         puntoInicial = transform.position;
         puntoFinal = puntoInicial + new Vector3(0f, 0f, distancia); // Movimiento en el eje Z
+        lastPlatformPosition = transform.position;
     }
 
     void Update()
     {
+        // Guardar posición anterior antes de mover
+        Vector3 previousPosition = transform.position;
+
         // Movimiento entre los dos puntos en el eje Z
         if (moviendoHaciaDelante)
         {
@@ -40,40 +48,58 @@ public class PlataformaMovimiento : MonoBehaviour
                 moviendoHaciaDelante = true;
             }
         }
+
+        // Actualizar última posición para el próximo frame
+        lastPlatformPosition = transform.position;
+    }
+
+    void FixedUpdate()
+    {
+        // Si hay un jugador en la plataforma, moverlo con ella en FixedUpdate para mejor física
+        if (playerOnPlatform != null)
+        {
+            // Calcular el movimiento de la plataforma este frame
+            Vector3 platformMovement = transform.position - lastPlatformPosition;
+
+            // Aplicar el mismo movimiento al jugador
+            playerOnPlatform.position += platformMovement;
+        }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        // Cuando el jugador entra en contacto con la plataforma
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            playerOnPlatform = collision.transform;
+        }
     }
 
     void OnCollisionStay(Collision collision)
     {
-        // Si el jugador o cualquier otro objeto está sobre la plataforma, lo mueve con ella
+        // Mantener el jugador como "en la plataforma" si sigue en contacto
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Le asignamos la misma posición Z de la plataforma
-            // También podemos hacerlo solo en el eje Z, sin afectar X o Y del jugador
-            Vector3 nuevaPosicion = collision.transform.position;
-            nuevaPosicion.z = transform.position.z; // Sin cambiar el resto de la posición
-            collision.transform.position = nuevaPosicion;
-
-            // Si el jugador tiene un Rigidbody, evitamos que se resbale usando "isKinematic"
-            Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
-            if (rb != null)
+            // Asegurarnos de que seguimos registrando al jugador
+            if (playerOnPlatform == null)
             {
-                // Ponemos el Rigidbody en kinematic temporalmente para que no se resbale
-                rb.isKinematic = true;
+                playerOnPlatform = collision.transform;
             }
         }
     }
 
     void OnCollisionExit(Collision collision)
     {
-        // Si el jugador sale de la plataforma, restablecemos el Rigidbody a su estado original
+        // Cuando el jugador sale de la plataforma
         if (collision.gameObject.CompareTag("Player"))
         {
-            Rigidbody rb = collision.gameObject.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                // Restablecemos el Rigidbody para que la física vuelva a ser controlada normalmente
-                rb.isKinematic = false;
-            }
+            playerOnPlatform = null;
         }
+    }
+
+    void LateUpdate()
+    {
+        // Actualizar la última posición para el próximo frame
+        lastPlatformPosition = transform.position;
     }
 }
