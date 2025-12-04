@@ -28,7 +28,6 @@ public class GameOverManager : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             Debug.LogWarning("GameOverManager duplicate detected, destroying the new one.");
-            Destroy(gameObject);
             return;
         }
         Instance = this;
@@ -241,30 +240,32 @@ public class GameOverManager : MonoBehaviour
     /// </summary>
     private void RestartGame()
     {
-        Debug.Log("Initiating game restart...");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
-        Time.timeScale = 1f;
+        //Debug.Log("Initiating game restart...");
 
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(false);
+        //Time.timeScale = 1f;
 
-        isGameOver = false;
+        //if (gameOverPanel != null)
+        //    gameOverPanel.SetActive(false);
 
-        if (ResourceManager.Instance != null)
-        {
-            ResourceManager.Instance.ResetGameOver();
-            ResourceManager.Instance.ResetAllResources();
-        }
+        //isGameOver = false;
 
-        ReviveAllNPCs();
+        //if (ResourceManager.Instance != null)
+        //{
+        //    ResourceManager.Instance.ResetGameOver();
+        //    ResourceManager.Instance.ResetAllResources();
+        //}
 
-        if (AssignmentManager.Instance != null)
-        {
-            AssignmentManager.Instance.ResetAllAssignments();
-            AssignmentManager.Instance.AutoAssignAll();
-        }
+        //ReviveAllNPCs();
 
-        Debug.Log("Game completely restarted");
+        //if (AssignmentManager.Instance != null)
+        //{
+        //    AssignmentManager.Instance.ResetAllAssignments();
+        //    AssignmentManager.Instance.AutoAssignAll();
+        //}
+
+        //Debug.Log("Game completely restarted");
     }
 
     /// <summary>

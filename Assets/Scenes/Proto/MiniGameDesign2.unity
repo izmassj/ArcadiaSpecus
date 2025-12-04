@@ -96,7 +96,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: 6efc53cdd17a2a2419c7f9512d8d50cd, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -3139,7 +3139,7 @@ MonoBehaviour:
   collectibleText: {fileID: 624242868}
   textFormat: '{0} / {1}'
   sceneChangeCollider: {fileID: 999670771}
-  requiredCollectibles: 1
+  requiredCollectibles: 3
   nextSceneName: NPCBunkerNavigation
 --- !u!1 &906436235
 GameObject:
@@ -10334,7 +10334,7 @@ Transform:
   m_GameObject: {fileID: 1314864401}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -10.59, y: 10.73, z: 49.04}
+  m_LocalPosition: {x: -10.59, y: 10.73, z: 20}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24205,11 +24205,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.97
+      value: 5.51
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 25.3
+      value: -29.41
       objectReference: {fileID: 0}
     - target: {fileID: 7742855707890509510, guid: 9dd837a979913e2468d2c8d3e36e7e38, type: 3}
       propertyPath: m_LocalRotation.w
