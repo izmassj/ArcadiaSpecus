@@ -14,4 +14,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Proto/MiniGameDesign1.unity
     guid: 5a325d43e12829246a75e69febddf5cf
+  - enabled: 1
+    path: Assets/Scenes/Proto/MiniGameDesign2.unity
+    guid: af0318f30059e464c92d92215a756119
+  - enabled: 1
+    path: Assets/Scenes/Proto/NPCBunkerNavigation.unity
+    guid: 910e532ed6ea9a64ebf0044a4588277e
   m_configObjects: {}

@@ -22,7 +22,7 @@ public class WinMiniGame : MonoBehaviour
         if (collider.CompareTag("Player"))
         {
             Debug.Log("Funciona el collider");
-            SceneManager.LoadScene("MainScene");
+            SceneManager.LoadScene("NPCBunkerNavigation");
         }
     }
 }
