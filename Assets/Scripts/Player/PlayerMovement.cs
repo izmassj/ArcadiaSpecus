@@ -1,4 +1,3 @@
-//PlayerMovement 
 using UnityEngine;
 
 /*
@@ -34,6 +33,7 @@ public class PlayerMovement : MonoBehaviour
     private Transform currentPlatform;
     private Vector3 lastPlatformPosition;
     private Vector3 platformVelocity;
+    private bool isOnPlatform = false;
 
     void Start()
     {
@@ -77,7 +77,15 @@ public class PlayerMovement : MonoBehaviour
     void FixedUpdate()
     {
         // Calculate platform movement before applying player movement
-        CalculatePlatformMovement();
+        if (isOnPlatform && currentPlatform != null)
+        {
+            platformVelocity = (currentPlatform.position - lastPlatformPosition) / Time.fixedDeltaTime;
+            lastPlatformPosition = currentPlatform.position;
+        }
+        else
+        {
+            platformVelocity = Vector3.zero;
+        }
 
         MovePlayer();
         ApplyJumpPhysics();
@@ -90,14 +98,18 @@ public class PlayerMovement : MonoBehaviour
 
         // Apply movement to the Rigidbody
         Vector3 velocity = rb.velocity;
-        velocity.x = targetVelocity.x;
-        velocity.z = targetVelocity.z;
 
-        // Add platform velocity to maintain relative movement
-        if (currentPlatform != null)
+        // Solo aplicar velocidad horizontal del jugador, mantener la plataforma en una capa separada
+        if (!isOnPlatform)
         {
-            velocity.x += platformVelocity.x;
-            velocity.z += platformVelocity.z;
+            velocity.x = targetVelocity.x;
+            velocity.z = targetVelocity.z;
+        }
+        else
+        {
+            // Cuando está en plataforma, combinar movimiento del jugador con velocidad de plataforma
+            velocity.x = targetVelocity.x + platformVelocity.x;
+            velocity.z = targetVelocity.z + platformVelocity.z;
         }
 
         rb.velocity = velocity;
@@ -106,7 +118,7 @@ public class PlayerMovement : MonoBehaviour
         // But preserve platform movement
         if (isGrounded && moveHorizontal == 0 && moveForward == 0)
         {
-            if (currentPlatform != null)
+            if (isOnPlatform)
             {
                 rb.velocity = new Vector3(platformVelocity.x, rb.velocity.y, platformVelocity.z);
             }
@@ -135,15 +147,11 @@ public class PlayerMovement : MonoBehaviour
 
         // Preserve platform velocity when jumping
         Vector3 jumpVelocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
-
-        // If on platform, add platform velocity to maintain momentum
-        if (currentPlatform != null)
-        {
-            jumpVelocity.x += platformVelocity.x;
-            jumpVelocity.z += platformVelocity.z;
-        }
-
         rb.velocity = jumpVelocity;
+
+        // Dejar de estar en plataforma al saltar
+        isOnPlatform = false;
+        currentPlatform = null;
     }
 
     void ApplyJumpPhysics()
@@ -160,35 +168,34 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void CalculatePlatformMovement()
-    {
-        if (currentPlatform != null)
-        {
-            platformVelocity = (currentPlatform.position - lastPlatformPosition) / Time.fixedDeltaTime;
-            lastPlatformPosition = currentPlatform.position;
-        }
-        else
-        {
-            platformVelocity = Vector3.zero;
-        }
-    }
-
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag(groundTag))
         {
-            // Only set as parent if it's actually a moving platform
-            Rigidbody platformRb = collision.gameObject.GetComponent<Rigidbody>();
-            if (platformRb != null && !platformRb.isKinematic)
+            isGrounded = true;
+            groundCheckTimer = 0;
+
+            // Check if it's a moving platform
+            PlataformaMovimiento platform = collision.gameObject.GetComponent<PlataformaMovimiento>();
+            if (platform != null)
             {
-                currentPlatform = collision.transform;
-                lastPlatformPosition = currentPlatform.position;
+                // Check if we're landing on top (normal pointing up)
+                float dot = Vector3.Dot(collision.contacts[0].normal, Vector3.up);
+                if (dot > 0.7f)
+                {
+                    isOnPlatform = true;
+                    currentPlatform = collision.transform;
+                    lastPlatformPosition = currentPlatform.position;
+                }
             }
-            else
-            {
-                // For static ground, just set transform parent normally
-                transform.SetParent(collision.transform);
-            }
+        }
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.CompareTag(groundTag))
+        {
+            isGrounded = true;
         }
     }
 
@@ -196,14 +203,13 @@ public class PlayerMovement : MonoBehaviour
     {
         if (collision.gameObject.CompareTag(groundTag))
         {
-            // Only unparent if leaving the current platform
-            if (currentPlatform == collision.transform)
+            // Check if it's the platform we're leaving
+            if (collision.transform == currentPlatform)
             {
+                isOnPlatform = false;
                 currentPlatform = null;
-                platformVelocity = Vector3.zero;
             }
-
-            transform.SetParent(null);
+            isGrounded = false;
         }
     }
 }
