@@ -17,12 +17,22 @@ public class GameOverMiniGame : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter(Collider collider)
+    private void OnTriggerEnter(Collider other)
     {
-        if (collider.CompareTag("Player"))
+        if (other.CompareTag("Player"))
         {
             Debug.Log("Funciona el collider");
             //Faltaria la parte de cargar escena de game over o volver al hud principal
         }
     }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            Debug.Log("Funciona el collider");
+            //Faltaria la parte de cargar escena de game over o volver al hud principal
+        }
+    }
+
 }

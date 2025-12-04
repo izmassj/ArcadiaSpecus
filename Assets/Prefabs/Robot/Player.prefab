@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 4019062083913761196}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -122,14 +122,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4445976a25de01849a324e54e83b377b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseSensitivity: 5
-  cameraTransform: {fileID: 7045877570601924452}
-  groundTag: Plataforma
-  MoveSpeed: 5
-  jumpForce: 12
-  fallMultiplier: 2.5
-  ascendMultiplier: 2
-  groundLayer:
+  sensibilidadMouse: 2
+  transformCamara: {fileID: 7045877570601924452}
+  tagSuelo: Plataforma
+  velocidadBase: 5
+  velocidadSprint: 8
+  fuerzaSalto: 7
+  multiplicadorCaida: 2.5
+  multiplicadorAscenso: 1.5
+  capaSuelo:
     serializedVersion: 2
     m_Bits: 256
 --- !u!54 &4019062083913761196

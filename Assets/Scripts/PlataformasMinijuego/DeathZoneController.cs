@@ -21,7 +21,7 @@ public class DeathZoneController : MonoBehaviour
 
         // Si alcanzamos el punto final, teletransportar al punto inicial
         if (Vector3.Distance(transform.position, puntoFinal) < 0.01f)
-        {
+        {   
             transform.position = puntoInicial;
         }
     }
