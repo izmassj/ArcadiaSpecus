@@ -81,7 +81,7 @@ public class CollectibleManager : MonoBehaviour
     {
         if (currentCollectibles >= requiredCollectibles && !string.IsNullOrEmpty(nextSceneName))
         {
-            SceneManager.LoadScene(nextSceneName, LoadSceneMode.Single);
+            SceneManager.LoadScene(nextSceneName);
         }
         else
         {
