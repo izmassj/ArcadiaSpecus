@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PlataformaMovimientoEnX : MonoBehaviour
+public class PlataformaMovimientoEnY : MonoBehaviour
 {
     public float velocidad = 3f;  // Velocidad de movimiento
     public float distancia = 5f;  // Distancia máxima hacia adelante y hacia atrás
@@ -16,7 +16,7 @@ public class PlataformaMovimientoEnX : MonoBehaviour
     {
         // Guardamos la posición inicial
         puntoInicial = transform.position;
-        puntoFinal = puntoInicial + new Vector3(distancia, 0f, 0f); // Movimiento en el eje Z
+        puntoFinal = puntoInicial + new Vector3(0f, distancia, 0f); // Movimiento en el eje Z
         lastPlatformPosition = transform.position;
     }
 
