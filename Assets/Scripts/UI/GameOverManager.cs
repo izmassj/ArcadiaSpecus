@@ -304,7 +304,7 @@ public class GameOverManager : MonoBehaviour
     {
         Debug.Log("Loading main menu (reloading current scene)...");
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene("MainMenu");
     }
 
     /// <summary>

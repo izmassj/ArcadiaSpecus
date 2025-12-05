@@ -225,7 +225,6 @@ public class TestingManager : MonoBehaviour
                 {
                     npc.needs.AccelerateNeedsWithoutKilling();
                     acceleratedCount++;
-
                     Debug.Log($"{npc.dwellerName} - H:{(int)npc.needs.hunger} T:{(int)npc.needs.thirst} F:{(int)npc.needs.fatigue}");
                 }
             }

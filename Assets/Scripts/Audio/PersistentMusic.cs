@@ -25,7 +25,7 @@ public class PersistentMusic : MonoBehaviour
         else
         {
             // Si ya existe una instancia, destruir esta
-            Destroy(gameObject);
+            //Destroy(gameObject);
         }
     }
 

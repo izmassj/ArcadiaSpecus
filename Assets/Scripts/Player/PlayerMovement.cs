@@ -85,7 +85,7 @@ public class PlayerMovement : MonoBehaviour
 
         // Acumular rotaciones
         rotacionHorizontal += (mouseX + stickX) * sensibilidadMouse;
-        rotacionVertical -= (mouseY + stickY) * sensibilidadMouse;
+        rotacionVertical += (mouseY + stickY) * sensibilidadMouse;
         rotacionVertical = Mathf.Clamp(rotacionVertical, -90f, 90f);
 
         // Detectar salto cuando se presiona espacio y está en el suelo

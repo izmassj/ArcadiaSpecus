@@ -26,6 +26,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     public CinemachineBrain cinemachineBrain;
     public GameObject mainCanvas;
     public GameObject cursorCanvas;
+    public GameObject GameOver;
 
     private Dictionary<string, CinemachineVirtualCamera> sceneCameras = new Dictionary<string, CinemachineVirtualCamera>();
     private string currentActiveScene;
@@ -36,6 +37,11 @@ public class AdvancedSceneCameraManager : MonoBehaviour
         // Store initial scene
         currentActiveScene = SceneManager.GetActiveScene().name;
         RegisterCurrentSceneCamera();
+
+
+            cinemachineBrain = GameObject.Find("Main Camera").GetComponent<CinemachineBrain>();
+            mainCanvas = GameObject.Find("Canvas");
+            cursorCanvas = GameObject.Find("CanvasCursor");
     }
 
     void RegisterCurrentSceneCamera()
@@ -56,7 +62,6 @@ public class AdvancedSceneCameraManager : MonoBehaviour
 
     IEnumerator LoadSceneRoutine(string sceneName)
     {
-        GameObject.Find("Canvas").gameObject.SetActive(false);
         GameObject.Find("CanvasCursor").gameObject.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
@@ -90,6 +95,9 @@ public class AdvancedSceneCameraManager : MonoBehaviour
         // Set as active scene
         SceneManager.SetActiveScene(newScene);
         currentActiveScene = sceneName;
+
+        GameObject.Find("Canvas").gameObject.SetActive(false);
+        GameObject.Find("GameOverManager").gameObject.SetActive(false);
     }
 
     public void ReturnToBaseScene(string baseSceneName, bool win)
@@ -100,7 +108,6 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     IEnumerator ReturnToBaseRoutine(string baseSceneName, bool win)
     {
         mainCanvas.SetActive(true);
-        cursorCanvas.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -133,12 +140,13 @@ public class AdvancedSceneCameraManager : MonoBehaviour
                 sceneCameras.Remove(sceneToUnload);
             }
 
-            // Clean up any remaining objects (optional safety)
-            CleanupDanglingObjects();
         }
 
         // Reset camera priorities
         ResetCameraPriorities(baseSceneName);
+
+        cursorCanvas.SetActive(true);
+        GameOver.SetActive(true);
     }
 
     void SwitchToSceneCamera(string sceneName)

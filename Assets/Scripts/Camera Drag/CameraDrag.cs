@@ -87,17 +87,16 @@ public class CameraDrag : MonoBehaviour
         _cameraTarget.position = targetPosition;
     }
 
-    // 🔹 Nuevo — cámara se mueve solo con stick derecho
     private void HandleControllerDragOnlyStick()
     {
         float stickX = Input.GetAxis(rightStickX);
         float stickY = Input.GetAxis(rightStickY);
 
-        // Si no se mueve el stick, no hacemos nada
         if (Mathf.Abs(stickX) < 0.05f && Mathf.Abs(stickY) < 0.05f)
             return;
 
-        Vector3 move = new Vector3(-stickX, -stickY, 0f) * controllerSensitivity * Time.deltaTime;
+        // Remove the minus so movement matches stick direction
+        Vector3 move = new Vector3(stickX, -stickY, 0f) * controllerSensitivity * Time.deltaTime;
         Vector3 targetPosition = _cameraTarget.position + move;
 
         if (confiner2D != null && confiner2D.m_BoundingShape2D != null)
@@ -105,6 +104,7 @@ public class CameraDrag : MonoBehaviour
 
         _cameraTarget.position = targetPosition;
     }
+
 
     private Vector3 GetMouseWorldPosition()
     {
