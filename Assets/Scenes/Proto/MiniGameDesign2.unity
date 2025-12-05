@@ -3745,7 +3745,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointValue: 1
-  collectSound: {fileID: 0}
+  collectSound: {fileID: 8300000, guid: 6dc014ad010b1f94e81327d2ad1373c0, type: 3}
 --- !u!23 &973869058
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -10387,7 +10387,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointValue: 1
-  collectSound: {fileID: 0}
+  collectSound: {fileID: 8300000, guid: 6dc014ad010b1f94e81327d2ad1373c0, type: 3}
 --- !u!23 &1314864405
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -16122,7 +16122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointValue: 1
-  collectSound: {fileID: 0}
+  collectSound: {fileID: 8300000, guid: 6dc014ad010b1f94e81327d2ad1373c0, type: 3}
 --- !u!23 &1483140934
 MeshRenderer:
   m_ObjectHideFlags: 0
