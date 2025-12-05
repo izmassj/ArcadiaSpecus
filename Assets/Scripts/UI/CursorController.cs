@@ -188,10 +188,10 @@ public class CursorController : MonoBehaviour
         float x = Input.GetAxis("Horizontal");
         float y = Input.GetAxis("Vertical");
 
-        // Solo mover el cursor virtual si hay input
         if (Mathf.Abs(x) > 0.01f || Mathf.Abs(y) > 0.01f)
         {
-            screenPos += new Vector2(x, y) * speed * Time.deltaTime;
+            // ← FIX: unscaledDeltaTime lets cursor move when paused
+            screenPos += new Vector2(x, y) * speed * Time.unscaledDeltaTime;
             screenPos.x = Mathf.Clamp(screenPos.x, 0, Screen.width);
             screenPos.y = Mathf.Clamp(screenPos.y, 0, Screen.height);
 
@@ -199,6 +199,7 @@ public class CursorController : MonoBehaviour
                 cursorTransform.position = screenPos;
         }
     }
+
 
     private void ProcessInteractions(List<RaycastResult> results)
     {

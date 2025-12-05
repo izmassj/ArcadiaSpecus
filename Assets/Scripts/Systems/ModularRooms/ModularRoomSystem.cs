@@ -65,10 +65,11 @@ public class ModularRoomSystem : MonoBehaviour
         if (showCornerDebug)
             UpdateCornerMarkerPositions();
 
-        if (Mouse.current.leftButton.wasPressedThisFrame && canPlaceRoom)
+        if ((Mouse.current.leftButton.wasPressedThisFrame || Input.GetButtonDown("Submit")) && canPlaceRoom)
         {
             PlaceRoom();
         }
+
     }
 
     public void SpawnRoomPrefab(RoomKind room)
@@ -101,7 +102,7 @@ public class ModularRoomSystem : MonoBehaviour
         if (cornerMarkerPrefab == null)
         {
             cornerMarkerPrefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Destroy(cornerMarkerPrefab.GetComponent<Collider>()); 
+            Destroy(cornerMarkerPrefab.GetComponent<Collider>());
         }
 
         for (int i = 0; i < 8; i++)
@@ -166,8 +167,6 @@ public class ModularRoomSystem : MonoBehaviour
                 }
             }
 
-            selfCollider.gameObject.SetActive(false);
-
             Vector3 offset = bestSelfCorner - currentRoom.transform.position;
             currentRoom.transform.position = bestTargetCorner - offset;
         }
@@ -189,8 +188,14 @@ public class ModularRoomSystem : MonoBehaviour
 
     Vector3 GetMouseWorldPosition()
     {
-        Vector2 mousePos = Mouse.current.position.ReadValue();
-        Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 500f));
+        Vector2 cursorPos;
+
+        if (CursorController.instance.usingRealMouse)
+            cursorPos = Input.mousePosition;
+        else
+            cursorPos = CursorController.instance.screenPos;
+
+        Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 500f));
         world.z = 0f;
         return world;
     }
@@ -226,7 +231,7 @@ public class ModularRoomSystem : MonoBehaviour
                 }
                 else
                 {
-                    possibleRoom = null; 
+                    possibleRoom = null;
                 }
             }
 

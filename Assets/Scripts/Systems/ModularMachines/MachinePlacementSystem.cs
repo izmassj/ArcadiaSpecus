@@ -64,10 +64,11 @@ public class MachinePlacementSystem : MonoBehaviour
         if (showCornerDebug)
             UpdateCornerMarkerPositions();
 
-        if (Mouse.current.leftButton.wasPressedThisFrame && canPlaceMachine)
+        if ((Mouse.current.leftButton.wasPressedThisFrame || Input.GetButtonDown("Submit")) && canPlaceMachine)
         {
             PlaceMachine();
         }
+
     }
 
     public void SpawnMachinePrefab(MachineKind machine)
@@ -275,8 +276,14 @@ public class MachinePlacementSystem : MonoBehaviour
 
     Vector3 GetMouseWorldPosition()
     {
-        Vector2 mousePos = Mouse.current.position.ReadValue();
-        Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 500f));
+        Vector2 cursorPos;
+
+        if (CursorController.instance.usingRealMouse)
+            cursorPos = Input.mousePosition;
+        else
+            cursorPos = CursorController.instance.screenPos;
+
+        Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 500f));
         world.z = 0f;
         return world;
     }

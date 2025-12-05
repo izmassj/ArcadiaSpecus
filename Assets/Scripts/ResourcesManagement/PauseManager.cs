@@ -122,7 +122,7 @@ public class PauseManager : MonoBehaviour
         }
 
         // Detección normal de la tecla ESC
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Select"))
         {
             if (!isPaused)
                 PauseGame();

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using Cinemachine;
 
@@ -15,6 +15,12 @@ public class CameraDrag : MonoBehaviour
     private Vector3 _cameraStartPosition;
     private bool _isDragging;
     private Transform _cameraTarget;
+
+    // 🔹 Configuración Input Manager (solo stick)
+    [Header("Controller Drag Settings")]
+    public string rightStickX = "RHorizontal";
+    public string rightStickY = "RVertical";
+    public float controllerSensitivity = 10f;
 
     private void Start()
     {
@@ -36,16 +42,13 @@ public class CameraDrag : MonoBehaviour
         }
     }
 
+    // EXISTENTE — drag con mouse
     public void OnDrag(InputAction.CallbackContext ctx)
     {
         if (ctx.started)
-        {
             StartDrag();
-        }
         else if (ctx.canceled)
-        {
             EndDrag();
-        }
     }
 
     private void StartDrag()
@@ -62,17 +65,43 @@ public class CameraDrag : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (!_isDragging) return;
+        // 🖱 drag por ratón existente
+        if (_isDragging)
+        {
+            HandleMouseDrag();
+        }
 
+        // 🎮 drag con mando sin botón
+        HandleControllerDragOnlyStick();
+    }
+
+    private void HandleMouseDrag()
+    {
         Vector3 currentMousePos = GetMouseWorldPosition();
         Vector3 difference = _dragStartPosition - currentMousePos;
         Vector3 targetPosition = _cameraStartPosition + difference;
 
-        // Apply confinement
         if (confiner2D != null && confiner2D.m_BoundingShape2D != null)
-        {
             targetPosition = ApplyConfinement(targetPosition);
-        }
+
+        _cameraTarget.position = targetPosition;
+    }
+
+    // 🔹 Nuevo — cámara se mueve solo con stick derecho
+    private void HandleControllerDragOnlyStick()
+    {
+        float stickX = Input.GetAxis(rightStickX);
+        float stickY = Input.GetAxis(rightStickY);
+
+        // Si no se mueve el stick, no hacemos nada
+        if (Mathf.Abs(stickX) < 0.05f && Mathf.Abs(stickY) < 0.05f)
+            return;
+
+        Vector3 move = new Vector3(-stickX, -stickY, 0f) * controllerSensitivity * Time.deltaTime;
+        Vector3 targetPosition = _cameraTarget.position + move;
+
+        if (confiner2D != null && confiner2D.m_BoundingShape2D != null)
+            targetPosition = ApplyConfinement(targetPosition);
 
         _cameraTarget.position = targetPosition;
     }
