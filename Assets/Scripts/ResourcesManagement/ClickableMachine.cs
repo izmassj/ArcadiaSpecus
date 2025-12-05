@@ -44,7 +44,7 @@ public class ClickableMachine : MonoBehaviour
     /// <summary>
     /// Maneja el clic del mouse para recolectar recursos
     /// </summary>
-    private void OnMouseDown()
+    public void OnMouseDown()
     {
         if (accumulatedAmount <= 0)
             return;

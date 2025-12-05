@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4922891972466030004}
   - component: {fileID: 8846623551391284971}
-  - component: {fileID: 412932929895109344}
   m_Layer: 6
   m_Name: RoomCollider
   m_TagString: Untagged
@@ -54,21 +53,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.81759006, y: 1.5710473, z: 1.255096}
   m_Center: {x: 0.0000014007092, y: 0.14504892, z: -0.015734583}
---- !u!114 &412932929895109344
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1643827383906853123}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 472513dd6232f7e40a59349a3e5b8dd8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rend: {fileID: 1938115214639526826}
-  hoverColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  clickColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
 --- !u!1 &8236242678531967258
 GameObject:
   m_ObjectHideFlags: 0
@@ -201,10 +185,5 @@ BoxCollider:
 --- !u!4 &769760773227514053 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
-  m_PrefabInstance: {fileID: 946886379503939374}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1938115214639526826 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 78cb99cce03df1a4d886af8605271786, type: 3}
   m_PrefabInstance: {fileID: 946886379503939374}
   m_PrefabAsset: {fileID: 0}
