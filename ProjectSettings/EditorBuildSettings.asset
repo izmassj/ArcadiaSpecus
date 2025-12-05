@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Proto/MainMenu.unity
     guid: acbeee19155edcf4087ab0d8127c8c08
   - enabled: 1
+    path: Assets/Scenes/Proto/NPCBunkerNavigation.unity
+    guid: 910e532ed6ea9a64ebf0044a4588277e
+  - enabled: 1
     path: Assets/Scenes/Proto/MiniGameDesign1.unity
     guid: 5a325d43e12829246a75e69febddf5cf
   - enabled: 1
@@ -17,7 +20,4 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Proto/MiniGameDesign3.unity
     guid: eda00ee2161984a469a43daac7909343
-  - enabled: 1
-    path: Assets/Scenes/Proto/NPCBunkerNavigation.unity
-    guid: 910e532ed6ea9a64ebf0044a4588277e
   m_configObjects: {}

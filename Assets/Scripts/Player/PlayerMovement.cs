@@ -37,6 +37,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 velocidadPlataforma;        // Velocidad calculada de la plataforma
     private bool enPlataforma = false;          // Indica si está sobre una plataforma móvil
 
+    private float rotacionHorizontal; // Rotación horizontal acumulada del jugador
+
     void Start()
     {
         // Inicialización del Rigidbody
@@ -75,8 +77,16 @@ public class PlayerMovement : MonoBehaviour
             velocidadActual = velocidadBase;   // Velocidad normal
         }
 
-        // Rotar cámara según movimiento del ratón
-        RotarCamara();
+        // Capturar input del mouse y stick
+        float mouseX = Input.GetAxisRaw("Mouse X");
+        float mouseY = Input.GetAxisRaw("Mouse Y");
+        float stickX = Input.GetAxisRaw("RHorizontal");
+        float stickY = Input.GetAxisRaw("RVertical");
+
+        // Acumular rotaciones
+        rotacionHorizontal += (mouseX + stickX) * sensibilidadMouse;
+        rotacionVertical -= (mouseY + stickY) * sensibilidadMouse;
+        rotacionVertical = Mathf.Clamp(rotacionVertical, -90f, 90f);
 
         // Detectar salto cuando se presiona espacio y está en el suelo
         if (Input.GetButtonDown("Jump") && enSuelo)
@@ -109,9 +119,19 @@ public class PlayerMovement : MonoBehaviour
             velocidadPlataforma = Vector3.zero; // Sin plataforma, sin velocidad adicional
         }
 
+        // Rotación horizontal del jugador usando Rigidbody
+        Quaternion nuevaRotacion = Quaternion.Euler(0, rotacionHorizontal, 0);
+        rb.MoveRotation(nuevaRotacion);
+
         // Aplicar movimiento y físicas de salto
         MoverJugador();
         AplicarFisicasSalto();
+    }
+
+    private void LateUpdate()
+    {
+        // Rotación vertical de la cámara (solo eje X)
+        transformCamara.localRotation = Quaternion.Euler(rotacionVertical, 0, 0);
     }
 
     void MoverJugador()
@@ -162,8 +182,8 @@ public class PlayerMovement : MonoBehaviour
         float mouseY = Input.GetAxis("Mouse Y");
 
         // --- Entradas del stick derecho del mando ---
-        float stickX = Input.GetAxis("RHorizontal");
-        float stickY = Input.GetAxis("RVertical");
+        float stickX = Input.GetAxisRaw("RHorizontal");
+        float stickY = Input.GetAxisRaw("RVertical");
 
         // Rotación horizontal (cuerpo del jugador)
         float rotacionHorizontal = (mouseX + stickX) * sensibilidadMouse;
