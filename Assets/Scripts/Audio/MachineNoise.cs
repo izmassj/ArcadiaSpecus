@@ -20,7 +20,8 @@ public class MachineNoise : MonoBehaviour
     void Update()
     {
         if (audioSource == null || clip == null)
-            return;
+        return;
+
 
         timer += Time.deltaTime;
 

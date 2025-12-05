@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class PersistentMusic : MonoBehaviour
 {
-    private static PersistentMusic instance;
-    private AudioSource audioSource;
+    public static PersistentMusic instance;
+    public AudioSource audioSource;
 
     void Awake()
     {
