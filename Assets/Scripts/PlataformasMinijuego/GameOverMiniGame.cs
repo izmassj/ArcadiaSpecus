@@ -29,7 +29,7 @@ public class GameOverMiniGame : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            SceneManager.LoadScene("NPCBunkerNavigation");
+            AdvancedSceneCameraManager.instance.ReturnToBaseScene("NPCBunkerNavigation", false);
         }
     }
 

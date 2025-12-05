@@ -31,7 +31,7 @@ public class RobotDeployer : MonoBehaviour
         int randomIndex = Random.Range(0, sceneOptions.Length);
         string sceneToLoad = sceneOptions[randomIndex];
 
-        SceneManager.LoadScene(sceneToLoad);
+        AdvancedSceneCameraManager.instance.LoadAdditiveScene(sceneToLoad);
     }
 
     private void Update()
