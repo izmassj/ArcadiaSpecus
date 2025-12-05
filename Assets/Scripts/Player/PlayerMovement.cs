@@ -157,16 +157,25 @@ public class PlayerMovement : MonoBehaviour
 
     void RotarCamara()
     {
-        // Rotación horizontal (girar cuerpo del jugador)
-        float rotacionHorizontal = Input.GetAxis("Mouse X") * sensibilidadMouse;
+        // --- Entradas del mouse ---
+        float mouseX = Input.GetAxis("Mouse X");
+        float mouseY = Input.GetAxis("Mouse Y");
+
+        // --- Entradas del stick derecho del mando ---
+        float stickX = Input.GetAxis("RHorizontal");
+        float stickY = Input.GetAxis("RVertical");
+
+        // Rotación horizontal (cuerpo del jugador)
+        float rotacionHorizontal = (mouseX + stickX) * sensibilidadMouse;
         transform.Rotate(0, rotacionHorizontal, 0);
 
-        // Rotación vertical (solo cámara, con límites)
-        rotacionVertical -= Input.GetAxis("Mouse Y") * sensibilidadMouse;
-        rotacionVertical = Mathf.Clamp(rotacionVertical, -90f, 90f); // Limitar para no voltear
+        // Rotación vertical (sólo cámara, con límites)
+        rotacionVertical -= (mouseY + stickY) * sensibilidadMouse;
+        rotacionVertical = Mathf.Clamp(rotacionVertical, -90f, 90f);
 
         transformCamara.localRotation = Quaternion.Euler(rotacionVertical, 0, 0);
     }
+
 
     void Saltar()
     {
