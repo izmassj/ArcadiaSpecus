@@ -25,6 +25,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
 
     public CinemachineBrain cinemachineBrain;
     public GameObject mainCanvas;
+    public GameObject cursorCanvas;
 
     private Dictionary<string, CinemachineVirtualCamera> sceneCameras = new Dictionary<string, CinemachineVirtualCamera>();
     private string currentActiveScene;
@@ -56,6 +57,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     IEnumerator LoadSceneRoutine(string sceneName)
     {
         GameObject.Find("Canvas").gameObject.SetActive(false);
+        GameObject.Find("CanvasCursor").gameObject.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -98,6 +100,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     IEnumerator ReturnToBaseRoutine(string baseSceneName, bool win)
     {
         mainCanvas.SetActive(true);
+        cursorCanvas.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
