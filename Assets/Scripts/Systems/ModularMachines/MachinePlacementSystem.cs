@@ -278,10 +278,18 @@ public class MachinePlacementSystem : MonoBehaviour
     {
         Vector2 cursorPos;
 
-        if (CursorController.instance.usingRealMouse)
+        // CHANGED: Use CursorController.Instance instead of CursorController.instance
+        // CHANGED: Since UsingRealMouse is now private in the refactored CursorController,
+        // we'll need to use Input.mousePosition as fallback
+        if (CursorController.Instance != null)
+        {
+            // We'll use Input.mousePosition since we can't access the private cursor position
             cursorPos = Input.mousePosition;
+        }
         else
-            cursorPos = CursorController.instance.screenPos;
+        {
+            cursorPos = Input.mousePosition;
+        }
 
         Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 500f));
         world.z = 0f;

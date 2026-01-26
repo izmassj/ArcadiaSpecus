@@ -2,20 +2,50 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
-    [Header("Paneles")]
-    public GameObject resourcesPanel;
-    public GameObject npcStatusPanel;
+    [Header("UI Panels")]
+    [SerializeField] private GameObject _resourcesPanel;
+    [SerializeField] private GameObject _npcStatusPanel;
 
-    void Start()
+    private NPCStatusPanel _cachedNPCStatusPanel;
+
+    private void Start()
     {
-        // UI Manager inicializado
+        CacheUIComponents();
+    }
+
+    private void CacheUIComponents()
+    {
+        _cachedNPCStatusPanel = FindObjectOfType<NPCStatusPanel>();
     }
 
     public void RefreshAllDisplays()
     {
-        NPCStatusPanel npcPanel = FindObjectOfType<NPCStatusPanel>();
-        if (npcPanel != null)
-            npcPanel.UpdateUI();
+        RefreshNPCStatusPanel();
     }
 
+    private void RefreshNPCStatusPanel()
+    {
+        if (_cachedNPCStatusPanel != null)
+        {
+            _cachedNPCStatusPanel.UpdateUI();
+        }
+        else
+        {
+            _cachedNPCStatusPanel = FindObjectOfType<NPCStatusPanel>();
+            if (_cachedNPCStatusPanel != null)
+                _cachedNPCStatusPanel.UpdateUI();
+        }
+    }
+
+    public void SetResourcesPanelVisible(bool visible)
+    {
+        if (_resourcesPanel != null)
+            _resourcesPanel.SetActive(visible);
+    }
+
+    public void SetNPCStatusPanelVisible(bool visible)
+    {
+        if (_npcStatusPanel != null)
+            _npcStatusPanel.SetActive(visible);
+    }
 }

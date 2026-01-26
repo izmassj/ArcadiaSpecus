@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIVisibilityBunkerManager : MonoBehaviour
+public class UIVisibilityManager : MonoBehaviour
 {
     [System.Serializable]
     public class UIStateConfiguration
@@ -14,36 +13,43 @@ public class UIVisibilityBunkerManager : MonoBehaviour
     }
 
     [Header("UI References")]
-    [SerializeField] private Button roomBuildingEnterButton;
-    [SerializeField] private Button roomBuildingExitButton;
+    [SerializeField] private Button _roomBuildingEnterButton;
+    [SerializeField] private Button _roomBuildingExitButton;
 
     [Header("UI Elements")]
-    [SerializeField] private GameObject roomBuildingButtons;
-    [SerializeField] private GameObject roomBuildingEnter;
+    [SerializeField] private GameObject _roomBuildingButtons;
+    [SerializeField] private GameObject _roomBuildingEnter;
 
     [Header("State Configurations")]
-    [SerializeField] private UIStateConfiguration[] stateConfigurations;
+    [SerializeField] private UIStateConfiguration[] _stateConfigurations;
 
     private Dictionary<PlayerManager.PlayerStates, UIStateConfiguration> _stateConfigMap;
+    private readonly GameObject[] _allUIElements = new GameObject[2];
 
     private void Awake()
     {
+        InitializeAllUIElementsArray();
         InitializeStateConfiguration();
-        roomBuildingEnterButton.onClick.AddListener(OnRoomBuildingButtonClicked);
-
-        PlayerManager.OnPlayerStateChanged += OnPlayerStateChanged;
+        SetupButtonListeners();
+        SubscribeToEvents();
     }
 
     private void OnDestroy()
     {
-        PlayerManager.OnPlayerStateChanged -= OnPlayerStateChanged;
+        UnsubscribeFromEvents();
+    }
+
+    private void InitializeAllUIElementsArray()
+    {
+        _allUIElements[0] = _roomBuildingButtons;
+        _allUIElements[1] = _roomBuildingEnter;
     }
 
     private void InitializeStateConfiguration()
     {
         _stateConfigMap = new Dictionary<PlayerManager.PlayerStates, UIStateConfiguration>();
 
-        foreach (var config in stateConfigurations)
+        foreach (var config in _stateConfigurations)
         {
             _stateConfigMap[config.state] = config;
         }
@@ -53,41 +59,54 @@ public class UIVisibilityBunkerManager : MonoBehaviour
 
     private void EnsureDefaultConfigurations()
     {
-        if (!_stateConfigMap.ContainsKey(PlayerManager.PlayerStates.NONE))
-        {
-            _stateConfigMap[PlayerManager.PlayerStates.NONE] = new UIStateConfiguration
-            {
-                state = PlayerManager.PlayerStates.NONE,
-                activeElements = new[] { roomBuildingEnter },
-                inactiveElements = new[] { roomBuildingButtons }
-            };
-        }
+        AddDefaultConfigurationIfMissing(PlayerManager.PlayerStates.NONE,
+            activeElements: new[] { _roomBuildingEnter },
+            inactiveElements: new[] { _roomBuildingButtons });
 
-        // ✅ CAMBIO: usamos ROOMBUILDING (el estado real del enum)
-        if (!_stateConfigMap.ContainsKey(PlayerManager.PlayerStates.ROOMBUILDING))
+        AddDefaultConfigurationIfMissing(PlayerManager.PlayerStates.ROOMBUILDING,
+            activeElements: new[] { _roomBuildingButtons },
+            inactiveElements: new[] { _roomBuildingEnter });
+    }
+
+    private void AddDefaultConfigurationIfMissing(PlayerManager.PlayerStates state,
+        GameObject[] activeElements, GameObject[] inactiveElements)
+    {
+        if (_stateConfigMap.ContainsKey(state)) return;
+
+        _stateConfigMap[state] = new UIStateConfiguration
         {
-            _stateConfigMap[PlayerManager.PlayerStates.ROOMBUILDING] = new UIStateConfiguration
-            {
-                state = PlayerManager.PlayerStates.ROOMBUILDING,
-                activeElements = new[] { roomBuildingButtons },
-                inactiveElements = new[] { roomBuildingEnter }
-            };
-        }
+            state = state,
+            activeElements = activeElements,
+            inactiveElements = inactiveElements
+        };
+    }
+
+    private void SetupButtonListeners()
+    {
+        _roomBuildingEnterButton.onClick.AddListener(OnRoomBuildingButtonClicked);
+    }
+
+    private void SubscribeToEvents()
+    {
+        PlayerManager.OnPlayerStateChanged += OnPlayerStateChanged;
+    }
+
+    private void UnsubscribeFromEvents()
+    {
+        PlayerManager.OnPlayerStateChanged -= OnPlayerStateChanged;
     }
 
     private void OnRoomBuildingButtonClicked()
     {
         var currentState = PlayerManager.Instance.GetCurrentPlayerState();
-
-        switch (currentState)
+        var newState = currentState switch
         {
-            case PlayerManager.PlayerStates.NONE:
-                PlayerManager.Instance.SetCurrentPlayerState(PlayerManager.PlayerStates.ROOMBUILDING);
-                break;
-            case PlayerManager.PlayerStates.ROOMBUILDING:
-                PlayerManager.Instance.SetCurrentPlayerState(PlayerManager.PlayerStates.NONE);
-                break;
-        }
+            PlayerManager.PlayerStates.NONE => PlayerManager.PlayerStates.ROOMBUILDING,
+            PlayerManager.PlayerStates.ROOMBUILDING => PlayerManager.PlayerStates.NONE,
+            _ => currentState
+        };
+
+        PlayerManager.Instance.SetCurrentPlayerState(newState);
     }
 
     private void OnPlayerStateChanged(PlayerManager.PlayerStates newState)
@@ -108,8 +127,7 @@ public class UIVisibilityBunkerManager : MonoBehaviour
 
     private void DeactivateAllUIElements()
     {
-        GameObject[] allUIElements = { roomBuildingButtons, roomBuildingEnter };
-        SetElementsActive(allUIElements, false);
+        SetElementsActive(_allUIElements, false);
     }
 
     private void SetElementsActive(GameObject[] elements, bool active)
@@ -123,7 +141,7 @@ public class UIVisibilityBunkerManager : MonoBehaviour
         }
     }
 
-    public void SetUpMainUI()
+    public void SetupMainUI()
     {
         UpdateUIVisibility(PlayerManager.PlayerStates.NONE);
     }
@@ -136,8 +154,10 @@ public class UIVisibilityBunkerManager : MonoBehaviour
         }
     }
 
-    private bool IsValidStateTransition(PlayerManager.PlayerStates current, PlayerManager.PlayerStates next)
+    private bool IsValidStateTransition(PlayerManager.PlayerStates current,
+        PlayerManager.PlayerStates next)
     {
+        // Add transition validation logic here if needed
         return true;
     }
 }

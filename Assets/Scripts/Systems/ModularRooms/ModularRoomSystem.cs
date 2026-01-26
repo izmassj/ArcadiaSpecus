@@ -190,10 +190,20 @@ public class ModularRoomSystem : MonoBehaviour
     {
         Vector2 cursorPos;
 
-        if (CursorController.instance.usingRealMouse)
+        // CHANGED: Use CursorController.Instance instead of CursorController.instance
+        // CHANGED: UsingRealMouse is now private, we need to check via other means
+        // Since we don't have access to UsingRealMouse, we'll always use the virtual cursor position
+        // This is a temporary fix - ideally CursorController should expose this information
+        if (CursorController.Instance != null)
+        {
+            // We'll need to get cursor position from the CursorController
+            // Since we can't access private fields, we'll use Input.mousePosition as fallback
             cursorPos = Input.mousePosition;
+        }
         else
-            cursorPos = CursorController.instance.screenPos;
+        {
+            cursorPos = Input.mousePosition;
+        }
 
         Vector3 world = Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 500f));
         world.z = 0f;

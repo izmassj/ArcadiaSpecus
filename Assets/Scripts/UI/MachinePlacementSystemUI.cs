@@ -3,77 +3,88 @@ using UnityEngine.UI;
 
 public class MachinePlacementSystemUI : MonoBehaviour
 {
-    [Header("Machine Buttons UI")]
-    [SerializeField] private Button waterMachineBtn;
-    [SerializeField] private Button foodMachineBtn;
-    [SerializeField] private Button energyMachineBtn;
-    [SerializeField] private Button scrapMachineBtn;
-    [SerializeField] private Button bedBtn;
-    [SerializeField] private Button waterDispenserBtn;
-    [SerializeField] private Button foodDispenserBtn;
+    [Header("Machine Buttons")]
+    [SerializeField] private Button _waterMachineBtn;
+    [SerializeField] private Button _foodMachineBtn;
+    [SerializeField] private Button _energyMachineBtn;
+    [SerializeField] private Button _scrapMachineBtn;
+    [SerializeField] private Button _bedBtn;
+    [SerializeField] private Button _waterDispenserBtn;
+    [SerializeField] private Button _foodDispenserBtn;
 
-    [Header("Enter/Exit Machine Buttons UI")]
-    [SerializeField] private Button enterMachineUIBtn;
-    [SerializeField] private Button exitMachineUIBtn;
+    [Header("Mode Control Buttons")]
+    [SerializeField] private Button _enterMachineUIBtn;
+    [SerializeField] private Button _exitMachineUIBtn;
 
-    [Header("Machine UI GameObjects")]
-    [SerializeField] private GameObject machinesButtonsGameObj;
-    [SerializeField] private GameObject machinesEnterButtonGameObj;
-    [SerializeField] private GameObject modularRoomEnterButtonGameObj;
+    [Header("UI Containers")]
+    [SerializeField] private GameObject _machinesButtonsContainer;
+    [SerializeField] private GameObject _machinesEnterButtonContainer;
+    [SerializeField] private GameObject _modularRoomEnterButtonContainer;
 
-
-    public void SetUpUI()
+    private void Awake()
     {
-        waterMachineBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.WATER_MACHINE));
-        foodMachineBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.FOOD_MACHINE));
-        energyMachineBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.ENERGY_MACHINE));
-        scrapMachineBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.SCRAP_MACHINE));
-        bedBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.BED));
-        waterDispenserBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.WATER_DISPENSER));
-        foodDispenserBtn.onClick.AddListener(() => MachinePlacementSystem.Instance.SpawnMachinePrefab(MachineKind.FOOD_DISPENSER));
-
-        enterMachineUIBtn.onClick.AddListener(EnterMachineUI);
-        exitMachineUIBtn.onClick.AddListener(ExitMachineUI);
+        SetupUI();
     }
 
-    void Awake()
+    private void SetupUI()
     {
-        SetUpUI();
+        SetupMachineButtons();
+        SetupModeButtons();
     }
 
-    private void EnterMachineUI()
+    private void SetupMachineButtons()
     {
-        // Deactivate modular room button and activate machine UI
-        modularRoomEnterButtonGameObj.SetActive(false);
-        machinesButtonsGameObj.SetActive(true);
-        machinesEnterButtonGameObj.SetActive(false);
+        _waterMachineBtn.onClick.AddListener(() => SpawnMachine(MachineKind.WATER_MACHINE));
+        _foodMachineBtn.onClick.AddListener(() => SpawnMachine(MachineKind.FOOD_MACHINE));
+        _energyMachineBtn.onClick.AddListener(() => SpawnMachine(MachineKind.ENERGY_MACHINE));
+        _scrapMachineBtn.onClick.AddListener(() => SpawnMachine(MachineKind.SCRAP_MACHINE));
+        _bedBtn.onClick.AddListener(() => SpawnMachine(MachineKind.BED));
+        _waterDispenserBtn.onClick.AddListener(() => SpawnMachine(MachineKind.WATER_DISPENSER));
+        _foodDispenserBtn.onClick.AddListener(() => SpawnMachine(MachineKind.FOOD_DISPENSER));
     }
 
-    private void ExitMachineUI()
+    private void SetupModeButtons()
     {
-        // Activate modular room button and deactivate machine UI
-        modularRoomEnterButtonGameObj.SetActive(true);
-        machinesButtonsGameObj.SetActive(false);
-        machinesEnterButtonGameObj.SetActive(true);
+        _enterMachineUIBtn.onClick.AddListener(EnterMachineMode);
+        _exitMachineUIBtn.onClick.AddListener(ExitMachineMode);
+    }
+
+    private void SpawnMachine(MachineKind machineKind)
+    {
+        if (MachinePlacementSystem.Instance != null)
+            MachinePlacementSystem.Instance.SpawnMachinePrefab(machineKind);
+    }
+
+    private void EnterMachineMode()
+    {
+        SetUIVisibility(
+            machinesActive: true,
+            modularRoomActive: false,
+            showEnterButton: false
+        );
+    }
+
+    private void ExitMachineMode()
+    {
+        SetUIVisibility(
+            machinesActive: false,
+            modularRoomActive: true,
+            showEnterButton: true
+        );
+
         DisableCurrentGhostMachine();
+    }
+
+    private void SetUIVisibility(bool machinesActive, bool modularRoomActive, bool showEnterButton)
+    {
+        _modularRoomEnterButtonContainer.SetActive(modularRoomActive);
+        _machinesButtonsContainer.SetActive(machinesActive);
+        _machinesEnterButtonContainer.SetActive(showEnterButton);
     }
 
     private void DisableCurrentGhostMachine()
     {
-        MachinePlacementSystem.Instance.SetCurrentMachine(null);
-    }
-
-    private void ActivateDeactivateUIObjects(GameObject obj1, GameObject obj2)
-    {
-        if (obj1.activeInHierarchy)
-        {
-            obj1.SetActive(false);
-            obj2.SetActive(true);
-        }
-        else
-        {
-            obj1.SetActive(true);
-            obj2.SetActive(false);
-        }
+        if (MachinePlacementSystem.Instance != null)
+            MachinePlacementSystem.Instance.SetCurrentMachine(null);
     }
 }

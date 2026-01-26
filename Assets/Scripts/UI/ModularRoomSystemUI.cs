@@ -1,88 +1,86 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ModularRoomSystemUI : MonoBehaviour
 {
-    [Header("Modular Room Buttons UI")]
-    [SerializeField] private Button doorWallBtn;
-    [SerializeField] private Button rightRoomBtn;
-    [SerializeField] private Button midRoomBtn;
-    [SerializeField] private Button leftRoomBtn;
-    [SerializeField] private Button intersectionBtn;
+    [Header("Room Buttons")]
+    [SerializeField] private Button _doorWallBtn;
+    [SerializeField] private Button _rightRoomBtn;
+    [SerializeField] private Button _midRoomBtn;
+    [SerializeField] private Button _leftRoomBtn;
+    [SerializeField] private Button _intersectionBtn;
 
-    [Header("Enter/Exit Modular Room Buttons UI")]
-    [SerializeField] private Button enterModularRoomUIBtn;
-    [SerializeField] private Button exitModularRoomUIBtn;
+    [Header("Mode Control Buttons")]
+    [SerializeField] private Button _enterModularRoomUIBtn;
+    [SerializeField] private Button _exitModularRoomUIBtn;
 
-    [Header("Modular Room UI GameObjects")]
-    [SerializeField] private GameObject modularRoomButtonsGameObj;
-    [SerializeField] private GameObject machinesEnterButtonGameObj;
-    [SerializeField] private GameObject modularRoomEnterButtonGameObj;
+    [Header("UI Containers")]
+    [SerializeField] private GameObject _modularRoomButtonsContainer;
+    [SerializeField] private GameObject _machinesEnterButtonContainer;
+    [SerializeField] private GameObject _modularRoomEnterButtonContainer;
 
-    private ModularRoomSystem roomSystem;
-
-    public void SetUpUI()
+    private void Awake()
     {
-        doorWallBtn.onClick.AddListener(() => ModularRoomSystem.Instance.SpawnRoomPrefab(RoomKind.DOORWALL));
-        rightRoomBtn.onClick.AddListener(() => ModularRoomSystem.Instance.SpawnRoomPrefab(RoomKind.RIGHT));
-        midRoomBtn.onClick.AddListener(() => ModularRoomSystem.Instance.SpawnRoomPrefab(RoomKind.MIDDLE));
-        leftRoomBtn.onClick.AddListener(() => ModularRoomSystem.Instance.SpawnRoomPrefab(RoomKind.LEFT));
-        intersectionBtn.onClick.AddListener(() => ModularRoomSystem.Instance.SpawnRoomPrefab(RoomKind.INTERSECTION));
-
-        enterModularRoomUIBtn.onClick.AddListener(EnterModularRoomUI);
-        exitModularRoomUIBtn.onClick.AddListener(ExitModularRoomUI);
+        SetupUI();
     }
 
-    void Awake()
+    private void SetupUI()
     {
-        SetUpUI();
+        SetupRoomButtons();
+        SetupModeButtons();
     }
 
-    void Start()
+    private void SetupRoomButtons()
     {
-
+        _doorWallBtn.onClick.AddListener(() => SpawnRoom(RoomKind.DOORWALL));
+        _rightRoomBtn.onClick.AddListener(() => SpawnRoom(RoomKind.RIGHT));
+        _midRoomBtn.onClick.AddListener(() => SpawnRoom(RoomKind.MIDDLE));
+        _leftRoomBtn.onClick.AddListener(() => SpawnRoom(RoomKind.LEFT));
+        _intersectionBtn.onClick.AddListener(() => SpawnRoom(RoomKind.INTERSECTION));
     }
 
-    void Update()
+    private void SetupModeButtons()
     {
-
+        _enterModularRoomUIBtn.onClick.AddListener(EnterRoomMode);
+        _exitModularRoomUIBtn.onClick.AddListener(ExitRoomMode);
     }
 
-    private void EnterModularRoomUI()
+    private void SpawnRoom(RoomKind roomKind)
     {
-        // Deactivate machines button and activate modular room UI
-        machinesEnterButtonGameObj.SetActive(false);
-        modularRoomButtonsGameObj.SetActive(true);
-        modularRoomEnterButtonGameObj.SetActive(false);
+        if (ModularRoomSystem.Instance != null)
+            ModularRoomSystem.Instance.SpawnRoomPrefab(roomKind);
     }
 
-    private void ExitModularRoomUI()
+    private void EnterRoomMode()
     {
-        // Activate machines button and deactivate modular room UI
-        machinesEnterButtonGameObj.SetActive(true);
-        modularRoomButtonsGameObj.SetActive(false);
-        modularRoomEnterButtonGameObj.SetActive(true);
+        SetUIVisibility(
+            roomsActive: true,
+            machinesActive: false,
+            showEnterButton: false
+        );
+    }
+
+    private void ExitRoomMode()
+    {
+        SetUIVisibility(
+            roomsActive: false,
+            machinesActive: true,
+            showEnterButton: true
+        );
+
         DisableCurrentGhostRoom();
+    }
+
+    private void SetUIVisibility(bool roomsActive, bool machinesActive, bool showEnterButton)
+    {
+        _machinesEnterButtonContainer.SetActive(machinesActive);
+        _modularRoomButtonsContainer.SetActive(roomsActive);
+        _modularRoomEnterButtonContainer.SetActive(showEnterButton);
     }
 
     private void DisableCurrentGhostRoom()
     {
-        ModularRoomSystem.Instance.SetCurrentRoom(null);
-    }
-
-    private void ActivateDeactivateUIObjects(GameObject obj1, GameObject obj2)
-    {
-        if (obj1.activeInHierarchy)
-        {
-            obj1.SetActive(false);
-            obj2.SetActive(true);
-        }
-        else
-        {
-            obj1.SetActive(true);
-            obj2.SetActive(false);
-        }
+        if (ModularRoomSystem.Instance != null)
+            ModularRoomSystem.Instance.SetCurrentRoom(null);
     }
 }

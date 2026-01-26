@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PilarMovement : MonoBehaviour
+public class PilarMovementOld : MonoBehaviour
 {
     public float velocidad = 3f;       // Velocidad de movimiento
     public float distancia = 5f;       // Distancia que baja

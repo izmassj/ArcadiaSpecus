@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class DeathZoneController : MonoBehaviour
+public class DeathZoneControllerOld : MonoBehaviour
 {
     public float velocidad = 3f;  // Velocidad de movimiento
     public float distancia = 5f;  // Distancia máxima hacia adelante

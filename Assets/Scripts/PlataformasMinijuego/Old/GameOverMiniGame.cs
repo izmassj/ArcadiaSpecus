@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class WinMiniGame : MonoBehaviour
+public class GameOverMiniGameOld : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()
@@ -17,13 +17,12 @@ public class WinMiniGame : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter(Collider collider)
+    private void OnCollisionEnter(Collision collision)
     {
-        if (collider.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("Player"))
         {
-            Debug.Log("Funciona el collider");
-            AdvancedSceneCameraManager.instance.ReturnToBaseScene("NPCBunkerNavigation", true);
+            AdvancedSceneCameraManager.instance.ReturnToBaseScene("NPCBunkerNavigation", false);
         }
     }
-}
 
+}

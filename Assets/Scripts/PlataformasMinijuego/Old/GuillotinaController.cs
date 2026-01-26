@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GuillotinaController : MonoBehaviour
+public class GuillotinaControllerOld : MonoBehaviour
 {
     public float velocidad = 3f;  // Velocidad de movimiento
     public float distancia = 5f;  // Distancia máxima hacia adelante y hacia atrás
