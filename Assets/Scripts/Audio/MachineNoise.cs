@@ -30,4 +30,6 @@ public class MachineNoise : MonoBehaviour
             timer = 0f;
         }
     }
+
+    
 }

@@ -17,6 +17,9 @@ public class ClickableMachine : MonoBehaviour
     public Renderer machineRenderer;
     private Color originalColor;
 
+    [Header("Audio")]
+    public new AudioSource audio;
+
     void Start()
     {
         if (machineRenderer == null)
@@ -26,6 +29,9 @@ public class ClickableMachine : MonoBehaviour
             originalColor = machineRenderer.material.color;
 
         cycleTimer = cycleDuration;
+
+        if(audio == null)
+            audio = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -53,6 +59,11 @@ public class ClickableMachine : MonoBehaviour
 
         accumulatedAmount = 0;
         RestoreColor();
+
+        audio.Play();
+
+        Debug.Log("Clickado");
+        
     }
 
     /// <summary>
@@ -75,4 +86,6 @@ public class ClickableMachine : MonoBehaviour
 
         machineRenderer.material.color = originalColor;
     }
+
+    
 }
