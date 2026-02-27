@@ -1,280 +1,368 @@
-using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Gestiona carga aditiva de minijuegos y cambio de cámara/UI al entrar/salir.
+/// Mantiene la API que ya usa vuestro proyecto.
+/// </summary>
 public class AdvancedSceneCameraManager : MonoBehaviour
 {
     public static AdvancedSceneCameraManager instance;
 
-    void Awake()
-    {
-        // Singleton pattern - evitar duplicados
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            // Si ya existe una instancia, destruir esta
-            Destroy(gameObject);
-        }
-    }
-
+    [Header("Referencias (opcionales, se pueden auto-buscar)")]
     public CinemachineBrain cinemachineBrain;
     public GameObject mainCanvas;
     public GameObject cursorCanvas;
     public GameObject GameOver;
 
-    private Dictionary<string, CinemachineVirtualCamera> sceneCameras = new Dictionary<string, CinemachineVirtualCamera>();
-    private string currentActiveScene;
-    private string previousScene;
+    private readonly Dictionary<string, CinemachineVirtualCamera> _sceneCameras = new Dictionary<string, CinemachineVirtualCamera>();
 
-    void Start()
+    private string _currentActiveScene;
+    private string _previousScene;
+    private bool _isTransitioning;
+
+    private void Awake()
     {
-        // Store initial scene
-        currentActiveScene = SceneManager.GetActiveScene().name;
-        RegisterCurrentSceneCamera();
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
-
-            cinemachineBrain = GameObject.Find("Main Camera").GetComponent<CinemachineBrain>();
-            mainCanvas = GameObject.Find("Canvas");
-            cursorCanvas = GameObject.Find("CanvasCursor");
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 
-    void RegisterCurrentSceneCamera()
+    private void Start()
     {
-        CinemachineVirtualCamera currentVCam = FindVCamInScene(SceneManager.GetSceneByName(currentActiveScene));
-        if (currentVCam != null)
+        SceneFlowManager.EnsureInstance();
+
+        _currentActiveScene = SceneManager.GetActiveScene().name;
+
+        RefreshCachedReferences();
+        RegisterCurrentSceneCamera();
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+            instance = null;
+
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+
+        _sceneCameras.Clear();
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (mode == LoadSceneMode.Single)
         {
-            sceneCameras[currentActiveScene] = currentVCam;
-            // Set high priority for initial camera
-            currentVCam.Priority = 100;
+            _sceneCameras.Clear();
+            _currentActiveScene = scene.name;
+            _previousScene = string.Empty;
         }
+
+        RefreshCachedReferences();
+        RegisterSceneCamera(scene);
+        SwitchToSceneCamera(SceneManager.GetActiveScene().name);
+    }
+
+    private void OnSceneUnloaded(Scene scene)
+    {
+        if (_sceneCameras.ContainsKey(scene.name))
+            _sceneCameras.Remove(scene.name);
+    }
+
+    private void RefreshCachedReferences()
+    {
+        if (cinemachineBrain == null)
+        {
+            Camera mainCam = Camera.main;
+            if (mainCam != null)
+                cinemachineBrain = mainCam.GetComponent<CinemachineBrain>();
+        }
+
+        // Se buscan por nombre por compatibilidad con vuestras escenas actuales.
+        // Si luego queréis, se puede refactorizar a referencias por inspector.
+        if (mainCanvas == null)
+        {
+            GameObject found = GameObject.Find("Canvas");
+            if (found != null)
+                mainCanvas = found;
+        }
+
+        if (cursorCanvas == null)
+        {
+            GameObject found = GameObject.Find("CanvasCursor");
+            if (found != null)
+                cursorCanvas = found;
+        }
+
+        if (GameOver == null)
+        {
+            GameObject found = GameObject.Find("GameOverManager");
+            if (found != null)
+                GameOver = found;
+        }
+    }
+
+    private void RegisterCurrentSceneCamera()
+    {
+        RegisterSceneCamera(SceneManager.GetSceneByName(_currentActiveScene));
+    }
+
+    private void RegisterSceneCamera(Scene scene)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
+            return;
+
+        CinemachineVirtualCamera currentVCam = FindVCamInScene(scene);
+        if (currentVCam == null)
+            return;
+
+        _sceneCameras[scene.name] = currentVCam;
     }
 
     public void LoadAdditiveScene(string sceneName)
     {
+        if (_isTransitioning)
+        {
+            Debug.LogWarning("AdvancedSceneCameraManager: transición en curso, se ignora LoadAdditiveScene.");
+            return;
+        }
+
         StartCoroutine(LoadSceneRoutine(sceneName));
     }
 
-    IEnumerator LoadSceneRoutine(string sceneName)
+    private IEnumerator LoadSceneRoutine(string sceneName)
     {
-        GameObject.Find("CanvasCursor").gameObject.SetActive(false);
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            Debug.LogWarning("AdvancedSceneCameraManager: nombre de escena inválido.");
+            yield break;
+        }
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        _isTransitioning = true;
+        RefreshCachedReferences();
 
-        // Store previous scene
-        previousScene = currentActiveScene;
+        SetBaseUIVisible(false);
+        SetCursorForMiniGame(lockedCursor: true);
 
-        // Load new scene additively
+        _previousScene = SceneManager.GetActiveScene().name;
+
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+        if (asyncLoad == null)
+        {
+            _isTransitioning = false;
+            yield break;
+        }
 
         while (!asyncLoad.isDone)
-        {
             yield return null;
-        }
 
-        // Get the newly loaded scene
         Scene newScene = SceneManager.GetSceneByName(sceneName);
 
-        // Wait one frame for initialization
+        // Un frame para que la escena termine de inicializar objetos/cámaras.
         yield return null;
 
-        // Find and register new scene's camera
-        CinemachineVirtualCamera newVCam = FindVCamInScene(newScene);
-        if (newVCam != null)
-        {
-            sceneCameras[sceneName] = newVCam;
+        RegisterSceneCamera(newScene);
+
+        if (_sceneCameras.ContainsKey(sceneName))
             SwitchToSceneCamera(sceneName);
+
+        if (newScene.IsValid() && newScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(newScene);
+            _currentActiveScene = sceneName;
         }
 
-        // Set as active scene
-        SceneManager.SetActiveScene(newScene);
-        currentActiveScene = sceneName;
-
-        GameObject.Find("Canvas").gameObject.SetActive(false);
-        GameObject.Find("GameOverManager").gameObject.SetActive(false);
+        _isTransitioning = false;
     }
 
     public void ReturnToBaseScene(string baseSceneName, bool win)
     {
+        if (_isTransitioning)
+        {
+            Debug.LogWarning("AdvancedSceneCameraManager: transición en curso, se ignora ReturnToBaseScene.");
+            return;
+        }
+
         StartCoroutine(ReturnToBaseRoutine(baseSceneName, win));
     }
 
-    IEnumerator ReturnToBaseRoutine(string baseSceneName, bool win)
+    private IEnumerator ReturnToBaseRoutine(string baseSceneName, bool win)
     {
-        mainCanvas.SetActive(true);
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        string sceneToUnload = currentActiveScene;
-
-        // Switch back to base scene's camera BEFORE unloading
-        SwitchToSceneCamera(baseSceneName);
-
-        // Set base scene as active
-        Scene baseScene = SceneManager.GetSceneByName(baseSceneName);
-        SceneManager.SetActiveScene(baseScene);
-        if (win)
-            ResourceManager.Instance.AddResource(ResourceType.Materials, 50);
-        currentActiveScene = baseSceneName;
-
-        // Unload the scene we're leaving
-        if (sceneToUnload != baseSceneName)
+        if (string.IsNullOrWhiteSpace(baseSceneName))
         {
-            AsyncOperation asyncUnload = SceneManager.UnloadSceneAsync(sceneToUnload);
-
-            while (!asyncUnload.isDone)
-            {
-                yield return null;
-            }
-
-            // Remove from dictionary
-            if (sceneCameras.ContainsKey(sceneToUnload))
-            {
-                sceneCameras.Remove(sceneToUnload);
-            }
-
+            Debug.LogWarning("AdvancedSceneCameraManager: baseSceneName inválido.");
+            yield break;
         }
 
-        // Reset camera priorities
-        ResetCameraPriorities(baseSceneName);
+        _isTransitioning = true;
+        RefreshCachedReferences();
 
-        cursorCanvas.SetActive(true);
-        GameOver.SetActive(true);
-    }
+        SetCursorForMiniGame(lockedCursor: false);
 
-    void SwitchToSceneCamera(string sceneName)
-    {
-        if (sceneCameras.ContainsKey(sceneName))
+        // Si la escena base no está cargada (fallback), cargamos en single.
+        Scene baseScene = SceneManager.GetSceneByName(baseSceneName);
+        if (!baseScene.IsValid() || !baseScene.isLoaded)
         {
-            CinemachineVirtualCamera targetVCam = sceneCameras[sceneName];
+            SceneFlowManager.EnsureInstance().LoadSceneByName(baseSceneName);
+            _isTransitioning = false;
+            yield break;
+        }
 
-            // Set target camera priority to highest
-            targetVCam.Priority = 100;
+        string sceneToUnload = SceneManager.GetActiveScene().name;
 
-            // Lower priority of all other cameras
-            foreach (var kvp in sceneCameras)
+        // Volver a la escena base como activa antes de descargar el minijuego.
+        SceneManager.SetActiveScene(baseScene);
+        _currentActiveScene = baseSceneName;
+
+        RegisterSceneCamera(baseScene);
+        SwitchToSceneCamera(baseSceneName);
+
+        if (win && ResourceManager.Instance != null)
+        {
+            // Recompensa básica de minijuego (placeholder funcional)
+            // Aquí luego podéis diferenciar por minijuego/tipo de recurso.
+            ResourceManager.Instance.AddResource(ResourceType.Materials, 50);
+
+            // Aquí iría feedback visual/sonoro de recompensa.
+        }
+
+        if (!string.Equals(sceneToUnload, baseSceneName) && SceneManager.GetSceneByName(sceneToUnload).isLoaded)
+        {
+            AsyncOperation asyncUnload = SceneManager.UnloadSceneAsync(sceneToUnload);
+            if (asyncUnload != null)
             {
-                if (kvp.Key != sceneName && kvp.Value != null)
-                {
-                    kvp.Value.Priority = 0;
-                }
+                while (!asyncUnload.isDone)
+                    yield return null;
             }
 
-            // Also handle regular cameras if they exist
-            HandleRegularCameras(sceneName);
+            if (_sceneCameras.ContainsKey(sceneToUnload))
+                _sceneCameras.Remove(sceneToUnload);
+        }
+
+        RefreshCachedReferences();
+        SetBaseUIVisible(true);
+        ResetCameraPriorities(baseSceneName);
+
+        _isTransitioning = false;
+    }
+
+    private void SetBaseUIVisible(bool isVisible)
+    {
+        if (mainCanvas != null)
+            mainCanvas.SetActive(isVisible);
+
+        if (cursorCanvas != null)
+            cursorCanvas.SetActive(isVisible);
+
+        if (GameOver != null)
+            GameOver.SetActive(isVisible);
+    }
+
+    private void SetCursorForMiniGame(bool lockedCursor)
+    {
+        if (lockedCursor)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
         else
         {
-            Debug.LogWarning($"No registered camera for scene: {sceneName}");
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 
-    void HandleRegularCameras(string activeSceneName)
+    private void SwitchToSceneCamera(string sceneName)
     {
-        Camera[] allCameras = FindObjectsOfType<Camera>();
-
-        foreach (Camera cam in allCameras)
+        if (!_sceneCameras.ContainsKey(sceneName))
         {
-            // Check which scene this camera belongs to
-            Scene cameraScene = cam.gameObject.scene;
-
-            if (cameraScene.name == activeSceneName)
-            {
-                // This is the active scene's camera
-                cam.tag = "MainCamera";
-                cam.enabled = true;
-
-                // Enable audio listener
-                AudioListener listener = cam.GetComponent<AudioListener>();
-                if (listener != null) listener.enabled = true;
-            }
-            else
-            {
-                // This is from another scene's camera
-                cam.tag = "Untagged";
-                cam.enabled = false;
-
-                // Disable audio listener
-                AudioListener listener = cam.GetComponent<AudioListener>();
-                if (listener != null) listener.enabled = false;
-            }
+            Debug.LogWarning($"AdvancedSceneCameraManager: no hay cámara registrada para '{sceneName}'.");
+            HandleRegularCameras(sceneName);
+            return;
         }
-    }
 
-    void ResetCameraPriorities(string baseSceneName)
-    {
-        // Reset all cameras to base priority except base scene
-        foreach (var kvp in sceneCameras)
+        foreach (KeyValuePair<string, CinemachineVirtualCamera> kvp in _sceneCameras)
         {
-            if (kvp.Value != null)
-            {
-                if (kvp.Key == baseSceneName)
-                {
-                    kvp.Value.Priority = 100;
-                }
-                else
-                {
-                    kvp.Value.Priority = 10; // Or whatever default you want
-                }
-            }
+            if (kvp.Value == null)
+                continue;
+
+            kvp.Value.Priority = kvp.Key == sceneName ? 100 : 0;
+        }
+
+        HandleRegularCameras(sceneName);
+    }
+
+    private void HandleRegularCameras(string activeSceneName)
+    {
+        Camera[] allCameras = FindObjectsOfType<Camera>(true);
+
+        for (int i = 0; i < allCameras.Length; i++)
+        {
+            Camera cam = allCameras[i];
+            if (cam == null)
+                continue;
+
+            bool belongsToActiveScene = cam.gameObject.scene.name == activeSceneName;
+
+            // IMPORTANTE:
+            // Esto mantiene la intención de vuestro código original: evitar múltiples cámaras/audio listeners activos.
+            cam.enabled = belongsToActiveScene;
+
+            AudioListener listener = cam.GetComponent<AudioListener>();
+            if (listener != null)
+                listener.enabled = belongsToActiveScene;
         }
     }
 
-    CinemachineVirtualCamera FindVCamInScene(Scene scene)
+    private void ResetCameraPriorities(string baseSceneName)
     {
-        if (!scene.IsValid()) return null;
+        foreach (KeyValuePair<string, CinemachineVirtualCamera> kvp in _sceneCameras)
+        {
+            if (kvp.Value == null)
+                continue;
+
+            kvp.Value.Priority = kvp.Key == baseSceneName ? 100 : 10;
+        }
+    }
+
+    private CinemachineVirtualCamera FindVCamInScene(Scene scene)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
+            return null;
 
         GameObject[] rootObjects = scene.GetRootGameObjects();
 
-        foreach (GameObject obj in rootObjects)
+        for (int i = 0; i < rootObjects.Length; i++)
         {
-            // Check in root object
-            CinemachineVirtualCamera vcam = obj.GetComponent<CinemachineVirtualCamera>();
-            if (vcam != null) return vcam;
+            GameObject root = rootObjects[i];
 
-            // Check in children
-            vcam = obj.GetComponentInChildren<CinemachineVirtualCamera>(true);
-            if (vcam != null) return vcam;
+            CinemachineVirtualCamera vcam = root.GetComponent<CinemachineVirtualCamera>();
+            if (vcam != null)
+                return vcam;
+
+            vcam = root.GetComponentInChildren<CinemachineVirtualCamera>(true);
+            if (vcam != null)
+                return vcam;
         }
 
         return null;
     }
 
-    void CleanupDanglingObjects()
-    {
-        // Find and destroy any objects that might have been left behind
-        GameObject[] allObjects = FindObjectsOfType<GameObject>();
-
-        foreach (GameObject obj in allObjects)
-        {
-            // Check if object is in a scene that doesn't exist anymore
-            if (obj.scene.name == null || !SceneManager.GetSceneByName(obj.scene.name).IsValid())
-            {
-                // This object is orphaned, destroy it
-                if (obj != gameObject) // Don't destroy this manager
-                {
-                    Destroy(obj);
-                }
-            }
-        }
-    }
-
-    // Public method to get current scene
     public string GetCurrentScene()
     {
-        return currentActiveScene;
-    }
-
-    // Clean up on destroy
-    void OnDestroy()
-    {
-        sceneCameras.Clear();
+        return _currentActiveScene;
     }
 }

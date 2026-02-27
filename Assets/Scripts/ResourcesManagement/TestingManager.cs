@@ -1,6 +1,9 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 public class TestingManager : MonoBehaviour
 {
@@ -14,51 +17,62 @@ public class TestingManager : MonoBehaviour
     public Button reviveAllNPCsButton;
     public TextMeshProUGUI debugText;
 
-    void Awake()
+    [Header("Teclas (New Input System)")]
+    [SerializeField] private Key _togglePanelKey = Key.F3;
+    [SerializeField] private Key _killAllKey = Key.F4;
+    [SerializeField] private Key _forceGameOverKey = Key.F5;
+    [SerializeField] private Key _reviveAllKey = Key.F6;
+
+    private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
     }
 
-    void Start()
+    private void Start()
     {
         InitializeTestingUI();
     }
 
-    void Update()
+    private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F3))
+        if (WasKeyPressedThisFrame(_togglePanelKey))
         {
             ToggleTestingPanel();
         }
 
         UpdateDebugInfo();
 
-        if (Input.GetKeyDown(KeyCode.F4))
+        if (WasKeyPressedThisFrame(_killAllKey))
         {
             KillAllNPCs();
         }
 
-        if (Input.GetKeyDown(KeyCode.F5))
+        if (WasKeyPressedThisFrame(_forceGameOverKey))
         {
             ForceGameOverWithDiagnostic();
         }
 
-        if (Input.GetKeyDown(KeyCode.F6))
+        if (WasKeyPressedThisFrame(_reviveAllKey))
         {
             ReviveAllNPCs();
         }
     }
 
-    /// <summary>
-    /// Initializes the testing UI components and button listeners
-    /// </summary>
+    private bool WasKeyPressedThisFrame(Key _key)
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current[_key] != null && Keyboard.current[_key].wasPressedThisFrame;
+#else
+        return false;
+#endif
+    }
+
     private void InitializeTestingUI()
     {
         if (testingPanel != null)
@@ -66,134 +80,61 @@ public class TestingManager : MonoBehaviour
             testingPanel.SetActive(false);
         }
 
-        if (killAllNPCsButton != null)
-        {
-            killAllNPCsButton.onClick.RemoveAllListeners();
-            killAllNPCsButton.onClick.AddListener(KillAllNPCs);
-
-            TextMeshProUGUI buttonText = killAllNPCsButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText != null) buttonText.text = "KILL ALL NPCS";
-
-            Debug.Log("Kill All button configured");
-        }
-
-        if (accelerateNeedsButton != null)
-        {
-            accelerateNeedsButton.onClick.RemoveAllListeners();
-            accelerateNeedsButton.onClick.AddListener(AccelerateAllNPCsNeeds);
-
-            TextMeshProUGUI buttonText = accelerateNeedsButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText != null) buttonText.text = "ACCELERATE NEEDS";
-
-            Debug.Log("Accelerate Needs button configured");
-        }
-
-        if (forceGameOverButton != null)
-        {
-            forceGameOverButton.onClick.RemoveAllListeners();
-            forceGameOverButton.onClick.AddListener(ForceGameOverWithDiagnostic);
-
-            TextMeshProUGUI buttonText = forceGameOverButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText != null) buttonText.text = "FORCE GAME OVER";
-
-            Debug.Log("Force Game Over button configured");
-        }
-
-        if (reviveAllNPCsButton != null)
-        {
-            reviveAllNPCsButton.onClick.RemoveAllListeners();
-            reviveAllNPCsButton.onClick.AddListener(ReviveAllNPCs);
-
-            TextMeshProUGUI buttonText = reviveAllNPCsButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText != null) buttonText.text = "REVIVE ALL NPCS";
-
-            Debug.Log("Revive All button configured");
-        }
-
-        Debug.Log("TestingManager initialized - Press F3 to show testing panel");
-        Debug.Log("Shortcuts: F4=Kill All, F5=Game Over, F6=Revive All");
+        BindButton(killAllNPCsButton, KillAllNPCs, "KILL ALL NPCS");
+        BindButton(accelerateNeedsButton, AccelerateAllNPCsNeeds, "ACCELERATE NEEDS");
+        BindButton(forceGameOverButton, ForceGameOverWithDiagnostic, "FORCE GAME OVER");
+        BindButton(reviveAllNPCsButton, ReviveAllNPCs, "REVIVE ALL NPCS");
     }
 
-    /// <summary>
-    /// Toggles the testing panel visibility
-    /// </summary>
+    private void BindButton(Button _button, UnityEngine.Events.UnityAction _action, string _label)
+    {
+        if (_button == null)
+        {
+            return;
+        }
+
+        _button.onClick.RemoveAllListeners();
+        _button.onClick.AddListener(_action);
+
+        TextMeshProUGUI _buttonText = _button.GetComponentInChildren<TextMeshProUGUI>();
+        if (_buttonText != null)
+        {
+            _buttonText.text = _label;
+        }
+    }
+
     private void ToggleTestingPanel()
     {
         if (testingPanel != null)
         {
-            bool newState = !testingPanel.activeInHierarchy;
-            testingPanel.SetActive(newState);
-            Debug.Log($"Testing Panel {(newState ? "ACTIVATED" : "DEACTIVATED")}");
+            testingPanel.SetActive(!testingPanel.activeSelf);
         }
     }
 
-    /// <summary>
-    /// Kills all NPCs in the scene for testing purposes
-    /// </summary>
     public void KillAllNPCs()
     {
-        Debug.LogWarning("KILLING ALL NPCS...");
-
-        DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
-        int killedCount = 0;
-
-        foreach (DwellerNPC npc in allNPCs)
+        DwellerNPC[] _allNPCs = FindObjectsOfType<DwellerNPC>(true);
+        for (int i = 0; i < _allNPCs.Length; i++)
         {
-            if (npc != null && !npc.IsDead)
+            if (_allNPCs[i] != null && !_allNPCs[i].IsDead)
             {
-                npc.KillInstantly();
-                killedCount++;
+                _allNPCs[i].KillInstantly();
             }
         }
-
-        Debug.Log($"{killedCount} NPCs eliminated of {allNPCs.Length} total");
 
         CheckForGameOver();
     }
 
-    /// <summary>
-    /// Checks if game over condition has been met after killing NPCs
-    /// </summary>
-    private void CheckForGameOver()
-    {
-        if (ResourceManager.Instance != null)
-        {
-            int deadCount = ResourceManager.Instance.GetDeadNPCCount();
-            int maxDeaths = ResourceManager.Instance.GetMaxAllowedDeaths();
-
-            Debug.Log($"Current deaths: {deadCount}/{maxDeaths}");
-
-            if (deadCount >= maxDeaths)
-            {
-                Debug.Log("Game Over condition reached - Should activate automatically");
-            }
-            else
-            {
-                Debug.Log($"Not enough deaths for Game Over yet ({deadCount}/{maxDeaths})");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Revives all dead NPCs in the scene
-    /// </summary>
     public void ReviveAllNPCs()
     {
-        Debug.Log("REVIVING ALL NPCS...");
-
-        DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
-        int revivedCount = 0;
-
-        foreach (DwellerNPC npc in allNPCs)
+        DwellerNPC[] _allNPCs = FindObjectsOfType<DwellerNPC>(true);
+        for (int i = 0; i < _allNPCs.Length; i++)
         {
-            if (npc != null && npc.IsDead)
+            if (_allNPCs[i] != null && _allNPCs[i].IsDead)
             {
-                npc.Revive();
-                revivedCount++;
+                _allNPCs[i].Revive();
             }
         }
-
-        Debug.Log($"{revivedCount} NPCs revived of {allNPCs.Length} total");
 
         if (AssignmentManager.Instance != null)
         {
@@ -207,210 +148,155 @@ public class TestingManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Accelerates the needs of all NPCs for testing
-    /// </summary>
     public void AccelerateAllNPCsNeeds()
     {
-        Debug.Log("ACCELERATING NEEDS OF ALL NPCS...");
-
-        DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
-        int acceleratedCount = 0;
-
-        foreach (DwellerNPC npc in allNPCs)
+        DwellerNPC[] _allNPCs = FindObjectsOfType<DwellerNPC>(true);
+        for (int i = 0; i < _allNPCs.Length; i++)
         {
-            if (npc != null && !npc.IsDead)
+            if (_allNPCs[i] != null && !_allNPCs[i].IsDead && _allNPCs[i].needs != null)
             {
-                if (npc.needs != null)
-                {
-                    npc.needs.AccelerateNeedsWithoutKilling();
-                    acceleratedCount++;
-                    Debug.Log($"{npc.dwellerName} - H:{(int)npc.needs.hunger} T:{(int)npc.needs.thirst} F:{(int)npc.needs.fatigue}");
-                }
+                _allNPCs[i].needs.AccelerateNeedsWithoutKilling();
             }
         }
 
-        Debug.Log($"Needs accelerated for {acceleratedCount} NPCs");
-
-        Invoke("CheckForDeathsAfterAcceleration", 1f);
+        Invoke(nameof(CheckForGameOver), 0.25f);
     }
 
-    /// <summary>
-    /// Checks for deaths after accelerating NPC needs
-    /// </summary>
-    private void CheckForDeathsAfterAcceleration()
+    private void CheckForGameOver()
     {
-        Debug.Log("Checking deaths after acceleration...");
-        CheckForGameOver();
+        if (ResourceManager.Instance != null)
+        {
+            ResourceManager.Instance.ForceCheckGameOver();
+        }
     }
 
-    /// <summary>
-    /// Forces game over with detailed diagnostic information
-    /// </summary>
     public void ForceGameOverWithDiagnostic()
     {
-        Debug.LogWarning("=== FORCED GAME OVER DIAGNOSTIC ===");
-
-        // 1. Check managers
-        Debug.Log($"1. GameOverManager: {GameOverManager.Instance != null}");
-        Debug.Log($"2. ResourceManager: {ResourceManager.Instance != null}");
-
-        // 2. Check current state
-        if (GameOverManager.Instance != null)
-        {
-            Debug.Log($"3. isGameOver state: {GameOverManager.Instance.IsGameOver()}");
-            GameOverManager.Instance.DebugStatus();
-        }
-
-        // 3. Force Game Over
-        Debug.Log("4. Forcing Game Over...");
+        Debug.Log("=== TESTING: FORCE GAME OVER ===");
+        Debug.Log($"GameOverManager: {GameOverManager.Instance != null}");
+        Debug.Log($"ResourceManager: {ResourceManager.Instance != null}");
 
         if (GameOverManager.Instance != null)
         {
-            Debug.Log("Using GameOverManager.ForceGameOver()");
             GameOverManager.Instance.ForceGameOver();
         }
         else if (ResourceManager.Instance != null)
         {
-            Debug.Log("Using ResourceManager.TriggerGameOver()");
             ResourceManager.Instance.TriggerGameOver();
         }
-        else
-        {
-            Debug.LogError("No managers available for Game Over");
-        }
-
-        Debug.Log("=== END DIAGNOSTIC ===");
     }
 
-    /// <summary>
-    /// Public method to force game over
-    /// </summary>
     public void ForceGameOver()
     {
         ForceGameOverWithDiagnostic();
     }
 
-    /// <summary>
-    /// Updates the debug information display
-    /// </summary>
     private void UpdateDebugInfo()
     {
-        if (debugText != null && testingPanel != null && testingPanel.activeInHierarchy)
+        if (debugText == null || testingPanel == null || !testingPanel.activeInHierarchy)
         {
-            DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
-            int aliveCount = 0;
-            int deadCount = 0;
-            int criticalCount = 0;
+            return;
+        }
 
-            foreach (DwellerNPC npc in allNPCs)
+        DwellerNPC[] _allNPCs = FindObjectsOfType<DwellerNPC>(true);
+        int _alive = 0;
+        int _dead = 0;
+        int _critical = 0;
+
+        for (int i = 0; i < _allNPCs.Length; i++)
+        {
+            DwellerNPC _npc = _allNPCs[i];
+            if (_npc == null)
             {
-                if (npc.IsDead)
-                    deadCount++;
-                else
+                continue;
+            }
+
+            if (_npc.IsDead)
+            {
+                _dead++;
+            }
+            else
+            {
+                _alive++;
+                if (_npc.needs != null && _npc.needs.IsCritical())
                 {
-                    aliveCount++;
-                    if (npc.needs != null && npc.needs.IsCritical())
-                        criticalCount++;
+                    _critical++;
                 }
             }
-
-            string debugInfo = "DEBUG INFO:\n";
-            debugInfo += $"Alive NPCs: {aliveCount}\n";
-            debugInfo += $"Dead NPCs: {deadCount}\n";
-            debugInfo += $"Critical NPCs: {criticalCount}\n";
-
-            if (ResourceManager.Instance != null)
-            {
-                debugInfo += $"Total Deaths: {ResourceManager.Instance.GetDeadNPCCount()}\n";
-                debugInfo += $"Game Over Limit: {ResourceManager.Instance.GetMaxAllowedDeaths()}\n";
-                debugInfo += $"Game Over: {(ResourceManager.Instance.IsGameOverTriggered() ? "ACTIVE" : "INACTIVE")}";
-            }
-
-            debugText.text = debugInfo;
         }
+
+        string _text = "DEBUG INFO\n";
+        _text += $"Alive NPCs: {_alive}\n";
+        _text += $"Dead NPCs: {_dead}\n";
+        _text += $"Critical NPCs: {_critical}\n";
+
+        if (ResourceManager.Instance != null)
+        {
+            _text += $"Total Deaths: {ResourceManager.Instance.GetDeadNPCCount()}\n";
+            _text += $"Game Over Limit: {ResourceManager.Instance.GetMaxAllowedDeaths()}\n";
+            _text += $"Game Over: {(ResourceManager.Instance.IsGameOverTriggered() ? "ACTIVE" : "INACTIVE")}";
+        }
+
+        debugText.text = _text;
     }
 
-    /// <summary>
-    /// Kills a specific NPC by name
-    /// </summary>
-    /// <param name="npcName">Name of the NPC to kill</param>
-    public void KillNPCByName(string npcName)
+    public void KillNPCByName(string _npcName)
     {
-        DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
-
-        foreach (DwellerNPC npc in allNPCs)
+        if (string.IsNullOrWhiteSpace(_npcName))
         {
-            if (npc != null && npc.dwellerName == npcName && !npc.IsDead)
+            return;
+        }
+
+        DwellerNPC[] _allNPCs = FindObjectsOfType<DwellerNPC>(true);
+        for (int i = 0; i < _allNPCs.Length; i++)
+        {
+            if (_allNPCs[i] != null && _allNPCs[i].dwellerName == _npcName && !_allNPCs[i].IsDead)
             {
-                npc.KillInstantly();
-                Debug.Log($"{npcName} eliminated");
+                _allNPCs[i].KillInstantly();
                 CheckForGameOver();
                 return;
             }
         }
-
-        Debug.LogWarning($"NPC {npcName} not found or already dead");
     }
 
-    /// <summary>
-    /// Revives a specific NPC by name
-    /// </summary>
-    /// <param name="npcName">Name of the NPC to revive</param>
-    public void ReviveNPCByName(string npcName)
+    public void ReviveNPCByName(string _npcName)
     {
-        DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
-
-        foreach (DwellerNPC npc in allNPCs)
+        if (string.IsNullOrWhiteSpace(_npcName))
         {
-            if (npc != null && npc.dwellerName == npcName && npc.IsDead)
+            return;
+        }
+
+        DwellerNPC[] _allNPCs = FindObjectsOfType<DwellerNPC>(true);
+        for (int i = 0; i < _allNPCs.Length; i++)
+        {
+            if (_allNPCs[i] != null && _allNPCs[i].dwellerName == _npcName && _allNPCs[i].IsDead)
             {
-                npc.Revive();
-                Debug.Log($"{npcName} revived");
+                _allNPCs[i].Revive();
                 return;
             }
         }
-
-        Debug.LogWarning($"NPC {npcName} not found or already alive");
     }
 
-    /// <summary>
-    /// Performs a complete system debug
-    /// </summary>
     [ContextMenu("Complete System Debug")]
     public void FullSystemDebug()
     {
         Debug.Log("=== COMPLETE SYSTEM DEBUG ===");
-
         Debug.Log($"GameOverManager: {GameOverManager.Instance != null}");
         Debug.Log($"ResourceManager: {ResourceManager.Instance != null}");
         Debug.Log($"TestingManager: {Instance != null}");
-
-        if (GameOverManager.Instance != null)
-        {
-            Debug.Log($"GameOver active: {GameOverManager.Instance.IsGameOver()}");
-            Debug.Log($"GameOverPanel active: {GameOverManager.Instance.gameOverPanel != null && GameOverManager.Instance.gameOverPanel.activeInHierarchy}");
-        }
-
-        if (ResourceManager.Instance != null)
-        {
-            Debug.Log($"Registered deaths: {ResourceManager.Instance.GetDeadNPCCount()}");
-            Debug.Log($"GameOver Limit: {ResourceManager.Instance.GetMaxAllowedDeaths()}");
-        }
-
-        DwellerNPC[] allNPCs = FindObjectsOfType<DwellerNPC>();
-        Debug.Log($"Total NPCs in scene: {allNPCs.Length}");
-
-        foreach (DwellerNPC npc in allNPCs)
-        {
-            string state = npc.IsDead ? "DEAD" : "ALIVE";
-            string needs = npc.needs != null ? npc.needs.GetNeedsStatus() : "NO NEEDS";
-            Debug.Log($"- {npc.dwellerName}: {state} | {needs}");
-        }
-
         Debug.Log($"Time.timeScale: {Time.timeScale}");
 
-        Debug.Log("=== END DEBUG ===");
+        DwellerNPC[] _allNPCs = FindObjectsOfType<DwellerNPC>(true);
+        Debug.Log($"Total NPCs: {_allNPCs.Length}");
+        for (int i = 0; i < _allNPCs.Length; i++)
+        {
+            DwellerNPC _npc = _allNPCs[i];
+            if (_npc == null)
+            {
+                continue;
+            }
+            Debug.Log($"- {_npc.dwellerName} | {(_npc.IsDead ? "DEAD" : "ALIVE")} | {(_npc.needs != null ? _npc.needs.GetNeedsStatus() : "NO NEEDS")}");
+        }
     }
 
     [ContextMenu("Show Testing Panel")]

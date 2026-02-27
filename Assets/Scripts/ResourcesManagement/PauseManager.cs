@@ -1,8 +1,12 @@
-﻿using UnityEngine;
-using TMPro;
+﻿using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Menú de pausa + settings en juego.
+/// Migrado a New Input System (sin Input.GetKey / Input.GetButton).
+/// </summary>
 public class PauseManager : MonoBehaviour
 {
     public static PauseManager Instance;
@@ -10,9 +14,9 @@ public class PauseManager : MonoBehaviour
     [Header("Panels")]
     public GameObject pausePanel;
     public GameObject unsavedChangesPanel;
-    public GameObject gameOverPanel; // Mantener la referencia pero no usarla para lógica
+    public GameObject gameOverPanel; // Se mantiene referencia por compatibilidad visual, no lógica principal.
 
-    [Header("Game Over UI")]
+    [Header("Game Over UI (fallback legacy si faltara GameOverManager)")]
     public TextMeshProUGUI gameOverTitle;
     public TextMeshProUGUI gameOverDescription;
     public TextMeshProUGUI gameOverStats;
@@ -27,258 +31,278 @@ public class PauseManager : MonoBehaviour
     public TMP_Dropdown resolutionDropdown;
     public Toggle fullscreenToggle;
 
-    private bool isPaused = false;
-    private Resolution[] resolutions;
+    [Header("Input (New Input System)")]
+    [SerializeField] private PlayerInput _playerInput;
+    [SerializeField] private string _pauseActionName = "Pause";
+    [SerializeField] private bool _allowKeyboardEscapeFallback = true;
+    [SerializeField] private bool _allowGamepadStartFallback = true;
 
-    private float tempMusic;
-    private float tempSFX;
-    private int tempResolution;
-    private bool tempFullscreen;
+    private bool _isPaused;
+    private bool _legacyGameOverFallbackListenersAdded;
 
-    void Awake()
+    private Resolution[] _resolutions;
+    private GameSettingsService.SettingsSnapshot _tempSettings;
+
+    private InputAction _pauseAction;
+
+    private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
         }
-        else
+        else if (Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+
+        if (_playerInput == null)
+            _playerInput = FindObjectOfType<PlayerInput>();
     }
 
-    void Start()
+    private void Start()
     {
-        Debug.Log("⏸️ Inicializando PauseManager...");
+        SceneFlowManager.EnsureInstance();
+        InputDeviceTracker.EnsureInstance();
 
-        // Desactivar TODOS los panels al inicio
         ForceDeactivateAllPanels();
+        CachePauseAction();
 
-        LoadSettings();
         SetupResolutionOptions();
+
+        GameSettingsService.SettingsSnapshot savedSettings = GameSettingsService.LoadFromPrefs();
+        GameSettingsService.WriteToUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle,
+            savedSettings,
+            _resolutions);
+
         SaveTempSettings();
 
         Time.timeScale = 1f;
 
-        // Configurar botones del Game Over (pero la lógica estará en GameOverManager)
-        if (restartButton != null)
-            restartButton.onClick.AddListener(OnRestartGame);
-
-        if (mainMenuButton != null)
-            mainMenuButton.onClick.AddListener(OnGoToMainMenu);
-
-        Debug.Log("✅ PauseManager inicializado - Menú de pausa funcional");
+        ConfigureLegacyGameOverButtonFallbackIfNeeded();
     }
 
-    /// <summary>
-    /// Fuerza la desactivación de todos los panels al inicio
-    /// </summary>
-    private void ForceDeactivateAllPanels()
+    private void OnEnable()
     {
-        // PausePanel - debe estar desactivado
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(false);
-            Debug.Log("✅ PausePanel desactivado al inicio");
-        }
-        else
-        {
-            Debug.LogError("❌ PausePanel no asignado!");
-        }
-
-        // UnsavedChangesPanel - debe estar desactivado
-        if (unsavedChangesPanel != null)
-        {
-            unsavedChangesPanel.SetActive(false);
-            Debug.Log("✅ UnsavedChangesPanel desactivado al inicio");
-        }
-
-        // GameOverPanel - DEBE estar desactivado (esto soluciona el problema)
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(false);
-            Debug.Log("🎮 GameOverPanel FORZADO A DESACTIVADO - Solucionado!");
-        }
-        else
-        {
-            Debug.LogWarning("⚠️ GameOverPanel no asignado en PauseManager");
-        }
+        CachePauseAction();
     }
 
-    void Update()
+    private void OnDisable()
     {
-        // Verificar si hay Game Over activo (evitar pausa durante Game Over)
-        bool isGameOverActive = GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver();
+        // No hay suscripciones persistentes a acciones en este script (se consulta por polling).
+    }
 
-        if (isGameOverActive)
+    private void Update()
+    {
+        if (IsGameOverActive())
         {
-            // Si hay Game Over, no permitir pausa
-            if (isPaused)
-            {
-                // Si estaba pausado, reanudar automáticamente
+            if (_isPaused)
                 ForceResume();
-            }
+
             return;
         }
 
-        // Detección normal de la tecla ESC
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Select"))
+        if (WasPausePressedThisFrame())
         {
-            if (!isPaused)
+            if (!_isPaused)
                 PauseGame();
             else
-                HandleResume();
+                HandleResumeRequest();
         }
     }
 
-    void PauseGame()
+    private void CachePauseAction()
     {
-        isPaused = true;
-        Time.timeScale = 0f;
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(true);
-            Debug.Log("⏸️ Juego pausado - Menú de pausa visible");
-        }
+        if (_playerInput == null)
+            _playerInput = FindObjectOfType<PlayerInput>();
+
+        _pauseAction = null;
+
+        if (_playerInput == null || _playerInput.actions == null)
+            return;
+
+        _pauseAction = _playerInput.actions.FindAction(_pauseActionName, throwIfNotFound: false);
+
+        // Carga remapeos guardados (base para rúbrica UX "Bé")
+        InputBindingSaveManager.LoadBindingOverrides(_playerInput);
     }
 
-    void HandleResume()
+    /// <summary>
+    /// Desactiva paneles al iniciar para evitar estados rotos al cargar escena.
+    /// </summary>
+    private void ForceDeactivateAllPanels()
+    {
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (unsavedChangesPanel != null) unsavedChangesPanel.SetActive(false);
+
+        // Ojo: este panel se mantiene oculto aquí; la lógica real de Game Over la lleva GameOverManager.
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+    }
+
+    private bool WasPausePressedThisFrame()
+    {
+        if (_pauseAction != null && _pauseAction.enabled && _pauseAction.WasPressedThisFrame())
+            return true;
+
+        // Fallbacks usando New Input System (no InputManager antiguo)
+        if (_allowKeyboardEscapeFallback && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            return true;
+
+        if (_allowGamepadStartFallback && Gamepad.current != null)
+        {
+            if (Gamepad.current.startButton.wasPressedThisFrame || Gamepad.current.selectButton.wasPressedThisFrame)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsGameOverActive()
+    {
+        return GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver();
+    }
+
+    private void PauseGame()
+    {
+        _isPaused = true;
+        Time.timeScale = 0f;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(true);
+
+        // Aquí iría SFX/UI animation de apertura de pausa.
+    }
+
+    private void HandleResumeRequest()
     {
         if (HasUnsavedChanges())
         {
             if (unsavedChangesPanel != null)
-            {
                 unsavedChangesPanel.SetActive(true);
-                Debug.Log("💾 Mostrando panel de cambios no guardados");
-            }
+
+            return;
         }
-        else
-        {
-            ResumeGame();
-        }
+
+        ResumeGame();
     }
 
     public void ResumeGame()
     {
-        isPaused = false;
+        _isPaused = false;
         Time.timeScale = 1f;
 
         if (pausePanel != null)
-        {
             pausePanel.SetActive(false);
-            Debug.Log("▶️ Juego reanudado desde botón");
-        }
 
         if (unsavedChangesPanel != null)
             unsavedChangesPanel.SetActive(false);
+
+        // Aquí iría SFX/UI animation de cierre de pausa.
     }
 
-    /// <summary>
-    /// Reanudación forzada (sin mostrar UI)
-    /// </summary>
     private void ForceResume()
     {
-        isPaused = false;
+        _isPaused = false;
         Time.timeScale = 1f;
 
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        if (unsavedChangesPanel != null)
-            unsavedChangesPanel.SetActive(false);
-
-        Debug.Log("🔄 Reanudación forzada (Game Over activo)");
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (unsavedChangesPanel != null) unsavedChangesPanel.SetActive(false);
     }
 
-    /// <summary>
-    /// Maneja el botón Reiniciar del Game Over
-    /// </summary>
-    private void OnRestartGame()
+    public bool IsPaused()
     {
-        Debug.Log("🔄 Botón Reiniciar presionado desde PauseManager");
+        return _isPaused;
+    }
 
-        // Delegar al GameOverManager si existe
+    // =========================================================
+    // FALLBACK LEGACY PARA BOTONES DE GAME OVER (si faltara manager)
+    // =========================================================
+
+    private void ConfigureLegacyGameOverButtonFallbackIfNeeded()
+    {
+        // Si existe GameOverManager, él configura sus botones y no añadimos listeners duplicados.
+        if (GameOverManager.Instance != null)
+            return;
+
+        if (restartButton != null)
+        {
+            restartButton.onClick.RemoveListener(OnRestartGameFallback);
+            restartButton.onClick.AddListener(OnRestartGameFallback);
+            _legacyGameOverFallbackListenersAdded = true;
+        }
+
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.onClick.RemoveListener(OnGoToMainMenuFallback);
+            mainMenuButton.onClick.AddListener(OnGoToMainMenuFallback);
+            _legacyGameOverFallbackListenersAdded = true;
+        }
+    }
+
+    private void OnRestartGameFallback()
+    {
         if (GameOverManager.Instance != null)
         {
             GameOverManager.Instance.ForceRestart();
+            return;
         }
-        else
-        {
-            Debug.LogWarning("⚠️ GameOverManager no encontrado, reiniciando directamente...");
-            RestartGameDirectly();
-        }
+
+        RestartGameDirectly();
     }
 
-    /// <summary>
-    /// Maneja el botón Menú Principal del Game Over
-    /// </summary>
-    private void OnGoToMainMenu()
+    private void OnGoToMainMenuFallback()
     {
-        Debug.Log("🏠 Botón Menú Principal presionado desde PauseManager");
-
-        // Delegar al GameOverManager si existe
         if (GameOverManager.Instance != null)
         {
-            // GameOverManager manejará esto
+            GameOverManager.Instance.GoToMainMenu();
+            return;
         }
-        else
-        {
-            GoToMainMenuDirectly();
-        }
+
+        GoToMainMenuDirectly();
     }
 
-    /// <summary>
-    /// Reinicio directo (fallback)
-    /// </summary>
     private void RestartGameDirectly()
     {
         Time.timeScale = 1f;
 
-        // Desactivar GameOverPanel si está activo
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
 
-        // Reiniciar recursos
         if (ResourceManager.Instance != null)
         {
             ResourceManager.Instance.ResetGameOver();
             ResourceManager.Instance.ResetAllResources();
         }
 
-        Debug.Log("🔄 Reinicio directo ejecutado");
+        SceneFlowManager.EnsureInstance().RestartCurrentScene();
     }
 
-    /// <summary>
-    /// Ir al menú principal directamente (fallback)
-    /// </summary>
     private void GoToMainMenuDirectly()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneFlowManager.EnsureInstance().LoadMainMenu();
     }
 
-    // ========== MÉTODOS DE CONFIGURACIÓN (MANTENER) ==========
+    // =========================================================
+    // SETTINGS (se mantienen métodos públicos para botones UI)
+    // =========================================================
 
     public void ApplySettings()
     {
-        if (resolutionDropdown != null && fullscreenToggle != null)
-        {
-            Screen.SetResolution(
-                resolutions[resolutionDropdown.value].width,
-                resolutions[resolutionDropdown.value].height,
-                fullscreenToggle.isOn
-            );
-        }
+        GameSettingsService.SettingsSnapshot currentSettings = GameSettingsService.ReadFromUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle);
 
-        PlayerPrefs.SetFloat("MusicVol", musicSlider.value);
-        PlayerPrefs.SetFloat("SFXVol", sfxSlider.value);
+        GameSettingsService.ApplyRuntime(currentSettings, _resolutions);
+        GameSettingsService.SaveToPrefs(currentSettings);
 
-        if (resolutionDropdown != null)
-            PlayerPrefs.SetInt("ResIndex", resolutionDropdown.value);
-
-        PlayerPrefs.SetInt("Fullscreen", fullscreenToggle.isOn ? 1 : 0);
-
-        PlayerPrefs.Save();
         SaveTempSettings();
 
         if (unsavedChangesPanel != null)
@@ -289,15 +313,20 @@ public class PauseManager : MonoBehaviour
 
     public void DefaultSettings()
     {
-        if (musicSlider != null) musicSlider.value = 0.7f;
-        if (sfxSlider != null) sfxSlider.value = 0.7f;
-        if (fullscreenToggle != null) fullscreenToggle.isOn = true;
-        if (resolutionDropdown != null) resolutionDropdown.value = 0;
+        GameSettingsService.SettingsSnapshot defaults = GameSettingsService.GetDefaultSettings();
+
+        GameSettingsService.WriteToUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle,
+            defaults,
+            _resolutions);
     }
 
     public void ExitGame()
     {
-        Debug.Log("🚪 Saliendo del juego...");
+        Time.timeScale = 1f;
         Application.Quit();
 
 #if UNITY_EDITOR
@@ -305,49 +334,29 @@ public class PauseManager : MonoBehaviour
 #endif
     }
 
-    void LoadSettings()
+    private void SetupResolutionOptions()
     {
-        if (musicSlider != null)
-            musicSlider.value = PlayerPrefs.GetFloat("MusicVol", 0.7f);
-
-        if (sfxSlider != null)
-            sfxSlider.value = PlayerPrefs.GetFloat("SFXVol", 0.7f);
-
-        if (resolutionDropdown != null)
-            resolutionDropdown.value = PlayerPrefs.GetInt("ResIndex", 0);
-
-        if (fullscreenToggle != null)
-            fullscreenToggle.isOn = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        _resolutions = GameSettingsService.PopulateResolutionDropdown(resolutionDropdown);
     }
 
-    void SetupResolutionOptions()
+    private bool HasUnsavedChanges()
     {
-        resolutions = Screen.resolutions;
-        if (resolutionDropdown != null)
-        {
-            resolutionDropdown.ClearOptions();
-            foreach (var res in resolutions)
-                resolutionDropdown.options.Add(new TMP_Dropdown.OptionData(res.width + "x" + res.height));
-        }
+        GameSettingsService.SettingsSnapshot currentSettings = GameSettingsService.ReadFromUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle);
+
+        return GameSettingsService.HasChanges(currentSettings, _tempSettings);
     }
 
-    bool HasUnsavedChanges()
+    private void SaveTempSettings()
     {
-        if (musicSlider == null || sfxSlider == null || resolutionDropdown == null || fullscreenToggle == null)
-            return false;
-
-        return musicSlider.value != tempMusic ||
-               sfxSlider.value != tempSFX ||
-               resolutionDropdown.value != tempResolution ||
-               fullscreenToggle.isOn != tempFullscreen;
-    }
-
-    void SaveTempSettings()
-    {
-        if (musicSlider != null) tempMusic = musicSlider.value;
-        if (sfxSlider != null) tempSFX = sfxSlider.value;
-        if (resolutionDropdown != null) tempResolution = resolutionDropdown.value;
-        if (fullscreenToggle != null) tempFullscreen = fullscreenToggle.isOn;
+        _tempSettings = GameSettingsService.ReadFromUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle);
     }
 
     public void OnUnsavedYes()
@@ -357,10 +366,13 @@ public class PauseManager : MonoBehaviour
 
     public void OnUnsavedNo()
     {
-        if (musicSlider != null) musicSlider.value = tempMusic;
-        if (sfxSlider != null) sfxSlider.value = tempSFX;
-        if (resolutionDropdown != null) resolutionDropdown.value = tempResolution;
-        if (fullscreenToggle != null) fullscreenToggle.isOn = tempFullscreen;
+        GameSettingsService.WriteToUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle,
+            _tempSettings,
+            _resolutions);
 
         if (unsavedChangesPanel != null)
             unsavedChangesPanel.SetActive(false);
@@ -368,27 +380,31 @@ public class PauseManager : MonoBehaviour
         ResumeGame();
     }
 
-    /// <summary>
-    /// Verifica el estado del PauseManager
-    /// </summary>
-    [ContextMenu("📊 Debug Estado PauseManager")]
+    [ContextMenu("Debug Estado PauseManager")]
     public void DebugPauseStatus()
     {
         Debug.Log("=== PAUSE MANAGER STATUS ===");
-        Debug.Log($"¿Juego pausado?: {isPaused}");
+        Debug.Log($"Pausado: {_isPaused}");
         Debug.Log($"Time.timeScale: {Time.timeScale}");
         Debug.Log($"PausePanel activo: {pausePanel != null && pausePanel.activeInHierarchy}");
-        Debug.Log($"GameOverPanel activo: {gameOverPanel != null && gameOverPanel.activeInHierarchy}");
-        Debug.Log($"GameOverManager existe: {GameOverManager.Instance != null}");
-
-        if (GameOverManager.Instance != null)
-        {
-            Debug.Log($"¿Game Over activo?: {GameOverManager.Instance.IsGameOver()}");
-        }
+        Debug.Log($"UnsavedPanel activo: {unsavedChangesPanel != null && unsavedChangesPanel.activeInHierarchy}");
+        Debug.Log($"GameOver activo (manager): {IsGameOverActive()}");
+        Debug.Log($"PauseAction encontrada: {_pauseAction != null}");
+        Debug.Log($"PlayerInput encontrado: {_playerInput != null}");
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
-        Debug.Log("🗑️ PauseManager destruido");
+        if (_legacyGameOverFallbackListenersAdded)
+        {
+            if (restartButton != null)
+                restartButton.onClick.RemoveListener(OnRestartGameFallback);
+
+            if (mainMenuButton != null)
+                mainMenuButton.onClick.RemoveListener(OnGoToMainMenuFallback);
+        }
+
+        if (Instance == this)
+            Instance = null;
     }
 }

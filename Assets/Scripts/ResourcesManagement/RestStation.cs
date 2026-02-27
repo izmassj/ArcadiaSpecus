@@ -1,109 +1,92 @@
-﻿// RestStation.cs
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class RestStation : WorkStation
 {
     [Header("Configuración Descanso")]
     public int maxRestingNPCs = 2;
-    public float restEfficiency = 2.0f;
+    public float restEfficiency = 1.5f;
     public float fatigueRecoveryRate = 40f;
 
-    private List<DwellerNPC> restingNPCs = new List<DwellerNPC>();
+    [SerializeField] private float _slotSpacing = 1f;
 
-    void Start()
+    private readonly List<DwellerNPC> _restingNPCs = new List<DwellerNPC>();
+
+    protected override void Awake()
     {
-        if (string.IsNullOrEmpty(stationId))
-            stationId = System.Guid.NewGuid().ToString();
-
-        stationName = "Cama Descanso";
-        isConsumptionStation = true; // Marcar como estación de consumo
+        base.Awake();
+        stationName = string.IsNullOrWhiteSpace(stationName) ? "Cama Descanso" : stationName;
+        isConsumptionStation = true;
     }
 
-    void Update()
+    private void Update()
     {
-        // Aplicar recuperación de fatiga a todos los NPCs descansando
-        foreach (var npc in restingNPCs)
+        for (int i = _restingNPCs.Count - 1; i >= 0; i--)
         {
-            if (npc != null && npc.needs != null)
+            DwellerNPC _npc = _restingNPCs[i];
+            if (_npc == null || _npc.IsDead)
             {
-                npc.needs.Rest(Time.deltaTime * restEfficiency);
+                _restingNPCs.RemoveAt(i);
+                continue;
+            }
 
-                // Debug opcional cada 5 segundos
-                if (Time.frameCount % 300 == 0)
-                {
-                    Debug.Log($"{npc.dwellerName} descansando (F:{(int)npc.needs.fatigue})");
-                }
+            if (_npc.needs != null)
+            {
+                float _mult = Mathf.Max(0.1f, restEfficiency);
+                _npc.needs.Rest(Time.deltaTime * _mult);
             }
         }
     }
 
-    /// <summary>
-    /// Verifica si la estación puede aceptar más NPCs
-    /// </summary>
     public bool CanAcceptNPC()
     {
-        return restingNPCs.Count < maxRestingNPCs;
+        return _restingNPCs.Count < Mathf.Max(1, maxRestingNPCs);
     }
 
-    /// <summary>
-    /// Asigna un NPC para descansar en esta estación
-    /// </summary>
-    public void AssignRestingNPC(DwellerNPC npc)
+    public void AssignRestingNPC(DwellerNPC _npc)
     {
-        if (!restingNPCs.Contains(npc) && CanAcceptNPC())
+        if (_npc == null)
         {
-            restingNPCs.Add(npc);
-            npc.transform.position = GetRestingPosition(restingNPCs.Count - 1);
-            Debug.Log($"{npc.dwellerName} se acostó en {stationName} (F:{(int)npc.needs.fatigue})");
+            return;
         }
-    }
 
-    /// <summary>
-    /// Remueve un NPC de la estación de descanso
-    /// </summary>
-    public void RemoveRestingNPC(DwellerNPC npc)
-    {
-        if (restingNPCs.Contains(npc))
+        if (_restingNPCs.Contains(_npc) || !CanAcceptNPC())
         {
-            restingNPCs.Remove(npc);
-            Debug.Log($"{npc.dwellerName} se levantó de {stationName} (F:{(int)npc.needs.fatigue})");
+            return;
         }
+
+        _restingNPCs.Add(_npc);
+        _npc.transform.position = GetRestingPosition(_restingNPCs.Count - 1);
     }
 
-    /// <summary>
-    /// Obtiene la posición de descanso basada en el índice
-    /// </summary>
-    Vector3 GetRestingPosition(int index)
+    public void RemoveRestingNPC(DwellerNPC _npc)
     {
-        Vector3[] positions = {
-            transform.position + transform.forward * 1f,
-            transform.position + transform.forward * -1f
-        };
-        return index < positions.Length ? positions[index] : transform.position;
+        if (_npc == null)
+        {
+            return;
+        }
+
+        _restingNPCs.Remove(_npc);
     }
 
-    /// <summary>
-    /// Obtiene la posición principal para descansar
-    /// </summary>
+    private Vector3 GetRestingPosition(int _index)
+    {
+        float _offset = (_index - (Mathf.Max(1, maxRestingNPCs) - 1) * 0.5f) * _slotSpacing;
+        return transform.position + transform.right * _offset;
+    }
+
     public Vector3 GetRestPosition()
     {
         return GetRestingPosition(0);
     }
 
-    /// <summary>
-    /// Verifica si un NPC debería dejar la estación de descanso
-    /// </summary>
-    public bool ShouldNPCLeave(DwellerNPC npc)
+    public bool ShouldNPCLeave(DwellerNPC _npc)
     {
-        return npc.needs.fatigue <= 5f;
+        return _npc == null || _npc.needs == null || _npc.needs.IsFullyRested();
     }
 
-    /// <summary>
-    /// Obtiene el número de NPCs actualmente descansando
-    /// </summary>
     public int GetRestingNPCCount()
     {
-        return restingNPCs.Count;
+        return _restingNPCs.Count;
     }
 }

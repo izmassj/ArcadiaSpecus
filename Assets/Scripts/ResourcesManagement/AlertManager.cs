@@ -1,30 +1,33 @@
-﻿// AlertManager.cs
 using UnityEngine;
 
 public class AlertManager : MonoBehaviour
 {
     public static AlertManager Instance;
 
-    void Awake()
+    private void Awake()
     {
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
+            Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
     }
 
-    void Start()
+    private void OnEnable()
     {
-        // Suscribirse al evento de recursos críticos
         ResourceManager.OnResourceCritical += OnResourceCritical;
     }
 
-    /// <summary>
-    /// Maneja el evento cuando un recurso alcanza nivel crítico
-    /// </summary>
-    /// <param name="resourceType">Tipo de recurso en estado crítico</param>
-    void OnResourceCritical(ResourceType resourceType)
+    private void OnDisable()
     {
-        Debug.Log($"ALERTA: {resourceType} está en nivel crítico!");
+        ResourceManager.OnResourceCritical -= OnResourceCritical;
+    }
+
+    private void OnResourceCritical(ResourceType _resourceType)
+    {
+        Debug.Log($"ALERTA: {_resourceType} en nivel crítico");
+        // Comentario audio/UI: aquí se podría disparar popup/sonido de alerta.
     }
 }

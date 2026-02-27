@@ -1,13 +1,18 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Menú principal + settings.
+/// Mantiene métodos públicos usados por botones del inspector.
+/// </summary>
 public class MainMenuManager : MonoBehaviour
 {
     [Header("Panels")]
     public GameObject settingsPanel;
     public GameObject unsavedChangesPanel;
+    public GameObject helpPanel;
+    public GameObject creditsPanel;
 
     [Header("Settings UI")]
     public Slider musicSlider;
@@ -15,20 +20,32 @@ public class MainMenuManager : MonoBehaviour
     public TMP_Dropdown resolutionDropdown;
     public Toggle fullscreenToggle;
 
-    private Resolution[] resolutions;
+    private Resolution[] _resolutions;
+    private GameSettingsService.SettingsSnapshot _tempSettings;
 
-    private float tempMusic;
-    private float tempSFX;
-    private int tempResolution;
-    private bool tempFullscreen;
-
-    void Start()
+    private void Awake()
     {
-        settingsPanel.SetActive(false);
-        unsavedChangesPanel.SetActive(false);
+        SceneFlowManager.EnsureInstance();
+    }
 
-        LoadSettings();
+    private void Start()
+    {
+        SafeSetActive(settingsPanel, false);
+        SafeSetActive(unsavedChangesPanel, false);
+        SafeSetActive(helpPanel, false);
+        SafeSetActive(creditsPanel, false);
+
         SetupResolutionOptions();
+
+        GameSettingsService.SettingsSnapshot savedSettings = GameSettingsService.LoadFromPrefs();
+        GameSettingsService.WriteToUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle,
+            savedSettings,
+            _resolutions);
+
         SaveTempSettings();
     }
 
@@ -38,18 +55,49 @@ public class MainMenuManager : MonoBehaviour
 
     public void PlayGame()
     {
-        SceneManager.LoadScene("NPCBunkerNavigation"); // Cambia al nombre real de tu escena
+        // Aquí iría un SFX de botón al integrarlo.
+        SceneFlowManager.EnsureInstance().LoadBunker();
     }
 
     public void OpenSettings()
     {
-        settingsPanel.SetActive(true);
         SaveTempSettings();
+        SafeSetActive(unsavedChangesPanel, false);
+        SafeSetActive(settingsPanel, true);
     }
 
     public void QuitGame()
     {
+        // Aquí iría un SFX de botón al integrarlo.
         Application.Quit();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
+    }
+
+    // ---------------------------
+    //      HELP / ABOUT (rúbrica)
+    // ---------------------------
+
+    public void OpenHelp()
+    {
+        SafeSetActive(helpPanel, true);
+    }
+
+    public void CloseHelp()
+    {
+        SafeSetActive(helpPanel, false);
+    }
+
+    public void OpenCredits()
+    {
+        SafeSetActive(creditsPanel, true);
+    }
+
+    public void CloseCredits()
+    {
+        SafeSetActive(creditsPanel, false);
     }
 
     // ---------------------------
@@ -60,40 +108,44 @@ public class MainMenuManager : MonoBehaviour
     {
         if (HasUnsavedChanges())
         {
-            unsavedChangesPanel.SetActive(true);
+            SafeSetActive(unsavedChangesPanel, true);
+            return;
         }
-        else
-        {
-            settingsPanel.SetActive(false);
-        }
+
+        SafeSetActive(unsavedChangesPanel, false);
+        SafeSetActive(settingsPanel, false);
     }
 
     public void ApplySettings()
     {
-        Screen.SetResolution(
-            resolutions[resolutionDropdown.value].width,
-            resolutions[resolutionDropdown.value].height,
-            fullscreenToggle.isOn
-        );
+        GameSettingsService.SettingsSnapshot currentSettings = GameSettingsService.ReadFromUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle);
 
-        PlayerPrefs.SetFloat("MusicVol", musicSlider.value);
-        PlayerPrefs.SetFloat("SFXVol", sfxSlider.value);
-        PlayerPrefs.SetInt("ResIndex", resolutionDropdown.value);
-        PlayerPrefs.SetInt("Fullscreen", fullscreenToggle.isOn ? 1 : 0);
+        GameSettingsService.ApplyRuntime(currentSettings, _resolutions);
+        GameSettingsService.SaveToPrefs(currentSettings);
 
-        PlayerPrefs.Save();
+        // Aquí iría la aplicación de volúmenes reales a AudioMixer/FM0D.
+        // Por ahora solo se guardan los valores y se aplica resolución/fullscreen.
+
         SaveTempSettings();
-
-        unsavedChangesPanel.SetActive(false);
-        settingsPanel.SetActive(false);
+        SafeSetActive(unsavedChangesPanel, false);
+        SafeSetActive(settingsPanel, false);
     }
 
     public void DefaultSettings()
     {
-        musicSlider.value = 0.7f;
-        sfxSlider.value = 0.7f;
-        fullscreenToggle.isOn = true;
-        resolutionDropdown.value = 0;
+        GameSettingsService.SettingsSnapshot defaults = GameSettingsService.GetDefaultSettings();
+
+        GameSettingsService.WriteToUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle,
+            defaults,
+            _resolutions);
     }
 
     // ---------------------------
@@ -107,50 +159,50 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnUnsavedNo()
     {
-        musicSlider.value = tempMusic;
-        sfxSlider.value = tempSFX;
-        resolutionDropdown.value = tempResolution;
-        fullscreenToggle.isOn = tempFullscreen;
+        GameSettingsService.WriteToUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle,
+            _tempSettings,
+            _resolutions);
 
-        unsavedChangesPanel.SetActive(false);
-        settingsPanel.SetActive(false);
+        SafeSetActive(unsavedChangesPanel, false);
+        SafeSetActive(settingsPanel, false);
     }
 
     // ---------------------------
     //   SISTEMA DE PREFERENCIAS
     // ---------------------------
 
-    void LoadSettings()
+    private void SetupResolutionOptions()
     {
-        musicSlider.value = PlayerPrefs.GetFloat("MusicVol", 0.7f);
-        sfxSlider.value = PlayerPrefs.GetFloat("SFXVol", 0.7f);
-        resolutionDropdown.value = PlayerPrefs.GetInt("ResIndex", 0);
-        fullscreenToggle.isOn = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        _resolutions = GameSettingsService.PopulateResolutionDropdown(resolutionDropdown);
     }
 
-    void SetupResolutionOptions()
+    private bool HasUnsavedChanges()
     {
-        resolutions = Screen.resolutions;
-        resolutionDropdown.ClearOptions();
+        GameSettingsService.SettingsSnapshot currentSettings = GameSettingsService.ReadFromUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle);
 
-        foreach (var res in resolutions)
-            resolutionDropdown.options.Add(new TMP_Dropdown.OptionData(res.width + "x" + res.height));
+        return GameSettingsService.HasChanges(currentSettings, _tempSettings);
     }
 
-    bool HasUnsavedChanges()
+    private void SaveTempSettings()
     {
-        return
-            musicSlider.value != tempMusic ||
-            sfxSlider.value != tempSFX ||
-            resolutionDropdown.value != tempResolution ||
-            fullscreenToggle.isOn != tempFullscreen;
+        _tempSettings = GameSettingsService.ReadFromUI(
+            musicSlider,
+            sfxSlider,
+            resolutionDropdown,
+            fullscreenToggle);
     }
 
-    void SaveTempSettings()
+    private void SafeSetActive(GameObject target, bool isActive)
     {
-        tempMusic = musicSlider.value;
-        tempSFX = sfxSlider.value;
-        tempResolution = resolutionDropdown.value;
-        tempFullscreen = fullscreenToggle.isOn;
+        if (target != null)
+            target.SetActive(isActive);
     }
 }

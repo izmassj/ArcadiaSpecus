@@ -1,10 +1,13 @@
-﻿// ResourceIndicator.cs
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.EventSystems;
 using System.Collections;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
+/// <summary>
+/// Indicador visual de recurso (cantidad + barra + alerta).
+/// Refactorizado para evitar fugas de eventos y null refs.
+/// </summary>
 public class ResourceIndicator : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Referencias UI")]
@@ -25,309 +28,371 @@ public class ResourceIndicator : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public float hoverScale = 1.1f;
     public float animationDuration = 0.2f;
 
-    private int currentAmount;
-    private int maxAmount;
-    private bool isAlertActive = false;
-    private Vector3 originalScale;
-    private Coroutine scaleCoroutine;
+    [Header("Escalado barra")]
+    [SerializeField] private int _fallbackMaxAmount = 100;
+    [SerializeField] private bool _autoGrowMaxAmount = true;
 
-    void Start()
+    private int _currentAmount;
+    private int _maxAmount;
+    private bool _isAlertActive;
+    private Vector3 _originalScale;
+    private Coroutine _scaleCoroutine;
+    private bool _isSubscribed;
+
+    private void Awake()
     {
-        originalScale = transform.localScale;
-
-        if (alertIcon != null)
-            alertIcon.SetActive(false);
-
+        _originalScale = transform.localScale;
         ConfigureFillComponent();
 
-        // Suscribirse a eventos del ResourceManager
-        ResourceManager.OnResourceChanged += OnResourceChanged;
-        ResourceManager.OnResourceCritical += OnResourceCritical;
-        ResourceManager.OnResourceSafe += OnResourceSafe;
-
-        if (ResourceManager.Instance != null)
+        if (alertIcon != null)
         {
-            currentAmount = ResourceManager.Instance.GetResourceAmount(resourceType);
-            maxAmount = CalculateMaxAmount();
-            UpdateDisplay();
+            alertIcon.SetActive(false);
         }
     }
 
-    /// <summary>
-    /// Configura el componente de llenado para mostrar correctamente los valores
-    /// </summary>
-    void ConfigureFillComponent()
+    private void OnEnable()
     {
+        SubscribeEvents();
+        EmergencyUpdate();
+    }
+
+    private void Start()
+    {
+        // Segunda sincronización por si ResourceManager se crea en Start de otro objeto.
+        EmergencyUpdate();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeEvents();
+        StopAllIndicatorAnimations();
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeEvents();
+    }
+
+    private void SubscribeEvents()
+    {
+        if (_isSubscribed)
+        {
+            return;
+        }
+
+        ResourceManager.OnResourceChanged += OnResourceChanged;
+        ResourceManager.OnResourceCritical += OnResourceCritical;
+        ResourceManager.OnResourceSafe += OnResourceSafe;
+        _isSubscribed = true;
+    }
+
+    private void UnsubscribeEvents()
+    {
+        if (!_isSubscribed)
+        {
+            return;
+        }
+
+        ResourceManager.OnResourceChanged -= OnResourceChanged;
+        ResourceManager.OnResourceCritical -= OnResourceCritical;
+        ResourceManager.OnResourceSafe -= OnResourceSafe;
+        _isSubscribed = false;
+    }
+
+    private void ConfigureFillComponent()
+    {
+        if (resourceFill == null)
+        {
+            return;
+        }
+
         resourceFill.type = Image.Type.Filled;
         resourceFill.fillMethod = Image.FillMethod.Vertical;
         resourceFill.fillOrigin = (int)Image.OriginVertical.Bottom;
 
-        var rt = resourceFill.rectTransform;
-        rt.localScale = new Vector3(1, 1, 1);
-        rt.localRotation = Quaternion.identity;
+        RectTransform _rt = resourceFill.rectTransform;
+        _rt.localRotation = Quaternion.identity;
 
-        // Asegurar que no haya escalas negativas en la jerarquía
-        Transform t = resourceFill.transform;
-        while (t.parent != null)
-        {
-            if (t.parent.localScale.y < 0)
-                t.parent.localScale = new Vector3(t.parent.localScale.x, Mathf.Abs(t.parent.localScale.y), t.parent.localScale.z);
-
-            t = t.parent;
-        }
+        // Normalizamos escala local del fill para evitar artefactos de jerarquías invertidas.
+        Vector3 _scale = _rt.localScale;
+        _rt.localScale = new Vector3(Mathf.Abs(_scale.x), Mathf.Abs(_scale.y), Mathf.Abs(_scale.z));
     }
 
-    /// <summary>
-    /// Maneja el evento cuando cambia un recurso
-    /// </summary>
-    void OnResourceChanged(ResourceType type, int amount)
+    private void OnResourceChanged(ResourceType _type, int _amount)
     {
-        if (type == resourceType)
+        if (_type != resourceType)
         {
-            currentAmount = amount;
-            UpdateDisplay();
-            PlayChangeAnimation();
-            CheckAlertStatus();
+            return;
         }
+
+        _currentAmount = Mathf.Max(0, _amount);
+
+        if (_autoGrowMaxAmount)
+        {
+            _maxAmount = Mathf.Max(_maxAmount, _currentAmount);
+        }
+
+        UpdateDisplay();
+        PlayChangeAnimation();
+        CheckAlertStatus();
     }
 
-    /// <summary>
-    /// Maneja el evento cuando un recurso está crítico
-    /// </summary>
-    void OnResourceCritical(ResourceType type)
+    private void OnResourceCritical(ResourceType _type)
     {
-        if (type == resourceType)
+        if (_type != resourceType)
         {
-            isAlertActive = true;
-            ShowAlert(true);
-            PlayCriticalAnimation();
+            return;
         }
+
+        _isAlertActive = true;
+        ShowAlert(true);
+        PlayCriticalAnimation();
     }
 
-    /// <summary>
-    /// Maneja el evento cuando un recurso vuelve a nivel seguro
-    /// </summary>
-    void OnResourceSafe(ResourceType type)
+    private void OnResourceSafe(ResourceType _type)
     {
-        if (type == resourceType)
+        if (_type != resourceType)
         {
-            isAlertActive = false;
-            ShowAlert(false);
-            StopCriticalAnimation();
+            return;
         }
+
+        _isAlertActive = false;
+        ShowAlert(false);
+        StopCriticalAnimation();
     }
 
-    /// <summary>
-    /// Actualiza la visualización del indicador
-    /// </summary>
-    void UpdateDisplay()
+    private void UpdateDisplay()
     {
         if (amountText != null)
-            amountText.text = currentAmount.ToString();
+        {
+            amountText.text = _currentAmount.ToString();
+        }
 
-        float fill = Mathf.Clamp01((float)currentAmount / maxAmount);
-        resourceFill.fillAmount = fill;
+        if (resourceFill == null)
+        {
+            return;
+        }
 
-        // Cambiar color basado en el nivel de llenado
-        if (fill > 0.6f) resourceFill.color = fullColor;
-        else if (fill > 0.3f) resourceFill.color = mediumColor;
-        else resourceFill.color = lowColor;
+        int _safeMax = Mathf.Max(1, _maxAmount);
+        float _fill = Mathf.Clamp01((float)_currentAmount / _safeMax);
+        resourceFill.fillAmount = _fill;
 
-        // Ajustar máximo si es necesario
-        if (currentAmount > maxAmount)
-            maxAmount = currentAmount;
+        if (_fill > 0.6f)
+        {
+            resourceFill.color = fullColor;
+        }
+        else if (_fill > 0.3f)
+        {
+            resourceFill.color = mediumColor;
+        }
+        else
+        {
+            resourceFill.color = lowColor;
+        }
     }
 
-    /// <summary>
-    /// Verifica el estado de alerta del recurso
-    /// </summary>
-    void CheckAlertStatus()
+    private void CheckAlertStatus()
     {
-        int minimum = ResourceManager.Instance.GetMinimumLevel(resourceType);
-
-        if (currentAmount <= minimum && !isAlertActive)
+        if (ResourceManager.Instance == null)
         {
-            isAlertActive = true;
+            return;
+        }
+
+        int _minimum = ResourceManager.Instance.GetMinimumLevel(resourceType);
+
+        if (_currentAmount <= _minimum && !_isAlertActive)
+        {
+            _isAlertActive = true;
             ShowAlert(true);
             PlayCriticalAnimation();
         }
-        else if (currentAmount > minimum && isAlertActive)
+        else if (_currentAmount > _minimum && _isAlertActive)
         {
-            isAlertActive = false;
+            _isAlertActive = false;
             ShowAlert(false);
             StopCriticalAnimation();
         }
     }
 
-    /// <summary>
-    /// Calcula el máximo amount para escalado
-    /// </summary>
-    int CalculateMaxAmount()
+    private int CalculateMaxAmount()
     {
-        int warningLevel = ResourceManager.Instance.GetWarningLevel(resourceType);
-        return Mathf.Max(currentAmount, warningLevel * 3);
+        if (ResourceManager.Instance == null)
+        {
+            return Mathf.Max(1, _fallbackMaxAmount, _currentAmount);
+        }
+
+        int _warningLevel = ResourceManager.Instance.GetWarningLevel(resourceType);
+        return Mathf.Max(1, _currentAmount, _fallbackMaxAmount, _warningLevel * 3);
     }
 
-    /// <summary>
-    /// Muestra u oculta el icono de alerta
-    /// </summary>
-    void ShowAlert(bool show)
+    private void ShowAlert(bool _show)
     {
         if (alertIcon != null)
-            alertIcon.SetActive(show);
-    }
-
-    /// <summary>
-    /// Reproduce animación de cambio de valor
-    /// </summary>
-    void PlayChangeAnimation()
-    {
-        if (!enableHoverEffects) return;
-
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        scaleCoroutine = StartCoroutine(ScaleAnimation(originalScale * 1.05f, 0.1f));
-    }
-
-    /// <summary>
-    /// Reproduce animación de estado crítico
-    /// </summary>
-    void PlayCriticalAnimation()
-    {
-        if (!enableHoverEffects) return;
-
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        scaleCoroutine = StartCoroutine(PulseAnimation());
-    }
-
-    /// <summary>
-    /// Detiene la animación de estado crítico
-    /// </summary>
-    void StopCriticalAnimation()
-    {
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        transform.localScale = originalScale;
-    }
-
-    /// <summary>
-    /// Animación de escala genérica
-    /// </summary>
-    IEnumerator ScaleAnimation(Vector3 targetScale, float duration)
-    {
-        Vector3 start = transform.localScale;
-        float t = 0f;
-
-        while (t < duration)
         {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(start, targetScale, t / duration);
+            alertIcon.SetActive(_show);
+        }
+    }
+
+    private void PlayChangeAnimation()
+    {
+        if (!enableHoverEffects || !isActiveAndEnabled)
+        {
+            return;
+        }
+
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+        }
+
+        _scaleCoroutine = StartCoroutine(ScaleAnimation(_originalScale * 1.05f, 0.1f));
+    }
+
+    private void PlayCriticalAnimation()
+    {
+        if (!enableHoverEffects || !isActiveAndEnabled)
+        {
+            return;
+        }
+
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+        }
+
+        _scaleCoroutine = StartCoroutine(PulseAnimation());
+    }
+
+    private void StopCriticalAnimation()
+    {
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+            _scaleCoroutine = null;
+        }
+
+        transform.localScale = _originalScale;
+    }
+
+    private void StopAllIndicatorAnimations()
+    {
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+            _scaleCoroutine = null;
+        }
+
+        transform.localScale = _originalScale;
+    }
+
+    private IEnumerator ScaleAnimation(Vector3 _targetScale, float _duration)
+    {
+        Vector3 _start = transform.localScale;
+        float _t = 0f;
+        float _safeDuration = Mathf.Max(0.01f, _duration);
+
+        while (_t < _safeDuration)
+        {
+            _t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(_start, _targetScale, _t / _safeDuration);
             yield return null;
         }
 
-        t = 0f;
-        start = transform.localScale;
+        _t = 0f;
+        _start = transform.localScale;
 
-        while (t < duration)
+        while (_t < _safeDuration)
         {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(start, originalScale, t / duration);
-            yield return null;
-        }
-    }
-
-    /// <summary>
-    /// Animación de pulso para estado crítico
-    /// </summary>
-    IEnumerator PulseAnimation()
-    {
-        while (isAlertActive)
-        {
-            yield return StartCoroutine(ScaleAnimation(originalScale * 1.15f, 0.3f));
-            yield return new WaitForSeconds(0.1f);
-        }
-    }
-
-    /// <summary>
-    /// Maneja el evento de entrar el puntero
-    /// </summary>
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (!enableHoverEffects) return;
-
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        scaleCoroutine = StartCoroutine(HoverAnimation(originalScale * hoverScale, animationDuration));
-    }
-
-    /// <summary>
-    /// Maneja el evento de salir el puntero
-    /// </summary>
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (!enableHoverEffects) return;
-
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        scaleCoroutine = StartCoroutine(HoverAnimation(originalScale, animationDuration));
-    }
-
-    /// <summary>
-    /// Animación de hover suave
-    /// </summary>
-    IEnumerator HoverAnimation(Vector3 targetScale, float duration)
-    {
-        Vector3 start = transform.localScale;
-        float t = 0f;
-
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(start, targetScale, t / duration);
+            _t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(_start, _originalScale, _t / _safeDuration);
             yield return null;
         }
 
-        transform.localScale = targetScale;
+        transform.localScale = _originalScale;
     }
 
-    /// <summary>
-    /// Actualización de emergencia para forzar sincronización
-    /// </summary>
+    private IEnumerator PulseAnimation()
+    {
+        while (_isAlertActive && isActiveAndEnabled)
+        {
+            yield return StartCoroutine(ScaleAnimation(_originalScale * 1.15f, 0.3f));
+            yield return new WaitForSecondsRealtime(0.1f);
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData _eventData)
+    {
+        if (!enableHoverEffects || !isActiveAndEnabled)
+        {
+            return;
+        }
+
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+        }
+
+        _scaleCoroutine = StartCoroutine(HoverAnimation(_originalScale * hoverScale, animationDuration));
+    }
+
+    public void OnPointerExit(PointerEventData _eventData)
+    {
+        if (!enableHoverEffects || !isActiveAndEnabled)
+        {
+            return;
+        }
+
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+        }
+
+        _scaleCoroutine = StartCoroutine(HoverAnimation(_originalScale, animationDuration));
+    }
+
+    private IEnumerator HoverAnimation(Vector3 _targetScale, float _duration)
+    {
+        Vector3 _start = transform.localScale;
+        float _t = 0f;
+        float _safeDuration = Mathf.Max(0.01f, _duration);
+
+        while (_t < _safeDuration)
+        {
+            _t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(_start, _targetScale, _t / _safeDuration);
+            yield return null;
+        }
+
+        transform.localScale = _targetScale;
+        _scaleCoroutine = null;
+    }
+
     [ContextMenu("EMERGENCY UPDATE")]
     public void EmergencyUpdate()
     {
-        Debug.Log($"ACTUALIZACIÓN DE EMERGENCIA PARA {gameObject.name}");
-
-        if (ResourceManager.Instance != null)
+        if (ResourceManager.Instance == null)
         {
-            currentAmount = ResourceManager.Instance.GetResourceAmount(resourceType);
-            maxAmount = CalculateMaxAmount();
+            _currentAmount = 0;
+            _maxAmount = Mathf.Max(1, _fallbackMaxAmount);
             UpdateDisplay();
+            ShowAlert(false);
+            return;
         }
-    }
 
-    /// <summary>
-    /// Sincronización de emergencia con configuración
-    /// </summary>
-    [ContextMenu("SINCRONIZAR CON CONFIGURACIÓN")]
-    public void EmergencySync()
-    {
-        EmergencyUpdate();
-    }
+        _currentAmount = Mathf.Max(0, ResourceManager.Instance.GetResourceAmount(resourceType));
+        _maxAmount = CalculateMaxAmount();
+        _isAlertActive = _currentAmount <= ResourceManager.Instance.GetMinimumLevel(resourceType);
 
-    /// <summary>
-    /// Limpia las suscripciones a eventos al destruir el objeto
-    /// </summary>
-    void OnDestroy()
-    {
-        ResourceManager.OnResourceChanged -= OnResourceChanged;
-        ResourceManager.OnResourceCritical -= OnResourceCritical;
-        ResourceManager.OnResourceSafe -= OnResourceSafe;
+        UpdateDisplay();
+        ShowAlert(_isAlertActive);
+
+        if (_isAlertActive)
+        {
+            PlayCriticalAnimation();
+        }
+        else
+        {
+            StopCriticalAnimation();
+        }
     }
 }

@@ -1,410 +1,488 @@
-﻿// SaveLoadManager.cs
-using UnityEngine;
-using System.IO;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Sistema de guardado/carga simple y robusto para Arcadia Specus.
+/// Guarda recursos, NPCs y estaciones. Mantiene compatibilidad con los save data de Lote 2.
+/// </summary>
 public class SaveLoadManager : MonoBehaviour
 {
     public static SaveLoadManager Instance;
-    private string savePath;
-    private string tempDirectory;
 
-    /// <summary>
-    /// Datos completos del juego para guardar
-    /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class GameSaveData
     {
+        public string saveVersion = "1.0";
+        public string sceneName;
+        public string saveDateUtc;
         public ResourceManager.ResourceSaveData resources;
-        public List<DwellerNPC.DwellerSaveData> dwellers;
-        public List<WorkStation.WorkStationSaveData> workStations;
+        public List<DwellerNPC.DwellerSaveData> dwellers = new List<DwellerNPC.DwellerSaveData>();
+        public List<WorkStation.WorkStationSaveData> workStations = new List<WorkStation.WorkStationSaveData>();
     }
 
-    void Awake()
+    [Header("Configuración")]
+    [SerializeField] private string _saveFileName = "arcadia_save.json";
+    [SerializeField] private bool _dontDestroyOnLoad = true;
+    [SerializeField] private bool _autoSaveOnQuit = true;
+    [SerializeField] private bool _autoSaveOnSceneChange = false;
+    [SerializeField] private bool _verboseLogs = true;
+
+    private string _savePath;
+    private string _saveDirectory;
+    private bool _isLoading;
+
+    public string GetSavePath() => _savePath;
+    public bool IsLoading() => _isLoading;
+
+    private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-
-            // CONFIGURACIÓN MEJORADA DE DIRECTORIOS
-            InitializeDirectories();
-
-            DontDestroyOnLoad(gameObject);
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
+        if (_dontDestroyOnLoad)
+        {
+            DontDestroyOnLoad(gameObject);
+        }
+
+        InitializePaths();
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
 
-    /// <summary>
-    /// Inicializa los directorios necesarios para guardar archivos
-    /// </summary>
-    void InitializeDirectories()
+    private void InitializePaths()
     {
+        _saveDirectory = Path.Combine(Application.persistentDataPath, "Saves");
+        _savePath = Path.Combine(_saveDirectory, _saveFileName);
+
         try
         {
-            // DIRECTORIO DE GUARDADO PRINCIPAL
-            savePath = Path.Combine(Application.persistentDataPath, "Saves", "arcadia_save.json");
-            string saveDirectory = Path.GetDirectoryName(savePath);
-
-            if (!Directory.Exists(saveDirectory))
+            if (!Directory.Exists(_saveDirectory))
             {
-                Directory.CreateDirectory(saveDirectory);
-                Debug.Log($"Directorio de guardado creado: {saveDirectory}");
+                Directory.CreateDirectory(_saveDirectory);
             }
 
-            // DIRECTORIO TEMPORAL ALTERNATIVO (para evitar problemas de permisos)
-            tempDirectory = Path.Combine(Application.persistentDataPath, "Temp");
-            if (!Directory.Exists(tempDirectory))
+            if (_verboseLogs)
             {
-                Directory.CreateDirectory(tempDirectory);
-                Debug.Log($"Directorio temporal creado: {tempDirectory}");
+                Debug.Log($"[SaveLoad] Ruta de guardado: {_savePath}");
             }
-
-            // CONFIGURAR VARIABLES TEMPORALES SI ES NECESARIO
-            SetupTemporaryEnvironment();
-
-            Debug.Log($"SaveLoadManager inicializado:");
-            Debug.Log($"   - Guardado: {savePath}");
-            Debug.Log($"   - Temporal: {tempDirectory}");
-            Debug.Log($"   - Persistente: {Application.persistentDataPath}");
         }
-        catch (System.Exception e)
+        catch (Exception _e)
         {
-            Debug.LogError($"Error inicializando directorios: {e.Message}");
-            // Fallback a ubicaciones más simples
-            savePath = Path.Combine(Application.dataPath, "arcadia_save.json");
-            Debug.Log($"Usando fallback: {savePath}");
+            Debug.LogError($"[SaveLoad] No se pudo crear el directorio de guardado: {_e.Message}");
+            _saveDirectory = Application.persistentDataPath;
+            _savePath = Path.Combine(_saveDirectory, _saveFileName);
         }
     }
 
-    /// <summary>
-    /// Configura el entorno temporal para Unity
-    /// </summary>
-    void SetupTemporaryEnvironment()
+    private void OnSceneLoaded(Scene _scene, LoadSceneMode _mode)
     {
-        try
+        if (_autoSaveOnSceneChange && !_isLoading)
         {
-            // Intentar configurar directorio temporal personalizado
-            string customTemp = Path.Combine(Application.persistentDataPath, "UnityTemp");
-            if (!Directory.Exists(customTemp))
-            {
-                Directory.CreateDirectory(customTemp);
-            }
+            // Comentario para vosotros: aquí podríais filtrar por escenas concretas si no queréis guardar en minijuegos.
+            SaveGame();
+        }
 
-            // Esto puede ayudar con algunos problemas de Unity
-            Environment.SetEnvironmentVariable("UNITY_TEMP_PATH", customTemp);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"No se pudo configurar entorno temporal: {e.Message}");
-        }
+        // Re-sincronizar UI por si los managers persistentes sobreviven a un cambio de escena.
+        TryRefreshUI();
     }
 
-    void Start()
+    public bool SaveExists()
     {
-        // VERIFICACIÓN INICIAL DE PERMISOS
-        CheckFilePermissions();
+        return !string.IsNullOrWhiteSpace(_savePath) && File.Exists(_savePath);
     }
 
-    /// <summary>
-    /// Verifica los permisos de escritura en el directorio
-    /// </summary>
-    void CheckFilePermissions()
-    {
-        try
-        {
-            // Probar permisos de escritura
-            string testFile = Path.Combine(Path.GetDirectoryName(savePath), "permission_test.tmp");
-            File.WriteAllText(testFile, "test");
-            File.Delete(testFile);
-            Debug.Log("Permisos de archivo: OK");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error de permisos: {e.Message}");
-
-            // Fallback a DataPath si persistentDataPath falla
-            if (!savePath.StartsWith(Application.dataPath))
-            {
-                savePath = Path.Combine(Application.dataPath, "Saves", "arcadia_save.json");
-                string directory = Path.GetDirectoryName(savePath);
-                if (!Directory.Exists(directory))
-                    Directory.CreateDirectory(directory);
-
-                Debug.Log($"Cambiado a directorio de datos: {savePath}");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Guarda el estado actual del juego
-    /// </summary>
     public void SaveGame()
     {
         try
         {
             if (ResourceManager.Instance == null)
             {
-                Debug.LogError("No se puede guardar: ResourceManager no inicializado");
+                Debug.LogWarning("[SaveLoad] No se guarda porque ResourceManager.Instance es null.");
                 return;
             }
 
-            // GUARDADO TEMPORAL PRIMERO (patrón atómico)
-            string tempSavePath = savePath + ".tmp";
+            EnsureSaveDirectory();
 
-            GameSaveData saveData = new GameSaveData();
+            GameSaveData _save = BuildCurrentSaveData();
+            string _json = JsonUtility.ToJson(_save, true);
 
-            // Guardar recursos
-            saveData.resources = new ResourceManager.ResourceSaveData
+            string _tempPath = _savePath + ".tmp";
+            File.WriteAllText(_tempPath, _json);
+
+            if (File.Exists(_savePath))
             {
-                food = ResourceManager.Instance.GetResourceAmount(ResourceType.Food),
-                water = ResourceManager.Instance.GetResourceAmount(ResourceType.Water),
-                energy = ResourceManager.Instance.GetResourceAmount(ResourceType.Energy),
-                materials = ResourceManager.Instance.GetResourceAmount(ResourceType.Materials)
-            };
-
-            // Guardar NPCs
-            saveData.dwellers = new List<DwellerNPC.DwellerSaveData>();
-            foreach (var dweller in FindObjectsOfType<DwellerNPC>())
-            {
-                saveData.dwellers.Add(dweller.GetSaveData());
+                File.Delete(_savePath);
             }
 
-            // Guardar máquinas
-            saveData.workStations = new List<WorkStation.WorkStationSaveData>();
-            foreach (var station in FindObjectsOfType<WorkStation>())
+            File.Move(_tempPath, _savePath);
+
+            if (_verboseLogs)
             {
-                saveData.workStations.Add(station.GetSaveData());
+                Debug.Log($"[SaveLoad] Partida guardada correctamente ({_json.Length} bytes)");
             }
-
-            // GUARDAR EN ARCHIVO TEMPORAL PRIMERO
-            string json = JsonUtility.ToJson(saveData, true);
-            File.WriteAllText(tempSavePath, json);
-
-            // REEMPLAZAR ARCHIVO ORIGINAL (operación atómica)
-            if (File.Exists(savePath))
-                File.Delete(savePath);
-
-            File.Move(tempSavePath, savePath);
-
-            Debug.Log($"Partida guardada: {savePath} ({json.Length} bytes)");
         }
-        catch (System.Exception e)
+        catch (Exception _e)
         {
-            Debug.LogError($"Error guardando partida: {e.Message}");
-            EmergencySave();
+            Debug.LogError($"[SaveLoad] Error guardando: {_e.Message}");
         }
     }
 
-    /// <summary>
-    /// Guardado de emergencia cuando falla el guardado normal
-    /// </summary>
-    void EmergencySave()
+    private GameSaveData BuildCurrentSaveData()
     {
-        try
+        GameSaveData _save = new GameSaveData
         {
-            // GUARDADO DE EMERGENCIA EN DATA PATH
-            string emergencyPath = Path.Combine(Application.dataPath, "emergency_save.json");
-            GameSaveData emergencyData = new GameSaveData();
+            sceneName = SceneManager.GetActiveScene().name,
+            saveDateUtc = DateTime.UtcNow.ToString("o"),
+            resources = BuildResourcesSaveData()
+        };
 
-            // Solo guardar recursos críticos
-            emergencyData.resources = new ResourceManager.ResourceSaveData
+        DwellerNPC[] _dwellers = FindObjectsOfType<DwellerNPC>(true);
+        for (int i = 0; i < _dwellers.Length; i++)
+        {
+            if (_dwellers[i] == null)
             {
-                food = ResourceManager.Instance.GetResourceAmount(ResourceType.Food),
-                water = ResourceManager.Instance.GetResourceAmount(ResourceType.Water),
-                energy = ResourceManager.Instance.GetResourceAmount(ResourceType.Energy),
-                materials = 0 // No crítico para emergencia
-            };
+                continue;
+            }
 
-            string json = JsonUtility.ToJson(emergencyData, true);
-            File.WriteAllText(emergencyPath, json);
-            Debug.Log($"Guardado de emergencia: {emergencyPath}");
+            _save.dwellers.Add(_dwellers[i].GetSaveData());
         }
-        catch (System.Exception ex)
+
+        WorkStation[] _stations = FindObjectsOfType<WorkStation>(true);
+        for (int i = 0; i < _stations.Length; i++)
         {
-            Debug.LogError($"Error en guardado de emergencia: {ex.Message}");
+            if (_stations[i] == null)
+            {
+                continue;
+            }
+
+            _save.workStations.Add(_stations[i].GetSaveData());
         }
+
+        return _save;
     }
 
-    /// <summary>
-    /// Carga el juego desde un archivo guardado
-    /// </summary>
+    private ResourceManager.ResourceSaveData BuildResourcesSaveData()
+    {
+        ResourceManager _rm = ResourceManager.Instance;
+
+        return new ResourceManager.ResourceSaveData
+        {
+            food = _rm.GetResourceAmount(ResourceType.Food),
+            water = _rm.GetResourceAmount(ResourceType.Water),
+            energy = _rm.GetResourceAmount(ResourceType.Energy),
+            materials = _rm.GetResourceAmount(ResourceType.Materials),
+            deadNPCCount = _rm.GetDeadNPCCount(),
+            gameOverTriggered = _rm.IsGameOverTriggered()
+        };
+    }
+
     public void LoadGame()
     {
         if (!SaveExists())
         {
-            Debug.LogWarning("No hay partida guardada para cargar");
+            Debug.LogWarning("[SaveLoad] No hay guardado para cargar.");
             return;
         }
 
         try
         {
-            // INTENTAR CARGA PRINCIPAL
-            string json = File.ReadAllText(savePath);
-            GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(json);
+            string _json = File.ReadAllText(_savePath);
+            GameSaveData _save = JsonUtility.FromJson<GameSaveData>(_json);
 
-            // Cargar recursos
-            ResourceManager.Instance.LoadFromSave(saveData.resources);
-
-            // Cargar NPCs
-            DwellerNPC[] allDwellers = FindObjectsOfType<DwellerNPC>();
-            foreach (var dwellerData in saveData.dwellers)
+            if (_save == null)
             {
-                DwellerNPC dweller = System.Array.Find(allDwellers, d => d.dwellerName == dwellerData.dwellerName);
-                if (dweller != null)
+                Debug.LogError("[SaveLoad] El archivo existe pero el JSON no se pudo leer.");
+                return;
+            }
+
+            _isLoading = true;
+            LoadGameInternal(_save);
+
+            if (_verboseLogs)
+            {
+                Debug.Log("[SaveLoad] Partida cargada correctamente.");
+            }
+        }
+        catch (Exception _e)
+        {
+            Debug.LogError($"[SaveLoad] Error cargando: {_e.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void LoadGameInternal(GameSaveData _save)
+    {
+        if (_save.resources != null && ResourceManager.Instance != null)
+        {
+            ResourceManager.Instance.LoadFromSave(_save.resources);
+            ResourceManager.Instance.ForceCheckGameOver();
+        }
+
+        WorkStation[] _stations = FindObjectsOfType<WorkStation>(true);
+        DwellerNPC[] _dwellers = FindObjectsOfType<DwellerNPC>(true);
+
+        // 1) Aplicar datos base de estaciones (posición, id, etc.)
+        if (_save.workStations != null)
+        {
+            for (int i = 0; i < _save.workStations.Count; i++)
+            {
+                WorkStation.WorkStationSaveData _stationData = _save.workStations[i];
+                if (_stationData == null)
                 {
-                    dweller.LoadData(dwellerData);
+                    continue;
                 }
-            }
 
-            // Cargar máquinas y restaurar asignaciones
-            RestoreAssignments(saveData);
-
-            Debug.Log("Partida cargada exitosamente");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error cargando partida: {e.Message}");
-            AttemptEmergencyLoad();
-        }
-    }
-
-    /// <summary>
-    /// Intenta cargar desde el guardado de emergencia
-    /// </summary>
-    void AttemptEmergencyLoad()
-    {
-        try
-        {
-            // INTENTAR CARGA DE EMERGENCIA
-            string emergencyPath = Path.Combine(Application.dataPath, "emergency_save.json");
-            if (File.Exists(emergencyPath))
-            {
-                string json = File.ReadAllText(emergencyPath);
-                GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(json);
-
-                ResourceManager.Instance.LoadFromSave(saveData.resources);
-                Debug.Log("Carga de emergencia exitosa");
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Error en carga de emergencia: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Restaura las asignaciones de NPCs a estaciones de trabajo
-    /// </summary>
-    void RestoreAssignments(GameSaveData saveData)
-    {
-        // Restaurar asignaciones NPC → Máquina
-        DwellerNPC[] allDwellers = FindObjectsOfType<DwellerNPC>();
-        WorkStation[] allStations = FindObjectsOfType<WorkStation>();
-
-        foreach (var stationData in saveData.workStations)
-        {
-            WorkStation station = System.Array.Find(allStations, s => s.stationId == stationData.stationId);
-            if (station != null)
-            {
-                foreach (var workerName in stationData.assignedWorkerNames)
+                WorkStation _station = FindStationById(_stations, _stationData.stationId);
+                if (_station != null)
                 {
-                    DwellerNPC dweller = System.Array.Find(allDwellers, d => d.dwellerName == workerName);
-                    if (dweller != null)
-                    {
-                        dweller.AssignToWorkStation(station);
-                    }
+                    _station.LoadData(_stationData);
                 }
             }
         }
+
+        // 2) Limpiar asignaciones actuales para evitar duplicados raros al cargar varias veces.
+        for (int i = 0; i < _dwellers.Length; i++)
+        {
+            if (_dwellers[i] != null)
+            {
+                _dwellers[i].AssignToWorkStation(null);
+            }
+        }
+
+        // 3) Aplicar datos de NPCs (posición/needs/muerte). Mapa por nombre para compatibilidad con vuestro save.
+        if (_save.dwellers != null)
+        {
+            for (int i = 0; i < _save.dwellers.Count; i++)
+            {
+                DwellerNPC.DwellerSaveData _dwellerData = _save.dwellers[i];
+                if (_dwellerData == null)
+                {
+                    continue;
+                }
+
+                DwellerNPC _npc = FindDwellerByName(_dwellers, _dwellerData.dwellerName);
+                if (_npc != null)
+                {
+                    _npc.LoadData(_dwellerData);
+                }
+            }
+        }
+
+        // 4) Restaurar asignaciones usando el save de estación (más fiable para grupos de trabajo).
+        RestoreAssignments(_save, _dwellers, _stations);
+
+        // 5) Rebalancear y refrescar UI para dejar la escena consistente.
+        if (AssignmentManager.Instance != null)
+        {
+            AssignmentManager.Instance.RefreshCaches();
+            AssignmentManager.Instance.RebalanceProductionAssignments();
+        }
+
+        TryRefreshUI();
     }
 
-    /// <summary>
-    /// Resetea completamente el juego
-    /// </summary>
+    private void RestoreAssignments(GameSaveData _save, DwellerNPC[] _dwellers, WorkStation[] _stations)
+    {
+        if (_save.workStations == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < _save.workStations.Count; i++)
+        {
+            WorkStation.WorkStationSaveData _stationData = _save.workStations[i];
+            if (_stationData == null || _stationData.assignedWorkerNames == null)
+            {
+                continue;
+            }
+
+            WorkStation _station = FindStationById(_stations, _stationData.stationId);
+            if (_station == null)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < _stationData.assignedWorkerNames.Count; j++)
+            {
+                string _workerName = _stationData.assignedWorkerNames[j];
+                if (string.IsNullOrWhiteSpace(_workerName))
+                {
+                    continue;
+                }
+
+                DwellerNPC _npc = FindDwellerByName(_dwellers, _workerName);
+                if (_npc == null || _npc.IsDead)
+                {
+                    continue;
+                }
+
+                _npc.AssignToWorkStation(_station);
+            }
+        }
+    }
+
+    private DwellerNPC FindDwellerByName(DwellerNPC[] _dwellers, string _dwellerName)
+    {
+        if (_dwellers == null || string.IsNullOrWhiteSpace(_dwellerName))
+        {
+            return null;
+        }
+
+        for (int i = 0; i < _dwellers.Length; i++)
+        {
+            if (_dwellers[i] != null && _dwellers[i].dwellerName == _dwellerName)
+            {
+                return _dwellers[i];
+            }
+        }
+
+        return null;
+    }
+
+    private WorkStation FindStationById(WorkStation[] _stations, string _stationId)
+    {
+        if (_stations == null || string.IsNullOrWhiteSpace(_stationId))
+        {
+            return null;
+        }
+
+        for (int i = 0; i < _stations.Length; i++)
+        {
+            if (_stations[i] != null && _stations[i].stationId == _stationId)
+            {
+                return _stations[i];
+            }
+        }
+
+        return null;
+    }
+
     public void ResetGame()
     {
         try
         {
             if (ResourceManager.Instance != null)
             {
+                ResourceManager.Instance.ResetGameOver();
                 ResourceManager.Instance.ResetAllResources();
             }
 
-            foreach (var dweller in FindObjectsOfType<DwellerNPC>())
+            DwellerNPC[] _dwellers = FindObjectsOfType<DwellerNPC>(true);
+            for (int i = 0; i < _dwellers.Length; i++)
             {
-                dweller.AssignToWorkStation(null);
+                if (_dwellers[i] != null)
+                {
+                    _dwellers[i].AssignToWorkStation(null);
+                }
             }
 
-            // LIMPIAR ARCHIVOS DE GUARDADO
             if (SaveExists())
             {
-                File.Delete(savePath);
+                File.Delete(_savePath);
             }
 
-            // Limpiar guardado de emergencia
-            string emergencyPath = Path.Combine(Application.dataPath, "emergency_save.json");
-            if (File.Exists(emergencyPath))
-            {
-                File.Delete(emergencyPath);
-            }
-
-            Debug.Log("Partida reseteada completamente");
+            TryRefreshUI();
+            Debug.Log("[SaveLoad] Juego reseteado (estado runtime + archivo de guardado).\n");
         }
-        catch (System.Exception e)
+        catch (Exception _e)
         {
-            Debug.LogError($"Error reseteando juego: {e.Message}");
+            Debug.LogError($"[SaveLoad] Error reseteando: {_e.Message}");
         }
     }
 
-    /// <summary>
-    /// Verifica si existe un archivo de guardado
-    /// </summary>
-    public bool SaveExists()
-    {
-        return File.Exists(savePath);
-    }
+    [ContextMenu("Guardar Partida")]
+    public void ContextSave() => SaveGame();
 
-    /// <summary>
-    /// Muestra información de debug sobre el estado del sistema de guardado
-    /// </summary>
-    [ContextMenu("Verificar Estado Guardado")]
+    [ContextMenu("Cargar Partida")]
+    public void ContextLoad() => LoadGame();
+
+    [ContextMenu("Debug Estado Guardado")]
     public void DebugSaveStatus()
     {
-        Debug.Log("=== ESTADO DEL SISTEMA DE GUARDADO ===");
-        Debug.Log($"Directorio persistente: {Application.persistentDataPath}");
-        Debug.Log($"Ruta guardado: {savePath}");
-        Debug.Log($"Guardado existe: {SaveExists()}");
-        Debug.Log($"Temp directory: {tempDirectory}");
+        Debug.Log("=== DEBUG SAVELOAD ===");
+        Debug.Log($"Ruta: {_savePath}");
+        Debug.Log($"Existe: {SaveExists()}");
 
-        try
+        if (SaveExists())
         {
-            if (SaveExists())
-            {
-                FileInfo info = new FileInfo(savePath);
-                Debug.Log($"Tamaño archivo: {info.Length} bytes");
-                Debug.Log($"Última modificación: {info.LastWriteTime}");
-            }
+            FileInfo _info = new FileInfo(_savePath);
+            Debug.Log($"Tamaño: {_info.Length} bytes");
+            Debug.Log($"Última modificación: {_info.LastWriteTime}");
         }
-        catch (System.Exception e)
+
+        Debug.Log("======================");
+    }
+
+    private void EnsureSaveDirectory()
+    {
+        if (string.IsNullOrWhiteSpace(_saveDirectory))
         {
-            Debug.LogError($"Error verificando archivo: {e.Message}");
+            InitializePaths();
+            return;
+        }
+
+        if (!Directory.Exists(_saveDirectory))
+        {
+            Directory.CreateDirectory(_saveDirectory);
         }
     }
 
-    /// <summary>
-    /// Guardado automático al salir de la aplicación
-    /// </summary>
-    void OnApplicationQuit()
+    private void TryRefreshUI()
     {
-        // GUARDADO AUTOMÁTICO AL SALIR
-        if (ResourceManager.Instance != null)
+        UIManager _uiManager = FindObjectOfType<UIManager>(true);
+        if (_uiManager != null)
+        {
+            _uiManager.RefreshAllDisplays();
+        }
+
+        NPCStatusPanel _npcPanel = FindObjectOfType<NPCStatusPanel>(true);
+        if (_npcPanel != null)
+        {
+            _npcPanel.UpdateUI();
+        }
+
+        ResourceIndicator[] _resourceIndicators = FindObjectsOfType<ResourceIndicator>(true);
+        for (int i = 0; i < _resourceIndicators.Length; i++)
+        {
+            if (_resourceIndicators[i] != null)
+            {
+                _resourceIndicators[i].EmergencyUpdate();
+            }
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        if (_autoSaveOnQuit)
         {
             SaveGame();
-            Debug.Log("Guardado automático al salir");
         }
     }
 }

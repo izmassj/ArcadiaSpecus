@@ -1,130 +1,111 @@
-﻿// WaterStation.cs
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class WaterStation : WorkStation
 {
     [Header("Configuración Dispensador Agua")]
     public int maxDrinkingNPCs = 3;
-    public int waterConsumptionAmount = 3; // AGUA CONSUMIDA por NPC por segundo
+    public int waterConsumptionAmount = 1;
     public float drinkingDuration = 3f;
 
-    private List<DwellerNPC> drinkingNPCs = new List<DwellerNPC>();
-    private float consumptionTimer = 0f;
+    [SerializeField] private float _consumptionTickSeconds = 1f;
+    [SerializeField] private float _slotSpacing = 1f;
 
-    void Start()
+    private readonly List<DwellerNPC> _drinkingNPCs = new List<DwellerNPC>();
+    private float _consumptionTimer;
+
+    protected override void Awake()
     {
-        if (string.IsNullOrEmpty(stationId))
-            stationId = System.Guid.NewGuid().ToString();
-
-        stationName = "Dispensador de Agua";
-        isConsumptionStation = true; // Marcar como estación de consumo
+        base.Awake();
+        stationName = string.IsNullOrWhiteSpace(stationName) ? "Dispensador de Agua" : stationName;
+        isConsumptionStation = true;
     }
 
-    void Update()
+    private void Update()
     {
-        if (drinkingNPCs.Count > 0)
+        if (_drinkingNPCs.Count == 0)
         {
-            consumptionTimer += Time.deltaTime;
+            return;
+        }
 
-            // Procesar consumo cada segundo
-            if (consumptionTimer >= 1f)
+        _consumptionTimer += Time.deltaTime;
+        if (_consumptionTimer < Mathf.Max(0.1f, _consumptionTickSeconds))
+        {
+            return;
+        }
+
+        _consumptionTimer = 0f;
+        ProcessWaterConsumptionTick();
+    }
+
+    private void ProcessWaterConsumptionTick()
+    {
+        if (ResourceManager.Instance == null)
+        {
+            return;
+        }
+
+        for (int i = _drinkingNPCs.Count - 1; i >= 0; i--)
+        {
+            DwellerNPC _npc = _drinkingNPCs[i];
+            if (_npc == null || _npc.IsDead)
             {
-                ProcessWaterConsumption();
-                consumptionTimer = 0f;
+                _drinkingNPCs.RemoveAt(i);
+                continue;
+            }
+
+            bool _consumed = ResourceManager.Instance.ConsumeResource(ResourceType.Water, Mathf.Max(1, waterConsumptionAmount));
+            if (_consumed && _npc.needs != null)
+            {
+                _npc.needs.Drink(1f);
             }
         }
     }
 
-    /// <summary>
-    /// Procesa el consumo de agua por parte de los NPCs
-    /// </summary>
-    void ProcessWaterConsumption()
-    {
-        foreach (var npc in drinkingNPCs)
-        {
-            if (npc != null && npc.needs != null)
-            {
-                // Verificar si hay agua disponible
-                if (ResourceManager.Instance.ConsumeResource(ResourceType.Water, waterConsumptionAmount))
-                {
-                    // Aplicar recuperación de sed
-                    npc.needs.Drink(Time.deltaTime);
-
-                    // Debug opcional
-                    if (Time.frameCount % 200 == 0)
-                    {
-                        Debug.Log($"{npc.dwellerName} bebiendo (S:{(int)npc.needs.thirst}) - Consumió {waterConsumptionAmount} agua");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"{npc.dwellerName} no puede beber - Sin agua disponible");
-                    // El NPC puede permanecer pero no recuperarse sin agua
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Verifica si la estación puede aceptar más NPCs
-    /// </summary>
     public bool CanAcceptNPC()
     {
-        return drinkingNPCs.Count < maxDrinkingNPCs;
+        return _drinkingNPCs.Count < Mathf.Max(1, maxDrinkingNPCs);
     }
 
-    /// <summary>
-    /// Asigna un NPC para beber en esta estación
-    /// </summary>
-    public void AssignDrinkingNPC(DwellerNPC npc)
+    public void AssignDrinkingNPC(DwellerNPC _npc)
     {
-        if (!drinkingNPCs.Contains(npc) && CanAcceptNPC())
+        if (_npc == null)
         {
-            drinkingNPCs.Add(npc);
-            npc.transform.position = GetDrinkingPosition(drinkingNPCs.Count - 1);
-            Debug.Log($"{npc.dwellerName} bebiendo en {stationName} (S:{(int)npc.needs.thirst})");
+            return;
         }
-    }
 
-    /// <summary>
-    /// Remueve un NPC de la estación de agua
-    /// </summary>
-    public void RemoveDrinkingNPC(DwellerNPC npc)
-    {
-        if (drinkingNPCs.Contains(npc))
+        if (_drinkingNPCs.Contains(_npc) || !CanAcceptNPC())
         {
-            drinkingNPCs.Remove(npc);
-            Debug.Log($"{npc.dwellerName} terminó de beber en {stationName} (S:{(int)npc.needs.thirst})");
+            return;
         }
+
+        _drinkingNPCs.Add(_npc);
+        _npc.transform.position = GetDrinkingPosition(_drinkingNPCs.Count - 1);
     }
 
-    /// <summary>
-    /// Obtiene la posición para beber basada en el índice
-    /// </summary>
-    Vector3 GetDrinkingPosition(int index)
+    public void RemoveDrinkingNPC(DwellerNPC _npc)
     {
-        Vector3[] positions = {
-            transform.position + transform.forward * -1f,
-            transform.position,
-            transform.position + transform.forward * 1f
-        };
-        return index < positions.Length ? positions[index] : transform.position;
+        if (_npc == null)
+        {
+            return;
+        }
+
+        _drinkingNPCs.Remove(_npc);
     }
 
-    /// <summary>
-    /// Obtiene la posición principal para beber
-    /// </summary>
+    private Vector3 GetDrinkingPosition(int _index)
+    {
+        float _offset = (_index - (Mathf.Max(1, maxDrinkingNPCs) - 1) * 0.5f) * _slotSpacing;
+        return transform.position + transform.forward * _offset;
+    }
+
     public Vector3 GetWaterPosition()
     {
         return GetDrinkingPosition(0);
     }
 
-    /// <summary>
-    /// Obtiene el número de NPCs actualmente bebiendo
-    /// </summary>
     public int GetDrinkingNPCCount()
     {
-        return drinkingNPCs.Count;
+        return _drinkingNPCs.Count;
     }
 }

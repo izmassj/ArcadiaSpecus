@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using TMPro;
-using UnityEngine.UI;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 [DefaultExecutionOrder(-1000)]
 public class GameOverManager : MonoBehaviour
@@ -16,13 +16,14 @@ public class GameOverManager : MonoBehaviour
     [SerializeField] private Button restartButton;
     [SerializeField] private Button mainMenuButton;
 
-    private bool _isGameOver = false;
-    private bool _isInitialized = false;
-
+    private bool _isGameOver;
+    private bool _isInitialized;
 
     private void Awake()
     {
         InitializeSingleton();
+        SceneFlowManager.EnsureInstance();
+
         InitializeGameOverSystem(hidePanel: true);
         SubscribeToEvents();
         TrySyncWithResourceManager();
@@ -36,7 +37,9 @@ public class GameOverManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (Instance == this) Instance = null;
+        if (Instance == this)
+            Instance = null;
+
         UnsubscribeFromEvents();
     }
 
@@ -44,18 +47,18 @@ public class GameOverManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("GameOverManager duplicate detected, destroying the new one.");
+            Debug.LogWarning("GameOverManager duplicado detectado. Se destruye el nuevo.");
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
-        Debug.Log("GameOverManager initialized (Awake)");
     }
 
     private void SubscribeToEvents()
     {
-        ResourceManager.OnGameOver -= HandleGameOver;
-        ResourceManager.OnGameOver += HandleGameOver;
+        ResourceManager.OnGameOver -= HandleGameOverFromResourceEvent;
+        ResourceManager.OnGameOver += HandleGameOverFromResourceEvent;
 
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -63,7 +66,7 @@ public class GameOverManager : MonoBehaviour
 
     private void UnsubscribeFromEvents()
     {
-        ResourceManager.OnGameOver -= HandleGameOver;
+        ResourceManager.OnGameOver -= HandleGameOverFromResourceEvent;
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
@@ -73,34 +76,29 @@ public class GameOverManager : MonoBehaviour
         {
             if (hidePanel && !_isGameOver && gameOverPanel != null)
                 gameOverPanel.SetActive(false);
+
             return;
         }
 
         _isInitialized = true;
-        Debug.Log("Initializing Game Over system...");
 
         ValidateUIReferences();
         ConfigureButtons();
 
         if (hidePanel && gameOverPanel != null)
-        {
             gameOverPanel.SetActive(false);
-            Debug.Log("GameOverPanel deactivated at start");
-        }
-
-        Debug.Log("Game Over system initialized correctly");
     }
 
     private void ValidateUIReferences()
     {
         if (gameOverPanel == null)
-            Debug.LogError("GameOverPanel not assigned in GameOverManager!");
+            Debug.LogError("GameOverManager: gameOverPanel no asignado.");
 
         if (restartButton == null)
-            Debug.LogWarning("restartButton not assigned");
+            Debug.LogWarning("GameOverManager: restartButton no asignado.");
 
         if (mainMenuButton == null)
-            Debug.LogWarning("mainMenuButton not assigned");
+            Debug.LogWarning("GameOverManager: mainMenuButton no asignado.");
     }
 
     private void ConfigureButtons()
@@ -109,195 +107,237 @@ public class GameOverManager : MonoBehaviour
         {
             restartButton.onClick.RemoveAllListeners();
             restartButton.onClick.AddListener(RestartGame);
-            Debug.Log("RestartButton configured");
         }
 
         if (mainMenuButton != null)
         {
             mainMenuButton.onClick.RemoveAllListeners();
             mainMenuButton.onClick.AddListener(GoToMainMenu);
-            Debug.Log("MainMenuButton configured");
         }
     }
 
-    private void HandleGameOver()
+    private void HandleGameOverFromResourceEvent()
     {
         if (_isGameOver)
-        {
-            Debug.LogWarning("Game Over already active, ignoring...");
             return;
-        }
 
         _isGameOver = true;
-        Debug.Log("ACTIVATING GAME OVER (event)...");
-
         Time.timeScale = 0f;
-        ShowGameOverPanel();
+
+        ShowGameOverPanelFromRuntimeData();
     }
 
-    private void ShowGameOverPanel()
+    private void ShowGameOverPanelFromRuntimeData()
     {
         if (gameOverPanel == null)
         {
-            Debug.LogError("Cannot activate GameOverPanel - null reference!");
+            Debug.LogError("GameOverManager: no se puede mostrar Game Over porque falta el panel.");
             return;
         }
 
         gameOverPanel.SetActive(true);
-        SetupGameOverUI();
-        Debug.Log("GameOverPanel ACTIVATED AND VISIBLE");
+        SetupGameOverUIFromResourceManager();
+
+        // Aquí iría SFX de derrota / transición visual de Game Over.
     }
 
-    private void SetupGameOverUI()
+    private void SetupGameOverUIFromResourceManager()
     {
-        Debug.Log("Setting up Game Over UI...");
-
         if (gameOverTitle != null)
             gameOverTitle.text = "GAME OVER";
 
         if (ResourceManager.Instance == null)
         {
-            SetupFallbackUI();
+            if (gameOverDescription != null)
+                gameOverDescription.text = "Se ha alcanzado una condición de derrota.";
+
+            if (gameOverStats != null)
+                gameOverStats.text = string.Empty;
+
             return;
         }
 
-        SetupResourceBasedUI();
-    }
-
-    private void SetupFallbackUI()
-    {
-        if (gameOverDescription != null)
-            gameOverDescription.text = "The game has ended.";
-
-        if (gameOverStats != null)
-            gameOverStats.text = "";
-
-        Debug.LogWarning("ResourceManager.Instance is null; UI shown in fallback mode.");
-    }
-
-    private void SetupResourceBasedUI()
-    {
         int deadCount = ResourceManager.Instance.GetDeadNPCCount();
         int maxDeaths = ResourceManager.Instance.GetMaxAllowedDeaths();
 
         if (gameOverDescription != null)
         {
-            gameOverDescription.text = deadCount >= maxDeaths
-                ? $"Too many inhabitants have died\n({deadCount} of {maxDeaths} allowed)"
-                : "Defeat condition reached.";
+            if (deadCount >= maxDeaths)
+            {
+                gameOverDescription.text = $"Demasiados habitantes han fallecido\n({deadCount}/{maxDeaths})";
+            }
+            else
+            {
+                gameOverDescription.text = "Se ha alcanzado una condición de derrota.";
+            }
         }
 
         if (gameOverStats != null)
         {
-            gameOverStats.text = GenerateStatsText();
+            gameOverStats.text =
+                "ESTADÍSTICAS FINALES\n" +
+                $"- Habitantes muertos: {ResourceManager.Instance.GetDeadNPCCount()}\n" +
+                $"- Comida: {ResourceManager.Instance.GetResourceAmount(ResourceType.Food)}\n" +
+                $"- Agua: {ResourceManager.Instance.GetResourceAmount(ResourceType.Water)}\n" +
+                $"- Energía: {ResourceManager.Instance.GetResourceAmount(ResourceType.Energy)}\n" +
+                $"- Materiales: {ResourceManager.Instance.GetResourceAmount(ResourceType.Materials)}";
         }
-
-        Debug.Log("Game Over UI configured");
     }
 
-    private string GenerateStatsText()
-    {
-        if (ResourceManager.Instance == null) return "";
-
-        return $"Final Statistics:\n" +
-               $"• Dead inhabitants: {ResourceManager.Instance.GetDeadNPCCount()}\n" +
-               $"• Food: {ResourceManager.Instance.GetResourceAmount(ResourceType.Food)}\n" +
-               $"• Water: {ResourceManager.Instance.GetResourceAmount(ResourceType.Water)}\n" +
-               $"• Energy: {ResourceManager.Instance.GetResourceAmount(ResourceType.Energy)}";
-    }
-
+    /// <summary>
+    /// API pública para forzar Game Over desde otros sistemas (debug o condiciones especiales).
+    /// </summary>
     public void ForceGameOver()
     {
         if (_isGameOver)
-        {
-            Debug.LogWarning("Game Over already active, ignoring...");
             return;
-        }
 
         if (ResourceManager.Instance != null && !ResourceManager.Instance.IsGameOverTriggered())
         {
-            Debug.LogWarning("FORCING GAME OVER through ResourceManager...");
             ResourceManager.Instance.TriggerGameOver();
             return;
         }
 
-        Debug.LogWarning("FORCING GAME OVER manually (fallback)...");
-        HandleGameOver();
+        _isGameOver = true;
+        Time.timeScale = 0f;
+        ShowGameOver("GAME OVER", "Se ha alcanzado una condición de derrota.", string.Empty);
     }
 
+    /// <summary>
+    /// API pública para mostrar el panel con textos personalizados.
+    /// </summary>
+    public void ShowGameOver(string titleText, string descriptionText, string statsText)
+    {
+        _isGameOver = true;
+        Time.timeScale = 0f;
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+
+        if (gameOverTitle != null)
+            gameOverTitle.text = string.IsNullOrWhiteSpace(titleText) ? "GAME OVER" : titleText;
+
+        if (gameOverDescription != null)
+            gameOverDescription.text = descriptionText ?? string.Empty;
+
+        if (gameOverStats != null)
+            gameOverStats.text = statsText ?? string.Empty;
+
+        // Aquí iría sonido de Game Over / animación del panel.
+    }
+
+    public void HideGameOver()
+    {
+        _isGameOver = false;
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
+
+        Time.timeScale = 1f;
+    }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        // Al cargar escenas, reconfiguramos botones por si el panel/UI fue reinstanciado.
+        ConfigureButtons();
+
+        // Si es una carga Single, el juego no debería seguir en Game Over visual.
+        if (mode == LoadSceneMode.Single)
+        {
+            _isGameOver = false;
+
+            if (gameOverPanel != null)
+                gameOverPanel.SetActive(false);
+
+            Time.timeScale = 1f;
+        }
+
         TrySyncWithResourceManager();
     }
 
     private void TrySyncWithResourceManager()
     {
-        if (_isGameOver) return;
+        if (_isGameOver)
+            return;
 
-        if (ResourceManager.Instance?.IsGameOverTriggered() == true)
+        if (ResourceManager.Instance != null && ResourceManager.Instance.IsGameOverTriggered())
         {
-            Debug.LogWarning("ResourceManager already has Game Over active. Synchronizing UI...");
-            HandleGameOver();
+            HandleGameOverFromResourceEvent();
         }
     }
 
-    private void RestartGame()
+    public void RestartGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Time.timeScale = 1f;
+
+        // Reinicio de estado global si existe ResourceManager persistente.
+        if (ResourceManager.Instance != null)
+        {
+            ResourceManager.Instance.ResetGameOver();
+            ResourceManager.Instance.ResetAllResources();
+        }
+
+        // Si tuvierais lógica de "revivir" sin recargar escena, aquí sería el punto.
+        // ReviveAllNPCs();
+
+        SceneFlowManager.EnsureInstance().RestartCurrentScene();
     }
 
-    private void GoToMainMenu()
+    public void GoToMainMenu()
     {
-        Debug.Log("Loading main menu...");
         Time.timeScale = 1f;
-        SceneManager.LoadScene("MainMenu");
+
+        if (ResourceManager.Instance != null)
+        {
+            ResourceManager.Instance.ResetGameOver();
+        }
+
+        SceneFlowManager.EnsureInstance().LoadMainMenu();
     }
 
     public void ForceRestart()
     {
-        Debug.Log("FORCING RESTART FROM GameOverManager...");
         RestartGame();
     }
 
     private void ReviveAllNPCs()
     {
+        // Método mantenido como utilidad para futuros usos.
         DwellerNPC[] allDwellers = FindObjectsOfType<DwellerNPC>();
-        int revivedCount = 0;
-
-        foreach (DwellerNPC dweller in allDwellers)
+        for (int i = 0; i < allDwellers.Length; i++)
         {
-            if (dweller != null && dweller.IsDead)
+            if (allDwellers[i] != null && allDwellers[i].IsDead)
             {
-                dweller.Revive();
-                revivedCount++;
+                allDwellers[i].Revive();
             }
         }
-
-        Debug.Log($"Revived {revivedCount} NPCs of {allDwellers.Length} total");
     }
 
-    public bool IsGameOver() => _isGameOver;
+    public bool IsGameOver()
+    {
+        return _isGameOver;
+    }
 
     [ContextMenu("Force Game Over")]
-    public void ContextForceGameOver() => ForceGameOver();
+    public void ContextForceGameOver()
+    {
+        ForceGameOver();
+    }
 
     [ContextMenu("Force Restart")]
-    public void ContextForceRestart() => ForceRestart();
+    public void ContextForceRestart()
+    {
+        ForceRestart();
+    }
 
     [ContextMenu("Debug Status")]
     public void DebugStatus()
     {
         Debug.Log("=== GAME OVER MANAGER STATUS ===");
-        Debug.Log($"Game Over active?: {_isGameOver}");
+        Debug.Log($"Game Over activo: {_isGameOver}");
         Debug.Log($"Time.timeScale: {Time.timeScale}");
-        Debug.Log($"GameOverPanel assigned: {gameOverPanel != null}");
-        Debug.Log($"GameOverPanel active: {gameOverPanel != null && gameOverPanel.activeInHierarchy}");
-        Debug.Log($"ResourceManager: {ResourceManager.Instance != null}");
-
-        if (ResourceManager.Instance != null)
-            Debug.Log($"Dead NPCs: {ResourceManager.Instance.GetDeadNPCCount()}");
-
-        Debug.Log("=== END DEBUG ===");
+        Debug.Log($"Panel asignado: {gameOverPanel != null}");
+        Debug.Log($"Panel activo: {gameOverPanel != null && gameOverPanel.activeInHierarchy}");
+        Debug.Log($"ResourceManager existe: {ResourceManager.Instance != null}");
     }
 }

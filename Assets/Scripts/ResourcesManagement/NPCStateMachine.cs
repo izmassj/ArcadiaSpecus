@@ -1,6 +1,5 @@
-﻿// NPCStateMachine.cs
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class NPCStateMachine : MonoBehaviour
 {
@@ -13,19 +12,21 @@ public class NPCStateMachine : MonoBehaviour
     public WaterStation[] waterStations;
 
     [Header("Configuración")]
-    public float checkNeedsInterval = 1.5f; // REDUCIDO para respuesta más rápida
-    public float minWorkTime = 8f;          // AUMENTADO para trabajar más tiempo
+    public float checkNeedsInterval = 1.5f;
+    public float minWorkTime = 8f;
+    [SerializeField] private float _moveStopDistance = 0.1f;
+    [SerializeField] private bool _autoFindStationsOnStart = true;
 
-    private NPCState currentState = NPCState.Idle;
-    private float stateTimer = 0f;
-    private float workTimer = 0f;
-    private RestStation currentRestStation;
-    private FoodStation currentFoodStation;
-    private WaterStation currentWaterStation;
+    private NPCState _currentState = NPCState.Idle;
+    private float _stateTimer;
+    private float _workTimer;
 
-    /// <summary>
-    /// Estados posibles de la máquina de estados del NPC
-    /// </summary>
+    private RestStation _currentRestStation;
+    private FoodStation _currentFoodStation;
+    private WaterStation _currentWaterStation;
+    private Coroutine _moveCoroutine;
+    private Coroutine _needsRoutine;
+
     public enum NPCState
     {
         Idle,
@@ -39,443 +40,360 @@ public class NPCStateMachine : MonoBehaviour
         Resting
     }
 
-    void Awake()
+    private void Awake()
     {
         if (dwellerNPC == null)
-            dwellerNPC = GetComponent<DwellerNPC>();
-
-        FindAllNeedStations();
-    }
-
-    void Start()
-    {
-        if (dwellerNPC == null) return;
-
-        StartCoroutine(NeedsCheckRoutine());
-    }
-
-    /// <summary>
-    /// NUEVO: Verifica si el NPC está muerto y detiene la máquina de estados
-    /// </summary>
-    private bool CheckIfDead()
-    {
-        if (dwellerNPC != null && dwellerNPC.IsDead)
         {
-            // Detener todas las corrutinas si está muerto
-            StopAllCoroutines();
-
-            // Limpiar estaciones actuales
-            if (currentRestStation != null)
-            {
-                currentRestStation.RemoveRestingNPC(dwellerNPC);
-                currentRestStation = null;
-            }
-            if (currentFoodStation != null)
-            {
-                currentFoodStation.RemoveEatingNPC(dwellerNPC);
-                currentFoodStation = null;
-            }
-            if (currentWaterStation != null)
-            {
-                currentWaterStation.RemoveDrinkingNPC(dwellerNPC);
-                currentWaterStation = null;
-            }
-
-            Debug.Log($"🛑 Máquina de estados detenida para {dwellerNPC.dwellerName} (MUERTO)");
-            return true;
+            dwellerNPC = GetComponent<DwellerNPC>();
         }
-        return false;
+
+        if (_autoFindStationsOnStart)
+        {
+            FindAllNeedStations();
+        }
     }
 
-    /// <summary>
-    /// Encuentra todas las estaciones de necesidades en la escena
-    /// </summary>
-    void FindAllNeedStations()
+    private void OnEnable()
     {
-        restStations = FindObjectsOfType<RestStation>();
-        foodStations = FindObjectsOfType<FoodStation>();
-        waterStations = FindObjectsOfType<WaterStation>();
-
-        Debug.Log($"{dwellerNPC.dwellerName} encontró: {restStations.Length} camas, {foodStations.Length} comedores, {waterStations.Length} bebederos");
+        if (_needsRoutine == null)
+        {
+            _needsRoutine = StartCoroutine(NeedsCheckRoutine());
+        }
     }
 
-    void Update()
+    private void Start()
     {
-        // NUEVO: Verificar si el NPC está muerto - detener toda lógica si es así
-        if (CheckIfDead()) return;
+        if (_autoFindStationsOnStart)
+        {
+            FindAllNeedStations();
+        }
+    }
 
-        if (dwellerNPC == null) return;
+    private void OnDisable()
+    {
+        if (_moveCoroutine != null)
+        {
+            StopCoroutine(_moveCoroutine);
+            _moveCoroutine = null;
+        }
 
-        stateTimer += Time.deltaTime;
+        if (_needsRoutine != null)
+        {
+            StopCoroutine(_needsRoutine);
+            _needsRoutine = null;
+        }
 
-        switch (currentState)
+        ReleaseCurrentNeedStations();
+    }
+
+    private void Update()
+    {
+        if (!IsValidAndAlive())
+        {
+            return;
+        }
+
+        _stateTimer += Time.deltaTime;
+
+        // Siempre degradan necesidades mientras el NPC está vivo.
+        if (dwellerNPC.needs != null)
+        {
+            dwellerNPC.needs.UpdateNeeds(Time.deltaTime, dwellerNPC);
+        }
+
+        switch (_currentState)
         {
             case NPCState.Working:
-                workTimer += Time.deltaTime;
-                UpdateNeeds(Time.deltaTime);
-
-                // Verificar si debe tomar un descanso programado
-                if (workTimer > minWorkTime && dwellerNPC.needs.IsCritical())
+                _workTimer += Time.deltaTime;
+                // Cuando pasa el tiempo mínimo de trabajo, permitimos cortar para necesidades críticas.
+                if (_workTimer >= minWorkTime && dwellerNPC.needs != null && dwellerNPC.needs.IsCritical())
                 {
                     CheckNeedsImmediate();
                 }
                 break;
 
             case NPCState.Eating:
-                UpdateNeeds(Time.deltaTime);
-                if (currentFoodStation != null)
-                {
-                    dwellerNPC.needs.Eat(Time.deltaTime);
-
-                    if (dwellerNPC.needs.IsFull() || stateTimer > 5f) // Tiempo máximo de comida
-                    {
-                        Debug.Log($"{dwellerNPC.dwellerName} terminó de comer. Hambre: {(int)dwellerNPC.needs.hunger}");
-                        ReturnToWork();
-                    }
-                }
+                UpdateEating();
                 break;
 
             case NPCState.Drinking:
-                UpdateNeeds(Time.deltaTime);
-                if (currentWaterStation != null)
-                {
-                    dwellerNPC.needs.Drink(Time.deltaTime);
-
-                    if (dwellerNPC.needs.IsHydrated() || stateTimer > 3f) // Tiempo máximo de bebida
-                    {
-                        Debug.Log($"{dwellerNPC.dwellerName} terminó de beber. Sed: {(int)dwellerNPC.needs.thirst}");
-                        ReturnToWork();
-                    }
-                }
+                UpdateDrinking();
                 break;
 
             case NPCState.Resting:
-                UpdateNeeds(Time.deltaTime);
-                if (currentRestStation != null)
-                {
-                    float restEfficiency = currentRestStation.restEfficiency;
-                    dwellerNPC.needs.Rest(Time.deltaTime * restEfficiency);
-
-                    if (dwellerNPC.needs.IsFullyRested() || stateTimer > 15f) // Tiempo máximo de descanso
-                    {
-                        Debug.Log($"{dwellerNPC.dwellerName} descansó suficiente (F:{(int)dwellerNPC.needs.fatigue})");
-                        ReturnToWork();
-                    }
-                }
-                break;
-
-            case NPCState.Idle:
-                if (dwellerNPC.assignedWorkStation != null)
-                {
-                    ChangeState(NPCState.MovingToWork);
-                    StartCoroutine(MoveToWorkStation());
-                }
+                UpdateResting();
                 break;
         }
     }
 
-    /// <summary>
-    /// Actualiza las necesidades del NPC
-    /// </summary>
-    void UpdateNeeds(float deltaTime)
-    {
-        if (dwellerNPC.needs != null)
-        {
-            // NUEVO: Pasar referencia al NPC para detección de muerte
-            dwellerNPC.needs.UpdateNeeds(deltaTime, dwellerNPC);
-        }
-    }
-
-    /// <summary>
-    /// Corrutina para verificar necesidades periódicamente
-    /// </summary>
-    IEnumerator NeedsCheckRoutine()
+    private IEnumerator NeedsCheckRoutine()
     {
         while (true)
         {
-            yield return new WaitForSeconds(checkNeedsInterval);
-
-            // NUEVO: No verificar necesidades si está muerto
-            if (CheckIfDead()) yield break;
-
-            if (dwellerNPC.needs != null && currentState == NPCState.Working)
-            {
-                CheckNeeds();
-            }
+            yield return new WaitForSeconds(Mathf.Max(0.1f, checkNeedsInterval));
+            CheckNeedsImmediate();
         }
     }
 
-    /// <summary>
-    /// Verificación inmediata de necesidades (para interrupciones)
-    /// </summary>
-    void CheckNeedsImmediate()
+    public void FindAllNeedStations()
     {
-        // NUEVO: No verificar necesidades si está muerto
-        if (CheckIfDead()) return;
-
-        if (dwellerNPC.needs == null) return;
-
-        // PRIORIDAD MEJORADA: Sed > Fatiga > Hambre
-        if (dwellerNPC.needs.thirst >= dwellerNPC.needs.criticalThirst)
-        {
-            FindDrinkStation();
-        }
-        else if (dwellerNPC.needs.fatigue >= dwellerNPC.needs.criticalFatigue)
-        {
-            FindRestStation();
-        }
-        else if (dwellerNPC.needs.hunger >= dwellerNPC.needs.criticalHunger)
-        {
-            FindFoodStation();
-        }
+        restStations = FindObjectsOfType<RestStation>(true);
+        foodStations = FindObjectsOfType<FoodStation>(true);
+        waterStations = FindObjectsOfType<WaterStation>(true);
     }
 
-    /// <summary>
-    /// Verificación regular de necesidades
-    /// </summary>
-    void CheckNeeds()
+    public void AssignToWork(WorkStation _station)
     {
-        // NUEVO: No verificar necesidades si está muerto
-        if (CheckIfDead()) return;
-
-        if (dwellerNPC.needs == null) return;
-
-        // Solo verificar si ha trabajado el tiempo mínimo
-        if (workTimer < minWorkTime) return;
-
-        CheckNeedsImmediate();
-    }
-
-    /// <summary>
-    /// Busca una estación de descanso disponible
-    /// </summary>
-    void FindRestStation()
-    {
-        // NUEVO: No buscar estaciones si está muerto
-        if (CheckIfDead()) return;
-
-        if (restStations == null || restStations.Length == 0)
+        if (!IsValidAndAlive())
         {
-            Debug.Log($"{dwellerNPC.dwellerName} no encontró camas disponibles");
             return;
         }
 
-        foreach (var bed in restStations)
+        ReleaseCurrentNeedStations();
+
+        if (_station == null)
         {
-            if (bed != null && bed.CanAcceptNPC())
-            {
-                currentRestStation = bed;
-                ChangeState(NPCState.MovingToRest);
-                StartCoroutine(MoveToRestStation());
-                return;
-            }
+            ChangeState(NPCState.Idle);
+            return;
         }
 
-        Debug.Log($"{dwellerNPC.dwellerName} no encontró camas disponibles (todas ocupadas)");
+        StartMoveCoroutine(MoveToTarget(_station.GetWorkerPosition(), () =>
+        {
+            ChangeState(NPCState.Working);
+            _workTimer = 0f;
+            OnArrivedAtWorkStation();
+        }, NPCState.MovingToWork));
     }
 
-    /// <summary>
-    /// Busca una estación de comida disponible
-    /// </summary>
-    void FindFoodStation()
+    public void OnArrivedAtWorkStation()
     {
-        // NUEVO: No buscar estaciones si está muerto
-        if (CheckIfDead()) return;
+        // Comentario audio: aquí iría sonido de inicio de tarea o animación de máquina.
+    }
 
+    private void CheckNeedsImmediate()
+    {
+        if (!IsValidAndAlive())
+        {
+            return;
+        }
+
+        if (dwellerNPC.needs == null)
+        {
+            return;
+        }
+
+        // Si ya está recuperándose, no redecidir.
+        if (_currentState == NPCState.Eating || _currentState == NPCState.Drinking || _currentState == NPCState.Resting ||
+            _currentState == NPCState.MovingToEat || _currentState == NPCState.MovingToDrink || _currentState == NPCState.MovingToRest)
+        {
+            return;
+        }
+
+        if (!dwellerNPC.needs.IsCritical())
+        {
+            return;
+        }
+
+        ResourceType _need = dwellerNPC.needs.GetMostCriticalNeed();
+
+        if (_need == ResourceType.Water)
+        {
+            TryGoDrink();
+            return;
+        }
+
+        if (_need == ResourceType.Energy)
+        {
+            TryGoRest();
+            return;
+        }
+
+        if (_need == ResourceType.Food)
+        {
+            TryGoEat();
+            return;
+        }
+    }
+
+    private void TryGoEat()
+    {
         if (foodStations == null || foodStations.Length == 0)
         {
-            Debug.Log($"{dwellerNPC.dwellerName} no encontró comedores disponibles");
+            FindAllNeedStations();
+        }
+
+        for (int i = 0; i < foodStations.Length; i++)
+        {
+            FoodStation _station = foodStations[i];
+            if (_station == null || !_station.CanAcceptNPC())
+            {
+                continue;
+            }
+
+            _currentFoodStation = _station;
+            StartMoveCoroutine(MoveToTarget(_station.GetFoodPosition(), () =>
+            {
+                if (!IsValidAndAlive() || _currentFoodStation == null)
+                {
+                    return;
+                }
+
+                _currentFoodStation.AssignEatingNPC(dwellerNPC);
+                ChangeState(NPCState.Eating);
+            }, NPCState.MovingToEat));
             return;
         }
-
-        foreach (var foodStation in foodStations)
-        {
-            if (foodStation != null && foodStation.CanAcceptNPC())
-            {
-                currentFoodStation = foodStation;
-                ChangeState(NPCState.MovingToEat);
-                StartCoroutine(MoveToFoodStation());
-                return;
-            }
-        }
-
-        Debug.Log($"{dwellerNPC.dwellerName} no encontró comedores disponibles (todos ocupados)");
     }
 
-    /// <summary>
-    /// Busca una estación de agua disponible
-    /// </summary>
-    void FindDrinkStation()
+    private void TryGoDrink()
     {
-        // NUEVO: No buscar estaciones si está muerto
-        if (CheckIfDead()) return;
-
         if (waterStations == null || waterStations.Length == 0)
         {
-            Debug.Log($"{dwellerNPC.dwellerName} no encontró bebederos disponibles");
+            FindAllNeedStations();
+        }
+
+        for (int i = 0; i < waterStations.Length; i++)
+        {
+            WaterStation _station = waterStations[i];
+            if (_station == null || !_station.CanAcceptNPC())
+            {
+                continue;
+            }
+
+            _currentWaterStation = _station;
+            StartMoveCoroutine(MoveToTarget(_station.GetWaterPosition(), () =>
+            {
+                if (!IsValidAndAlive() || _currentWaterStation == null)
+                {
+                    return;
+                }
+
+                _currentWaterStation.AssignDrinkingNPC(dwellerNPC);
+                ChangeState(NPCState.Drinking);
+            }, NPCState.MovingToDrink));
+            return;
+        }
+    }
+
+    private void TryGoRest()
+    {
+        if (restStations == null || restStations.Length == 0)
+        {
+            FindAllNeedStations();
+        }
+
+        for (int i = 0; i < restStations.Length; i++)
+        {
+            RestStation _station = restStations[i];
+            if (_station == null || !_station.CanAcceptNPC())
+            {
+                continue;
+            }
+
+            _currentRestStation = _station;
+            StartMoveCoroutine(MoveToTarget(_station.GetRestPosition(), () =>
+            {
+                if (!IsValidAndAlive() || _currentRestStation == null)
+                {
+                    return;
+                }
+
+                _currentRestStation.AssignRestingNPC(dwellerNPC);
+                ChangeState(NPCState.Resting);
+            }, NPCState.MovingToRest));
+            return;
+        }
+    }
+
+    private IEnumerator MoveToTarget(Vector3 _target, System.Action _onArrive, NPCState _movingState)
+    {
+        ChangeState(_movingState);
+
+        while (IsValidAndAlive())
+        {
+            float _distance = Vector3.Distance(transform.position, _target);
+            if (_distance <= _moveStopDistance)
+            {
+                break;
+            }
+
+            float _speed = Mathf.Max(0.01f, dwellerNPC.moveSpeed);
+            transform.position = Vector3.MoveTowards(transform.position, _target, _speed * Time.deltaTime);
+            yield return null;
+        }
+
+        if (IsValidAndAlive())
+        {
+            _onArrive?.Invoke();
+        }
+    }
+
+    private void UpdateEating()
+    {
+        if (_currentFoodStation == null || dwellerNPC.needs == null)
+        {
+            ReturnToWorkOrIdle();
             return;
         }
 
-        foreach (var waterStation in waterStations)
-        {
-            if (waterStation != null && waterStation.CanAcceptNPC())
-            {
-                currentWaterStation = waterStation;
-                ChangeState(NPCState.MovingToDrink);
-                StartCoroutine(MoveToWaterStation());
-                return;
-            }
-        }
+        // La estación consume recurso; aquí aplicamos recuperación continua del estado.
+        dwellerNPC.needs.Eat(Time.deltaTime);
 
-        Debug.Log($"{dwellerNPC.dwellerName} no encontró bebederos disponibles (todos ocupados)");
+        if (dwellerNPC.needs.IsFull() || _stateTimer >= Mathf.Max(1f, _currentFoodStation.eatingDuration))
+        {
+            _currentFoodStation.RemoveEatingNPC(dwellerNPC);
+            _currentFoodStation = null;
+            ReturnToWorkOrIdle();
+        }
     }
 
-    /// <summary>
-    /// Corrutina para mover el NPC a una estación de descanso
-    /// </summary>
-    IEnumerator MoveToRestStation()
+    private void UpdateDrinking()
     {
-        // NUEVO: Verificar muerte al inicio de la corrutina
-        if (CheckIfDead()) yield break;
-
-        if (currentRestStation == null) yield break;
-
-        Vector3 targetPosition = currentRestStation.GetRestPosition();
-
-        while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
+        if (_currentWaterStation == null || dwellerNPC.needs == null)
         {
-            // NUEVO: Verificar muerte durante el movimiento
-            if (CheckIfDead()) yield break;
-
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, dwellerNPC.moveSpeed * Time.deltaTime);
-            yield return null;
+            ReturnToWorkOrIdle();
+            return;
         }
 
-        // NUEVO: Verificar muerte antes de asignar estación
-        if (CheckIfDead()) yield break;
+        dwellerNPC.needs.Drink(Time.deltaTime);
 
-        currentRestStation.AssignRestingNPC(dwellerNPC);
-        ChangeState(NPCState.Resting);
-        Debug.Log($"{dwellerNPC.dwellerName} se acostó (F:{(int)dwellerNPC.needs.fatigue})");
+        if (dwellerNPC.needs.IsHydrated() || _stateTimer >= Mathf.Max(1f, _currentWaterStation.drinkingDuration))
+        {
+            _currentWaterStation.RemoveDrinkingNPC(dwellerNPC);
+            _currentWaterStation = null;
+            ReturnToWorkOrIdle();
+        }
     }
 
-    /// <summary>
-    /// Corrutina para mover el NPC a una estación de comida
-    /// </summary>
-    IEnumerator MoveToFoodStation()
+    private void UpdateResting()
     {
-        // NUEVO: Verificar muerte al inicio de la corrutina
-        if (CheckIfDead()) yield break;
-
-        if (currentFoodStation == null) yield break;
-
-        Vector3 targetPosition = currentFoodStation.GetFoodPosition();
-
-        while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
+        if (_currentRestStation == null || dwellerNPC.needs == null)
         {
-            // NUEVO: Verificar muerte durante el movimiento
-            if (CheckIfDead()) yield break;
-
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, dwellerNPC.moveSpeed * Time.deltaTime);
-            yield return null;
+            ReturnToWorkOrIdle();
+            return;
         }
 
-        // NUEVO: Verificar muerte antes de asignar estación
-        if (CheckIfDead()) yield break;
+        // La estación también puede recuperar fatiga; este refuerzo hace la sensación más clara.
+        dwellerNPC.needs.Rest(Time.deltaTime);
 
-        currentFoodStation.AssignEatingNPC(dwellerNPC);
-        ChangeState(NPCState.Eating);
-        Debug.Log($"{dwellerNPC.dwellerName} empezó a comer (H:{(int)dwellerNPC.needs.hunger})");
+        if (dwellerNPC.needs.IsFullyRested())
+        {
+            _currentRestStation.RemoveRestingNPC(dwellerNPC);
+            _currentRestStation = null;
+            ReturnToWorkOrIdle();
+        }
     }
 
-    /// <summary>
-    /// Corrutina para mover el NPC a una estación de agua
-    /// </summary>
-    IEnumerator MoveToWaterStation()
+    private void ReturnToWorkOrIdle()
     {
-        // NUEVO: Verificar muerte al inicio de la corrutina
-        if (CheckIfDead()) yield break;
-
-        if (currentWaterStation == null) yield break;
-
-        Vector3 targetPosition = currentWaterStation.GetWaterPosition();
-
-        while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
+        if (!IsValidAndAlive())
         {
-            // NUEVO: Verificar muerte durante el movimiento
-            if (CheckIfDead()) yield break;
-
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, dwellerNPC.moveSpeed * Time.deltaTime);
-            yield return null;
-        }
-
-        // NUEVO: Verificar muerte antes de asignar estación
-        if (CheckIfDead()) yield break;
-
-        currentWaterStation.AssignDrinkingNPC(dwellerNPC);
-        ChangeState(NPCState.Drinking);
-        Debug.Log($"{dwellerNPC.dwellerName} empezó a beber (S:{(int)dwellerNPC.needs.thirst})");
-    }
-
-    /// <summary>
-    /// Corrutina para mover el NPC a su estación de trabajo
-    /// </summary>
-    IEnumerator MoveToWorkStation()
-    {
-        // NUEVO: Verificar muerte al inicio de la corrutina
-        if (CheckIfDead()) yield break;
-
-        if (dwellerNPC.assignedWorkStation == null) yield break;
-
-        Vector3 targetPosition = dwellerNPC.assignedWorkStation.GetWorkerPosition();
-
-        while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
-        {
-            // NUEVO: Verificar muerte durante el movimiento
-            if (CheckIfDead()) yield break;
-
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, dwellerNPC.moveSpeed * Time.deltaTime);
-            yield return null;
-        }
-
-        // NUEVO: Verificar muerte antes de cambiar estado
-        if (CheckIfDead()) yield break;
-
-        ChangeState(NPCState.Working);
-        workTimer = 0f;
-        OnArrivedAtWorkStation();
-    }
-
-    /// <summary>
-    /// Hace que el NPC regrese a trabajar después de satisfacer sus necesidades
-    /// </summary>
-    void ReturnToWork()
-    {
-        // NUEVO: No regresar a trabajar si está muerto
-        if (CheckIfDead()) return;
-
-        // Limpiar todas las estaciones de necesidades
-        if (currentRestStation != null)
-        {
-            currentRestStation.RemoveRestingNPC(dwellerNPC);
-            currentRestStation = null;
-        }
-        if (currentFoodStation != null)
-        {
-            currentFoodStation.RemoveEatingNPC(dwellerNPC);
-            currentFoodStation = null;
-        }
-        if (currentWaterStation != null)
-        {
-            currentWaterStation.RemoveDrinkingNPC(dwellerNPC);
-            currentWaterStation = null;
+            return;
         }
 
         if (dwellerNPC.assignedWorkStation != null)
         {
-            Debug.Log($"{dwellerNPC.dwellerName} vuelve al trabajo");
-            ChangeState(NPCState.MovingToWork);
-            StartCoroutine(MoveToWorkStation());
+            AssignToWork(dwellerNPC.assignedWorkStation);
         }
         else
         {
@@ -483,103 +401,142 @@ public class NPCStateMachine : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Asigna el NPC a una estación de trabajo específica
-    /// </summary>
-    public void AssignToWork(WorkStation station)
+    private void StartMoveCoroutine(IEnumerator _routine)
     {
-        // NUEVO: No asignar si está muerto
-        if (CheckIfDead()) return;
-
-        // Limpiar estaciones de necesidades si está en una
-        if (currentState == NPCState.Resting && currentRestStation != null)
+        if (_moveCoroutine != null)
         {
-            currentRestStation.RemoveRestingNPC(dwellerNPC);
-            currentRestStation = null;
-        }
-        if (currentState == NPCState.Eating && currentFoodStation != null)
-        {
-            currentFoodStation.RemoveEatingNPC(dwellerNPC);
-            currentFoodStation = null;
-        }
-        if (currentState == NPCState.Drinking && currentWaterStation != null)
-        {
-            currentWaterStation.RemoveDrinkingNPC(dwellerNPC);
-            currentWaterStation = null;
+            StopCoroutine(_moveCoroutine);
         }
 
-        ChangeState(NPCState.MovingToWork);
-        StartCoroutine(MoveToWorkStation());
+        _moveCoroutine = StartCoroutine(_routine);
     }
 
-    /// <summary>
-    /// Llamado cuando el NPC llega a su estación de trabajo
-    /// </summary>
-    public void OnArrivedAtWorkStation()
+    private void ReleaseCurrentNeedStations()
     {
-        Debug.Log($"{dwellerNPC.dwellerName} llegó a la estación de trabajo");
-    }
-
-    /// <summary>
-    /// Cambia el estado actual del NPC
-    /// </summary>
-    void ChangeState(NPCState newState)
-    {
-        // NUEVO: No cambiar estado si está muerto
-        if (CheckIfDead()) return;
-
-        if (currentState == newState) return;
-
-        Debug.Log($"{dwellerNPC.dwellerName}: {currentState} -> {newState} | {dwellerNPC.needs.GetNeedsStatus()}");
-        currentState = newState;
-        stateTimer = 0f;
-
-        if (dwellerNPC != null)
+        if (_currentRestStation != null && dwellerNPC != null)
         {
-            switch (newState)
-            {
-                case NPCState.Working:
-                    dwellerNPC.currentState = DwellerState.Working;
-                    workTimer = 0f;
-                    break;
-                case NPCState.MovingToWork: dwellerNPC.currentState = DwellerState.MovingToWork; break;
-                case NPCState.Eating: dwellerNPC.currentState = DwellerState.Eating; break;
-                case NPCState.Drinking: dwellerNPC.currentState = DwellerState.Drinking; break;
-                case NPCState.Resting: dwellerNPC.currentState = DwellerState.Resting; break;
-                case NPCState.Idle: dwellerNPC.currentState = DwellerState.Idle; break;
-                default: dwellerNPC.currentState = DwellerState.Idle; break;
-            }
+            _currentRestStation.RemoveRestingNPC(dwellerNPC);
+            _currentRestStation = null;
+        }
+
+        if (_currentFoodStation != null && dwellerNPC != null)
+        {
+            _currentFoodStation.RemoveEatingNPC(dwellerNPC);
+            _currentFoodStation = null;
+        }
+
+        if (_currentWaterStation != null && dwellerNPC != null)
+        {
+            _currentWaterStation.RemoveDrinkingNPC(dwellerNPC);
+            _currentWaterStation = null;
         }
     }
 
-    // Métodos de verificación de estado
-    public bool IsWorking() => currentState == NPCState.Working;
-    public bool IsResting() => currentState == NPCState.Resting;
-    public bool IsEating() => currentState == NPCState.Eating;
-    public bool IsDrinking() => currentState == NPCState.Drinking;
+    private bool IsValidAndAlive()
+    {
+        return dwellerNPC != null && !dwellerNPC.IsDead;
+    }
 
-    /// <summary>
-    /// NUEVO: Reinicia la máquina de estados (para revivir NPC)
-    /// </summary>
+    private void ChangeState(NPCState _newState)
+    {
+        if (_currentState == _newState)
+        {
+            return;
+        }
+
+        _currentState = _newState;
+        _stateTimer = 0f;
+
+        if (dwellerNPC == null || dwellerNPC.IsDead)
+        {
+            return;
+        }
+
+        switch (_newState)
+        {
+            case NPCState.Idle:
+                dwellerNPC.currentState = DwellerState.Idle;
+                break;
+            case NPCState.MovingToWork:
+                dwellerNPC.currentState = DwellerState.MovingToWork;
+                break;
+            case NPCState.Working:
+                dwellerNPC.currentState = DwellerState.Working;
+                break;
+            case NPCState.Eating:
+                dwellerNPC.currentState = DwellerState.Eating;
+                break;
+            case NPCState.Drinking:
+                dwellerNPC.currentState = DwellerState.Drinking;
+                break;
+            case NPCState.Resting:
+                dwellerNPC.currentState = DwellerState.Resting;
+                break;
+            default:
+                // Estados de movimiento a necesidades se reflejan como Idle o MovingToWork (no existe enum específico).
+                if (_newState == NPCState.MovingToEat || _newState == NPCState.MovingToDrink || _newState == NPCState.MovingToRest)
+                {
+                    dwellerNPC.currentState = DwellerState.Idle;
+                }
+                break;
+        }
+    }
+
+    public bool IsWorking() => _currentState == NPCState.Working;
+    public bool IsResting() => _currentState == NPCState.Resting;
+    public bool IsEating() => _currentState == NPCState.Eating;
+    public bool IsDrinking() => _currentState == NPCState.Drinking;
+
+    public bool IsRecoveringOrGoingToRecover()
+    {
+        return _currentState == NPCState.MovingToEat ||
+               _currentState == NPCState.Eating ||
+               _currentState == NPCState.MovingToDrink ||
+               _currentState == NPCState.Drinking ||
+               _currentState == NPCState.MovingToRest ||
+               _currentState == NPCState.Resting;
+    }
+
+    public bool IsAvailableForReassignment()
+    {
+        if (!IsValidAndAlive())
+        {
+            return false;
+        }
+
+        if (dwellerNPC != null && dwellerNPC.needs != null && dwellerNPC.needs.IsCritical())
+        {
+            return false;
+        }
+
+        return _currentState == NPCState.Idle ||
+               _currentState == NPCState.MovingToWork ||
+               _currentState == NPCState.Working;
+    }
+
+
     public void RestartStateMachine()
     {
-        if (dwellerNPC != null && !dwellerNPC.IsDead)
+        if (dwellerNPC == null || dwellerNPC.IsDead)
         {
-            // Reiniciar estado a Idle
-            currentState = NPCState.Idle;
-            stateTimer = 0f;
-            workTimer = 0f;
-
-            // Limpiar referencias a estaciones
-            currentRestStation = null;
-            currentFoodStation = null;
-            currentWaterStation = null;
-
-            // Reiniciar corrutinas
-            StopAllCoroutines();
-            StartCoroutine(NeedsCheckRoutine());
-
-            Debug.Log($"🔄 Máquina de estados reiniciada para {dwellerNPC.dwellerName}");
+            return;
         }
+
+        if (_moveCoroutine != null)
+        {
+            StopCoroutine(_moveCoroutine);
+            _moveCoroutine = null;
+        }
+
+        ReleaseCurrentNeedStations();
+        _stateTimer = 0f;
+        _workTimer = 0f;
+        ChangeState(NPCState.Idle);
+
+        if (_needsRoutine != null)
+        {
+            StopCoroutine(_needsRoutine);
+        }
+        _needsRoutine = StartCoroutine(NeedsCheckRoutine());
     }
 }

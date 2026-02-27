@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Controla visibilidad de bloques UI según el estado del PlayerManager.
+/// Refactorizado para ser tolerante a nulls y a escenas donde no existe PlayerManager.
+/// </summary>
 public class UIVisibilityManager : MonoBehaviour
 {
     [System.Serializable]
@@ -12,46 +16,74 @@ public class UIVisibilityManager : MonoBehaviour
         public GameObject[] inactiveElements;
     }
 
-    [Header("UI References")]
+    [Header("Botones (opcionales)")]
     [SerializeField] private Button _roomBuildingEnterButton;
     [SerializeField] private Button _roomBuildingExitButton;
 
-    [Header("UI Elements")]
+    [Header("Bloques UI (opcionales)")]
     [SerializeField] private GameObject _roomBuildingButtons;
     [SerializeField] private GameObject _roomBuildingEnter;
 
-    [Header("State Configurations")]
+    [Header("Configuración por estado")]
     [SerializeField] private UIStateConfiguration[] _stateConfigurations;
+    [SerializeField] private bool _applyDefaultStateOnStart = true;
 
-    private Dictionary<PlayerManager.PlayerStates, UIStateConfiguration> _stateConfigMap;
-    private readonly GameObject[] _allUIElements = new GameObject[2];
+    private readonly Dictionary<PlayerManager.PlayerStates, UIStateConfiguration> _stateConfigMap = new Dictionary<PlayerManager.PlayerStates, UIStateConfiguration>();
+    private readonly List<GameObject> _allKnownElements = new List<GameObject>(8);
+    private bool _isSubscribed;
 
     private void Awake()
     {
-        InitializeAllUIElementsArray();
-        InitializeStateConfiguration();
+        RebuildConfigurationCache();
         SetupButtonListeners();
-        SubscribeToEvents();
     }
 
-    private void OnDestroy()
+    private void OnEnable()
+    {
+        SubscribeToEvents();
+
+        if (_applyDefaultStateOnStart)
+        {
+            RefreshFromCurrentState();
+        }
+    }
+
+    private void Start()
+    {
+        // Segunda pasada por si PlayerManager se inicializa un poco más tarde.
+        RefreshFromCurrentState();
+    }
+
+    private void OnDisable()
     {
         UnsubscribeFromEvents();
     }
 
-    private void InitializeAllUIElementsArray()
+    private void OnDestroy()
     {
-        _allUIElements[0] = _roomBuildingButtons;
-        _allUIElements[1] = _roomBuildingEnter;
+        RemoveButtonListeners();
+        UnsubscribeFromEvents();
     }
 
-    private void InitializeStateConfiguration()
+    private void RebuildConfigurationCache()
     {
-        _stateConfigMap = new Dictionary<PlayerManager.PlayerStates, UIStateConfiguration>();
+        _stateConfigMap.Clear();
+        _allKnownElements.Clear();
 
-        foreach (var config in _stateConfigurations)
+        if (_stateConfigurations != null)
         {
-            _stateConfigMap[config.state] = config;
+            for (int i = 0; i < _stateConfigurations.Length; i++)
+            {
+                UIStateConfiguration _config = _stateConfigurations[i];
+                if (_config == null)
+                {
+                    continue;
+                }
+
+                _stateConfigMap[_config.state] = _config;
+                RegisterElements(_config.activeElements);
+                RegisterElements(_config.inactiveElements);
+            }
         }
 
         EnsureDefaultConfigurations();
@@ -59,105 +91,202 @@ public class UIVisibilityManager : MonoBehaviour
 
     private void EnsureDefaultConfigurations()
     {
-        AddDefaultConfigurationIfMissing(PlayerManager.PlayerStates.NONE,
-            activeElements: new[] { _roomBuildingEnter },
-            inactiveElements: new[] { _roomBuildingButtons });
+        AddDefaultConfigurationIfMissing(
+            PlayerManager.PlayerStates.NONE,
+            new[] { _roomBuildingEnter },
+            new[] { _roomBuildingButtons });
 
-        AddDefaultConfigurationIfMissing(PlayerManager.PlayerStates.ROOMBUILDING,
-            activeElements: new[] { _roomBuildingButtons },
-            inactiveElements: new[] { _roomBuildingEnter });
+        AddDefaultConfigurationIfMissing(
+            PlayerManager.PlayerStates.ROOMBUILDING,
+            new[] { _roomBuildingButtons },
+            new[] { _roomBuildingEnter });
     }
 
-    private void AddDefaultConfigurationIfMissing(PlayerManager.PlayerStates state,
-        GameObject[] activeElements, GameObject[] inactiveElements)
+    private void AddDefaultConfigurationIfMissing(
+        PlayerManager.PlayerStates _state,
+        GameObject[] _activeElements,
+        GameObject[] _inactiveElements)
     {
-        if (_stateConfigMap.ContainsKey(state)) return;
-
-        _stateConfigMap[state] = new UIStateConfiguration
+        if (_stateConfigMap.ContainsKey(_state))
         {
-            state = state,
-            activeElements = activeElements,
-            inactiveElements = inactiveElements
+            return;
+        }
+
+        UIStateConfiguration _config = new UIStateConfiguration
+        {
+            state = _state,
+            activeElements = _activeElements,
+            inactiveElements = _inactiveElements
         };
+
+        _stateConfigMap[_state] = _config;
+        RegisterElements(_activeElements);
+        RegisterElements(_inactiveElements);
+    }
+
+    private void RegisterElements(GameObject[] _elements)
+    {
+        if (_elements == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < _elements.Length; i++)
+        {
+            GameObject _go = _elements[i];
+            if (_go == null)
+            {
+                continue;
+            }
+
+            if (!_allKnownElements.Contains(_go))
+            {
+                _allKnownElements.Add(_go);
+            }
+        }
     }
 
     private void SetupButtonListeners()
     {
-        _roomBuildingEnterButton.onClick.AddListener(OnRoomBuildingButtonClicked);
+        if (_roomBuildingEnterButton != null)
+        {
+            _roomBuildingEnterButton.onClick.RemoveListener(OnRoomBuildingEnterClicked);
+            _roomBuildingEnterButton.onClick.AddListener(OnRoomBuildingEnterClicked);
+        }
+
+        if (_roomBuildingExitButton != null)
+        {
+            _roomBuildingExitButton.onClick.RemoveListener(OnRoomBuildingExitClicked);
+            _roomBuildingExitButton.onClick.AddListener(OnRoomBuildingExitClicked);
+        }
+    }
+
+    private void RemoveButtonListeners()
+    {
+        if (_roomBuildingEnterButton != null)
+        {
+            _roomBuildingEnterButton.onClick.RemoveListener(OnRoomBuildingEnterClicked);
+        }
+
+        if (_roomBuildingExitButton != null)
+        {
+            _roomBuildingExitButton.onClick.RemoveListener(OnRoomBuildingExitClicked);
+        }
     }
 
     private void SubscribeToEvents()
     {
+        if (_isSubscribed)
+        {
+            return;
+        }
+
         PlayerManager.OnPlayerStateChanged += OnPlayerStateChanged;
+        _isSubscribed = true;
     }
 
     private void UnsubscribeFromEvents()
     {
+        if (!_isSubscribed)
+        {
+            return;
+        }
+
         PlayerManager.OnPlayerStateChanged -= OnPlayerStateChanged;
+        _isSubscribed = false;
     }
 
-    private void OnRoomBuildingButtonClicked()
+    private void OnRoomBuildingEnterClicked()
     {
-        var currentState = PlayerManager.Instance.GetCurrentPlayerState();
-        var newState = currentState switch
+        ChangeToState(PlayerManager.PlayerStates.ROOMBUILDING);
+    }
+
+    private void OnRoomBuildingExitClicked()
+    {
+        ChangeToState(PlayerManager.PlayerStates.NONE);
+    }
+
+    private void OnPlayerStateChanged(PlayerManager.PlayerStates _newState)
+    {
+        UpdateUIVisibility(_newState);
+    }
+
+    public void RefreshFromCurrentState()
+    {
+        RebuildConfigurationCache();
+
+        if (PlayerManager.Instance == null)
         {
-            PlayerManager.PlayerStates.NONE => PlayerManager.PlayerStates.ROOMBUILDING,
-            PlayerManager.PlayerStates.ROOMBUILDING => PlayerManager.PlayerStates.NONE,
-            _ => currentState
-        };
+            // Si no hay PlayerManager en esta escena, dejamos la UI en estado base.
+            UpdateUIVisibility(PlayerManager.PlayerStates.NONE);
+            return;
+        }
 
-        PlayerManager.Instance.SetCurrentPlayerState(newState);
+        UpdateUIVisibility(PlayerManager.Instance.GetCurrentPlayerState());
     }
 
-    private void OnPlayerStateChanged(PlayerManager.PlayerStates newState)
+    private void UpdateUIVisibility(PlayerManager.PlayerStates _state)
     {
-        UpdateUIVisibility(newState);
-    }
+        DeactivateAllKnownElements();
 
-    private void UpdateUIVisibility(PlayerManager.PlayerStates state)
-    {
-        DeactivateAllUIElements();
-
-        if (_stateConfigMap.TryGetValue(state, out var config))
+        if (_stateConfigMap.TryGetValue(_state, out UIStateConfiguration _config))
         {
-            SetElementsActive(config.activeElements, true);
-            SetElementsActive(config.inactiveElements, false);
+            SetElementsActive(_config.activeElements, true);
+            SetElementsActive(_config.inactiveElements, false);
         }
     }
 
-    private void DeactivateAllUIElements()
+    private void DeactivateAllKnownElements()
     {
-        SetElementsActive(_allUIElements, false);
+        for (int i = 0; i < _allKnownElements.Count; i++)
+        {
+            if (_allKnownElements[i] != null)
+            {
+                _allKnownElements[i].SetActive(false);
+            }
+        }
     }
 
-    private void SetElementsActive(GameObject[] elements, bool active)
+    private void SetElementsActive(GameObject[] _elements, bool _active)
     {
-        if (elements == null) return;
-
-        foreach (var element in elements)
+        if (_elements == null)
         {
-            if (element != null)
-                element.SetActive(active);
+            return;
+        }
+
+        for (int i = 0; i < _elements.Length; i++)
+        {
+            if (_elements[i] != null)
+            {
+                _elements[i].SetActive(_active);
+            }
         }
     }
 
     public void SetupMainUI()
     {
-        UpdateUIVisibility(PlayerManager.PlayerStates.NONE);
+        RefreshFromCurrentState();
     }
 
-    public void ChangeToState(PlayerManager.PlayerStates newState)
+    public void ChangeToState(PlayerManager.PlayerStates _newState)
     {
-        if (IsValidStateTransition(PlayerManager.Instance.GetCurrentPlayerState(), newState))
+        if (PlayerManager.Instance == null)
         {
-            PlayerManager.Instance.SetCurrentPlayerState(newState);
+            Debug.LogWarning("[UIVisibilityManager] No existe PlayerManager en la escena para cambiar estado.");
+            return;
         }
+
+        if (!IsValidStateTransition(PlayerManager.Instance.GetCurrentPlayerState(), _newState))
+        {
+            return;
+        }
+
+        PlayerManager.Instance.SetCurrentPlayerState(_newState);
     }
 
-    private bool IsValidStateTransition(PlayerManager.PlayerStates current,
-        PlayerManager.PlayerStates next)
+    private bool IsValidStateTransition(PlayerManager.PlayerStates _current, PlayerManager.PlayerStates _next)
     {
-        // Add transition validation logic here if needed
+        // De momento se permite todo para no romper vuestra lógica existente.
         return true;
     }
 }

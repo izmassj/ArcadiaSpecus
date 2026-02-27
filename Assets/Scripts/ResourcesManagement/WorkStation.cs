@@ -1,164 +1,30 @@
-﻿// WorkStation.cs
-using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class WorkStation : MonoBehaviour
 {
     [Header("Configuración Estación")]
     public string stationId;
-    public string stationName;
-    public ResourceType producedResource;
-    public bool isConsumptionStation = false; // Distingue entre producción y consumo
+    public string stationName = "Estación";
+    public ResourceType producedResource = ResourceType.Materials;
+    public bool isConsumptionStation = false;
     public int baseProduction = 1;
     public float productionInterval = 3f;
+
+    [Header("Puntos opcionales")]
+    [SerializeField] private Transform _workerPoint;
 
     [Header("Estado")]
     [SerializeField] protected List<DwellerNPC> assignedWorkers = new List<DwellerNPC>();
     [SerializeField] protected bool isProducing = false;
 
-    private Coroutine productionCoroutine;
+    private Coroutine _productionCoroutine;
 
-    public System.Action<ResourceType, int> OnProduction;
+    public Action<ResourceType, int> OnProduction;
 
-    void Start()
-    {
-        if (string.IsNullOrEmpty(stationId))
-            stationId = System.Guid.NewGuid().ToString();
-    }
-
-    /// <summary>
-    /// Asigna un trabajador a esta estación
-    /// </summary>
-    public virtual void AssignWorker(DwellerNPC worker)
-    {
-        if (!assignedWorkers.Contains(worker))
-        {
-            assignedWorkers.Add(worker);
-
-            // Solo iniciar producción si NO es estación de consumo
-            if (!isConsumptionStation && assignedWorkers.Count == 1 && !isProducing)
-            {
-                StartProduction();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Remueve un trabajador de esta estación
-    /// </summary>
-    public virtual void RemoveWorker(DwellerNPC worker)
-    {
-        if (assignedWorkers.Contains(worker))
-        {
-            assignedWorkers.Remove(worker);
-
-            // Solo detener producción si NO es estación de consumo
-            if (!isConsumptionStation && assignedWorkers.Count == 0 && isProducing)
-            {
-                StopProduction();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Inicia la producción de recursos (solo para estaciones de producción)
-    /// </summary>
-    private void StartProduction()
-    {
-        if (isConsumptionStation)
-        {
-            Debug.Log($"{stationName} es estación de consumo - No inicia producción");
-            return;
-        }
-
-        if (productionCoroutine != null)
-            StopCoroutine(productionCoroutine);
-
-        productionCoroutine = StartCoroutine(ProductionLoop());
-        isProducing = true;
-        Debug.Log($"{stationName} inició producción de {producedResource}");
-    }
-
-    /// <summary>
-    /// Detiene la producción de recursos (solo para estaciones de producción)
-    /// </summary>
-    private void StopProduction()
-    {
-        if (isConsumptionStation) return;
-
-        if (productionCoroutine != null)
-            StopCoroutine(productionCoroutine);
-
-        isProducing = false;
-        Debug.Log($"{stationName} detuvo producción");
-    }
-
-    /// <summary>
-    /// Bucle de producción que genera recursos periódicamente
-    /// </summary>
-    private IEnumerator ProductionLoop()
-    {
-        while (isProducing && !isConsumptionStation)
-        {
-            yield return new WaitForSeconds(productionInterval);
-
-            if (assignedWorkers.Count > 0)
-            {
-                int effectiveWorkers = 0;
-                foreach (var worker in assignedWorkers)
-                {
-                    if (worker != null && worker.CanWorkEffectively())
-                    {
-                        effectiveWorkers++;
-                    }
-                }
-
-                if (effectiveWorkers > 0)
-                {
-                    int totalProduction = baseProduction * effectiveWorkers;
-                    ResourceManager.Instance.AddResource(producedResource, totalProduction);
-                    OnProduction?.Invoke(producedResource, totalProduction);
-
-                    Debug.Log($"{stationName} produjo {totalProduction} {producedResource} " +
-                             $"(Trabajadores: {effectiveWorkers}/{assignedWorkers.Count})");
-                }
-                else
-                {
-                    Debug.Log($"{stationName} sin producción - trabajadores necesitan descanso");
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Obtiene una posición aleatoria para el trabajador cerca de la estación
-    /// </summary>
-    public Vector3 GetWorkerPosition()
-    {
-        return transform.position + new Vector3(Random.Range(-2f, 2f), 0, Random.Range(-2f, 2f));
-    }
-
-    /// <summary>
-    /// Obtiene una posición exacta para el trabajador frente a la estación
-    /// </summary>
-    public Vector3 GetExactWorkerPosition()
-    {
-        return transform.position + transform.forward * 2f;
-    }
-
-    /// <summary>
-    /// Obtiene la lista de trabajadores asignados a esta estación
-    /// </summary>
-    public List<DwellerNPC> GetAssignedWorkers()
-    {
-        return new List<DwellerNPC>(assignedWorkers);
-    }
-
-    /// <summary>
-    /// Datos para guardar el estado de la estación de trabajo
-    /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class WorkStationSaveData
     {
         public string stationId;
@@ -170,39 +36,180 @@ public class WorkStation : MonoBehaviour
         public ResourceType producedResource;
     }
 
-    /// <summary>
-    /// Obtiene los datos para guardar el estado de la estación
-    /// </summary>
+    protected virtual void Awake()
+    {
+        if (string.IsNullOrWhiteSpace(stationId))
+        {
+            stationId = Guid.NewGuid().ToString();
+        }
+    }
+
+    protected virtual void OnDisable()
+    {
+        StopProduction();
+    }
+
+    public virtual void AssignWorker(DwellerNPC _worker)
+    {
+        if (_worker == null)
+        {
+            return;
+        }
+
+        if (assignedWorkers.Contains(_worker))
+        {
+            return;
+        }
+
+        assignedWorkers.Add(_worker);
+
+        // Solo estaciones de producción generan recursos de forma periódica.
+        if (!isConsumptionStation && assignedWorkers.Count > 0)
+        {
+            StartProduction();
+        }
+    }
+
+    public virtual void RemoveWorker(DwellerNPC _worker)
+    {
+        if (_worker == null)
+        {
+            return;
+        }
+
+        assignedWorkers.Remove(_worker);
+
+        if (!isConsumptionStation && assignedWorkers.Count == 0)
+        {
+            StopProduction();
+        }
+    }
+
+    private void StartProduction()
+    {
+        if (isConsumptionStation)
+        {
+            return;
+        }
+
+        if (_productionCoroutine != null)
+        {
+            StopCoroutine(_productionCoroutine);
+        }
+
+        isProducing = true;
+        _productionCoroutine = StartCoroutine(ProductionLoop());
+    }
+
+    private void StopProduction()
+    {
+        if (_productionCoroutine != null)
+        {
+            StopCoroutine(_productionCoroutine);
+            _productionCoroutine = null;
+        }
+
+        isProducing = false;
+    }
+
+    private IEnumerator ProductionLoop()
+    {
+        while (isProducing && enabled && gameObject.activeInHierarchy)
+        {
+            float _wait = Mathf.Max(0.1f, productionInterval);
+            yield return new WaitForSeconds(_wait);
+
+            if (ResourceManager.Instance == null)
+            {
+                continue;
+            }
+
+            int _effectiveWorkers = 0;
+            for (int i = assignedWorkers.Count - 1; i >= 0; i--)
+            {
+                DwellerNPC _worker = assignedWorkers[i];
+                if (_worker == null)
+                {
+                    assignedWorkers.RemoveAt(i);
+                    continue;
+                }
+
+                if (_worker.CanWorkEffectively())
+                {
+                    _effectiveWorkers++;
+                }
+            }
+
+            if (_effectiveWorkers <= 0)
+            {
+                continue;
+            }
+
+            int _totalProduction = Mathf.Max(1, baseProduction) * _effectiveWorkers;
+            ResourceManager.Instance.AddResource(producedResource, _totalProduction);
+            OnProduction?.Invoke(producedResource, _totalProduction);
+
+            // Comentario audio: aquí iría sonido de máquina produciendo / feedback visual.
+        }
+    }
+
+    public Vector3 GetWorkerPosition()
+    {
+        if (_workerPoint != null)
+        {
+            return _workerPoint.position;
+        }
+
+        // Fallback sencillo para no romper escenas sin puntos configurados.
+        return transform.position + (transform.forward.sqrMagnitude > 0.01f ? transform.forward : Vector3.forward) * 1.5f;
+    }
+
+    public Vector3 GetExactWorkerPosition()
+    {
+        return GetWorkerPosition();
+    }
+
+    public List<DwellerNPC> GetAssignedWorkers()
+    {
+        return new List<DwellerNPC>(assignedWorkers);
+    }
+
     public virtual WorkStationSaveData GetSaveData()
     {
-        List<string> workerNames = new List<string>();
-        foreach (var worker in assignedWorkers)
+        List<string> _workerNames = new List<string>();
+
+        for (int i = 0; i < assignedWorkers.Count; i++)
         {
-            if (worker != null)
-                workerNames.Add(worker.dwellerName);
+            if (assignedWorkers[i] != null)
+            {
+                _workerNames.Add(assignedWorkers[i].dwellerName);
+            }
         }
 
         return new WorkStationSaveData
         {
-            stationId = this.stationId,
-            stationName = this.stationName,
-            assignedWorkerNames = workerNames,
+            stationId = stationId,
+            stationName = stationName,
+            assignedWorkerNames = _workerNames,
             position = transform.position,
             rotation = transform.rotation,
-            isConsumptionStation = this.isConsumptionStation,
-            producedResource = this.producedResource
+            isConsumptionStation = isConsumptionStation,
+            producedResource = producedResource
         };
     }
 
-    /// <summary>
-    /// Carga los datos guardados de la estación
-    /// </summary>
-    public virtual void LoadData(WorkStationSaveData data)
+    public virtual void LoadData(WorkStationSaveData _data)
     {
-        stationName = data.stationName;
-        transform.position = data.position;
-        transform.rotation = data.rotation;
-        isConsumptionStation = data.isConsumptionStation;
-        producedResource = data.producedResource;
+        if (_data == null)
+        {
+            return;
+        }
+
+        stationId = string.IsNullOrWhiteSpace(_data.stationId) ? stationId : _data.stationId;
+        stationName = string.IsNullOrWhiteSpace(_data.stationName) ? stationName : _data.stationName;
+        transform.position = _data.position;
+        transform.rotation = _data.rotation;
+        isConsumptionStation = _data.isConsumptionStation;
+        producedResource = _data.producedResource;
     }
 }

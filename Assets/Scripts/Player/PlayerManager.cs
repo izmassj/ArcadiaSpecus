@@ -1,27 +1,30 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Gestor de estado de interacción del jugador (dragging/building/etc).
+/// Mantiene la API usada por otros scripts (UIVisibilityManager, ClickableObjectManager...).
+/// </summary>
 public class PlayerManager : MonoBehaviour
 {
     [Header("Inputs")]
     [SerializeField] private PlayerInput playerInput;
+    [SerializeField] private string _gameplayActionMapName = "Gameplay";
+    [SerializeField] private string _dragActionName = "Drag";
 
     private InputActionMap _gameplayMap;
-    private InputAction _clickAction;
+    private InputAction _dragAction;
 
-    // Singleton
     public static PlayerManager Instance { get; private set; }
-
-    // Events for state changes
     public static event Action<PlayerStates> OnPlayerStateChanged;
 
     public enum PlayerStates
     {
-        NONE, DRAGGING, 
-        ROOMBUILDING, ROBOT
+        NONE,
+        DRAGGING,
+        ROOMBUILDING,
+        ROBOT
     }
 
     private PlayerStates _currentPlayerState = PlayerStates.NONE;
@@ -33,42 +36,78 @@ public class PlayerManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
-        else
+        else if (Instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
-        _currentPlayerState = PlayerStates.NONE;
+        if (playerInput == null)
+            playerInput = GetComponent<PlayerInput>();
 
-        _gameplayMap = playerInput.actions.FindActionMap("Gameplay");
-        _clickAction = _gameplayMap.FindAction("Drag");
+        if (playerInput == null)
+            playerInput = FindObjectOfType<PlayerInput>();
+
+        CacheInputActions();
+
+        // Base de remapping: cargamos overrides guardados si existen.
+        InputBindingSaveManager.LoadBindingOverrides(playerInput);
+
+        _currentPlayerState = PlayerStates.NONE;
     }
 
     private void OnEnable()
     {
-        _clickAction.performed += ToDragging;
-        _clickAction.canceled += ToDraggingRelease;
+        SubscribeInput();
     }
 
     private void OnDisable()
     {
-        _clickAction.performed -= ToDragging;
-        _clickAction.canceled -= ToDraggingRelease;
+        UnsubscribeInput();
     }
 
-    void Update()
+    private void CacheInputActions()
     {
-        switch (_currentPlayerState)
+        _gameplayMap = null;
+        _dragAction = null;
+
+        if (playerInput == null || playerInput.actions == null)
+            return;
+
+        _gameplayMap = playerInput.actions.FindActionMap(_gameplayActionMapName, throwIfNotFound: false);
+
+        if (_gameplayMap != null)
+            _dragAction = _gameplayMap.FindAction(_dragActionName, throwIfNotFound: false);
+        else
+            _dragAction = playerInput.actions.FindAction(_dragActionName, throwIfNotFound: false);
+    }
+
+    private void SubscribeInput()
+    {
+        if (_dragAction == null)
         {
-            case PlayerStates.NONE:
-                break;
-            case PlayerStates.DRAGGING:
-                break;
+            CacheInputActions();
+        }
+
+        if (_dragAction != null)
+        {
+            _dragAction.performed -= ToDragging;
+            _dragAction.canceled -= ToDraggingRelease;
+
+            _dragAction.performed += ToDragging;
+            _dragAction.canceled += ToDraggingRelease;
         }
     }
 
-    // Transition functions
+    private void UnsubscribeInput()
+    {
+        if (_dragAction != null)
+        {
+            _dragAction.performed -= ToDragging;
+            _dragAction.canceled -= ToDraggingRelease;
+        }
+    }
+
     private void ToDragging(InputAction.CallbackContext ctx)
     {
         SetCurrentPlayerState(PlayerStates.DRAGGING);
@@ -76,22 +115,38 @@ public class PlayerManager : MonoBehaviour
 
     private void ToDraggingRelease(InputAction.CallbackContext ctx)
     {
-        if (ctx.ReadValue<float>() == 0 && _currentPlayerState == PlayerStates.DRAGGING)
-        {
+        // Para botones típicos del Input System esto vuelve a 0 en cancel.
+        if (_currentPlayerState == PlayerStates.DRAGGING)
             SetCurrentPlayerState(PlayerStates.NONE);
-        }
     }
 
-    // Getters
-    public PlayerStates GetCurrentPlayerState() => _currentPlayerState;
+    public PlayerStates GetCurrentPlayerState()
+    {
+        return _currentPlayerState;
+    }
 
-    // Setter with event notification
     public void SetCurrentPlayerState(PlayerStates state)
     {
-        if (_currentPlayerState == state) return;
+        if (_currentPlayerState == state)
+            return;
 
-        var previousState = _currentPlayerState;
         _currentPlayerState = state;
         OnPlayerStateChanged?.Invoke(state);
+    }
+
+    public PlayerInput GetPlayerInput()
+    {
+        return playerInput;
+    }
+
+    public void SaveBindingOverrides()
+    {
+        InputBindingSaveManager.SaveBindingOverrides(playerInput);
+    }
+
+    public void ResetBindingOverrides()
+    {
+        InputBindingSaveManager.ResetBindingOverrides(playerInput);
+        CacheInputActions();
     }
 }

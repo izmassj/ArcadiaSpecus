@@ -1,10 +1,13 @@
-﻿// NPCStatIndicator.cs
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.EventSystems;
 using System.Collections;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
+/// <summary>
+/// Indicador vertical para hambre/sed/fatiga del NPC.
+/// Muestra alerta cuando el valor es alto (más crítico).
+/// </summary>
 public class NPCStatIndicator : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI")]
@@ -13,41 +16,59 @@ public class NPCStatIndicator : MonoBehaviour, IPointerEnterHandler, IPointerExi
     public TextMeshProUGUI statLetter;
     public GameObject alertIcon;
 
-    [Header("Colors")]
-    public Color fullColor = Color.green;      // Verde para valor bajo
-    public Color mediumColor = Color.yellow;   // Amarillo para valor medio
-    public Color lowColor = Color.red;         // Rojo para valor alto
+    [Header("Colores")]
+    public Color fullColor = Color.green;     // Valor bajo (bien)
+    public Color mediumColor = Color.yellow;  // Valor medio
+    public Color lowColor = Color.red;        // Valor alto (mal)
 
-    [Header("Hover Effects")]
+    [Header("Hover")]
     public bool enableHoverEffects = true;
     public float hoverScale = 1.1f;
     public float animationDuration = 0.2f;
 
-    [Header("Config")]
+    [Header("Configuración")]
     public float criticalThreshold = 70f;
+    [SerializeField] private float _maxValue = 100f;
 
-    private float currentValue = 0f;
-    private float maxValue = 100f;
+    private float _currentValue;
+    private bool _isAlert;
+    private Vector3 _originalScale;
+    private Coroutine _scaleCoroutine;
 
-    private bool isAlert = false;
-    private Vector3 originalScale;
-    private Coroutine scaleCoroutine;
-
-    void Start()
+    private void Awake()
     {
-        originalScale = transform.localScale;
+        _originalScale = transform.localScale;
+        ConfigureFill();
 
         if (alertIcon != null)
+        {
             alertIcon.SetActive(false);
-
-        ConfigureFill();
+        }
     }
 
-    /// <summary>
-    /// Configura el componente de llenado para mostrar correctamente los valores
-    /// </summary>
-    void ConfigureFill()
+    private void OnEnable()
     {
+        UpdateDisplay();
+    }
+
+    private void OnDisable()
+    {
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+            _scaleCoroutine = null;
+        }
+
+        transform.localScale = _originalScale;
+    }
+
+    private void ConfigureFill()
+    {
+        if (statFill == null)
+        {
+            return;
+        }
+
         statFill.type = Image.Type.Filled;
         statFill.fillMethod = Image.FillMethod.Vertical;
         statFill.fillOrigin = (int)Image.OriginVertical.Bottom;
@@ -57,162 +78,170 @@ public class NPCStatIndicator : MonoBehaviour, IPointerEnterHandler, IPointerExi
     }
 
     /// <summary>
-    /// Establece el valor actual del indicador
+    /// Establece el valor actual del indicador (0..100 por defecto).
     /// </summary>
-    public void SetValue(float value)
+    public void SetValue(float _value)
     {
-        currentValue = Mathf.Clamp(value, 0f, maxValue);
+        _currentValue = Mathf.Clamp(_value, 0f, Mathf.Max(1f, _maxValue));
         UpdateDisplay();
     }
 
-    /// <summary>
-    /// Actualiza la visualización del indicador
-    /// </summary>
+    public void SetMaxValue(float _value)
+    {
+        _maxValue = Mathf.Max(1f, _value);
+        _currentValue = Mathf.Clamp(_currentValue, 0f, _maxValue);
+        UpdateDisplay();
+    }
+
     public void UpdateDisplay()
     {
-        float fill = currentValue / maxValue;
-        statFill.fillAmount = fill;
-
-        // COLORS INVERTIDOS:
-        // VALOR BAJO  → VERDE
-        // VALOR MEDIO → AMARILLO
-        // VALOR ALTO  → ROJO
-        if (fill < 0.3f)
+        if (statFill == null)
         {
-            statFill.color = fullColor; // Verde cuando está bien
+            return;
         }
-        else if (fill < 0.6f)
+
+        float _fill = Mathf.Clamp01(_currentValue / Mathf.Max(1f, _maxValue));
+        statFill.fillAmount = _fill;
+
+        // Valores altos = peor estado (se mantiene la lógica visual que ya usabais).
+        if (_fill < 0.3f)
         {
-            statFill.color = mediumColor; // Amarillo cuando está normal
+            statFill.color = fullColor;
+        }
+        else if (_fill < 0.6f)
+        {
+            statFill.color = mediumColor;
         }
         else
         {
-            statFill.color = lowColor; // Rojo cuando es crítico
+            statFill.color = lowColor;
         }
 
-        // ALERTA CRÍTICA (si supera el umbral)
-        if (currentValue >= criticalThreshold)
+        bool _shouldAlert = _currentValue >= criticalThreshold;
+        if (_shouldAlert != _isAlert)
         {
-            if (!isAlert)
+            _isAlert = _shouldAlert;
+            if (alertIcon != null)
             {
-                isAlert = true;
-                if (alertIcon != null) alertIcon.SetActive(true);
+                alertIcon.SetActive(_isAlert);
+            }
+
+            if (_isAlert)
+            {
                 PlayCriticalAnimation();
             }
-        }
-        else
-        {
-            if (isAlert)
+            else
             {
-                isAlert = false;
-                if (alertIcon != null) alertIcon.SetActive(false);
                 StopCriticalAnimation();
             }
         }
     }
 
-    /// <summary>
-    /// Inicia la animación de estado crítico
-    /// </summary>
-    void PlayCriticalAnimation()
+    private void PlayCriticalAnimation()
     {
-        if (!enableHoverEffects) return;
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        scaleCoroutine = StartCoroutine(PulseAnimation());
-    }
-
-    /// <summary>
-    /// Detiene la animación de estado crítico
-    /// </summary>
-    void StopCriticalAnimation()
-    {
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        transform.localScale = originalScale;
-    }
-
-    /// <summary>
-    /// Animación de pulso para estado crítico
-    /// </summary>
-    IEnumerator PulseAnimation()
-    {
-        while (isAlert)
+        if (!enableHoverEffects || !isActiveAndEnabled)
         {
-            yield return StartCoroutine(ScaleAnimation(originalScale * 1.15f, 0.25f));
-            yield return new WaitForSeconds(0.1f);
+            return;
+        }
+
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+        }
+
+        _scaleCoroutine = StartCoroutine(PulseAnimation());
+    }
+
+    private void StopCriticalAnimation()
+    {
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+            _scaleCoroutine = null;
+        }
+
+        transform.localScale = _originalScale;
+    }
+
+    private IEnumerator PulseAnimation()
+    {
+        while (_isAlert && isActiveAndEnabled)
+        {
+            yield return StartCoroutine(ScaleAnimation(_originalScale * 1.15f, 0.25f));
+            yield return new WaitForSecondsRealtime(0.1f);
         }
     }
 
-    /// <summary>
-    /// Animación de escala genérica
-    /// </summary>
-    IEnumerator ScaleAnimation(Vector3 target, float duration)
+    private IEnumerator ScaleAnimation(Vector3 _target, float _duration)
     {
-        Vector3 start = transform.localScale;
-        float t = 0f;
+        Vector3 _start = transform.localScale;
+        float _t = 0f;
+        float _safeDuration = Mathf.Max(0.01f, _duration);
 
-        while (t < duration)
+        while (_t < _safeDuration)
         {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(start, target, t / duration);
+            _t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(_start, _target, _t / _safeDuration);
             yield return null;
         }
 
-        t = 0f;
-        start = transform.localScale;
+        _t = 0f;
+        _start = transform.localScale;
 
-        while (t < duration)
+        while (_t < _safeDuration)
         {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(start, originalScale, t / duration);
-            yield return null;
-        }
-    }
-
-    /// <summary>
-    /// Maneja el evento de entrar el puntero
-    /// </summary>
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (!enableHoverEffects) return;
-
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        scaleCoroutine = StartCoroutine(HoverAnimation(originalScale * hoverScale, animationDuration));
-    }
-
-    /// <summary>
-    /// Maneja el evento de salir el puntero
-    /// </summary>
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (!enableHoverEffects) return;
-
-        if (scaleCoroutine != null)
-            StopCoroutine(scaleCoroutine);
-
-        scaleCoroutine = StartCoroutine(HoverAnimation(originalScale, animationDuration));
-    }
-
-    /// <summary>
-    /// Animación de hover suave
-    /// </summary>
-    IEnumerator HoverAnimation(Vector3 targetScale, float duration)
-    {
-        Vector3 start = transform.localScale;
-        float t = 0f;
-
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(start, targetScale, t / duration);
+            _t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(_start, _originalScale, _t / _safeDuration);
             yield return null;
         }
 
-        transform.localScale = targetScale;
+        transform.localScale = _originalScale;
+    }
+
+    public void OnPointerEnter(PointerEventData _eventData)
+    {
+        if (!enableHoverEffects || !isActiveAndEnabled)
+        {
+            return;
+        }
+
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+        }
+
+        _scaleCoroutine = StartCoroutine(HoverAnimation(_originalScale * hoverScale, animationDuration));
+    }
+
+    public void OnPointerExit(PointerEventData _eventData)
+    {
+        if (!enableHoverEffects || !isActiveAndEnabled)
+        {
+            return;
+        }
+
+        if (_scaleCoroutine != null)
+        {
+            StopCoroutine(_scaleCoroutine);
+        }
+
+        _scaleCoroutine = StartCoroutine(HoverAnimation(_originalScale, animationDuration));
+    }
+
+    private IEnumerator HoverAnimation(Vector3 _targetScale, float _duration)
+    {
+        Vector3 _start = transform.localScale;
+        float _t = 0f;
+        float _safeDuration = Mathf.Max(0.01f, _duration);
+
+        while (_t < _safeDuration)
+        {
+            _t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(_start, _targetScale, _t / _safeDuration);
+            yield return null;
+        }
+
+        transform.localScale = _targetScale;
+        _scaleCoroutine = null;
     }
 }
