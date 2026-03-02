@@ -1219,10 +1219,38 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4834628671552184997, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 8705204629548478578, guid: 407083034d8321b4183f1189970ca4ce, type: 2}
+    - target: {fileID: 5201341896279985860, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
+      propertyPath: alert
+      value: 
+      objectReference: {fileID: 8300000, guid: d981dc6862a05b042a044adced21925f, type: 3}
+    - target: {fileID: 5201341896279985860, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
+      propertyPath: uiBack
+      value: 
+      objectReference: {fileID: 8300000, guid: 401e53701cb53bb4fbde03b6f08e2cdf, type: 3}
+    - target: {fileID: 5201341896279985860, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
+      propertyPath: uiClick
+      value: 
+      objectReference: {fileID: 8300000, guid: d414d82449358df4497083b1ed761fee, type: 3}
+    - target: {fileID: 5201341896279985860, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
+      propertyPath: sfxSource
+      value: 
+      objectReference: {fileID: 478094281}
     - target: {fileID: 5201341896279985860, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
       propertyPath: audioSource
       value: 
       objectReference: {fileID: 478094281}
+    - target: {fileID: 5201341896279985860, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
+      propertyPath: sfxMixerGroup
+      value: 
+      objectReference: {fileID: -4122958247111482212, guid: 407083034d8321b4183f1189970ca4ce, type: 2}
+    - target: {fileID: 5201341896279985860, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
+      propertyPath: musicMixerGroup
+      value: 
+      objectReference: {fileID: 8705204629548478578, guid: 407083034d8321b4183f1189970ca4ce, type: 2}
     - target: {fileID: 8387954578820508022, guid: 47d011b191bb65447a7b07bc01d6af01, type: 3}
       propertyPath: m_Name
       value: MusicManager

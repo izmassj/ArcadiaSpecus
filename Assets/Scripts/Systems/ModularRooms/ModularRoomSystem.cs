@@ -53,7 +53,13 @@ public class ModularRoomSystem : MonoBehaviour
             if (!prefabDict.ContainsKey(p.kind))
                 prefabDict.Add(p.kind, p.prefab);
         }
-    }
+    
+
+        // Creamos/actualizamos el manager de combos SIN tocar el sistema de colocación.
+        RoomComboManager.EnsureInstance().SetRoomLayerMask(roomLayerMask);
+        RoomComboManager.Instance.BootstrapExistingRooms();
+        RoomComboManager.Instance.RecalculateCombos();
+}
 
     private void Update()
     {
@@ -172,7 +178,31 @@ public class ModularRoomSystem : MonoBehaviour
         }
 
 
-        currentRoom = null;
+        
+
+        // Añadimos metadata del tipo de habitación SIN cambiar cómo se coloca (movimiento/snap se mantiene tal cual).
+        try
+        {
+            BoxCollider _placedCollider = currentRoom.transform.GetChild(0).GetChild(0).GetComponent<BoxCollider>();
+            if (_placedCollider != null)
+            {
+                PlacedRoom _placedRoom = _placedCollider.GetComponent<PlacedRoom>();
+                if (_placedRoom == null)
+                    _placedRoom = _placedCollider.gameObject.AddComponent<PlacedRoom>();
+
+                _placedRoom.roomKind = roomKind;
+            }
+        }
+        catch
+        {
+            // Si la jerarquía cambia, no rompemos el juego.
+        }
+
+        // Recalcular combos para dar bonus de producción (rúbrica "Bé").
+        // Comentario audio/VFX: aquí podríais poner un SFX de "colocar habitación" y un pequeño VFX.
+        RoomComboManager.EnsureInstance().SetRoomLayerMask(roomLayerMask);
+        RoomComboManager.Instance.RecalculateCombos();
+currentRoom = null;
         isBuilding = false;
         canPlaceRoom = false;
     }

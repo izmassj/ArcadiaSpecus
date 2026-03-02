@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// Cursor híbrido:
 /// - Ratón real cuando se detecta mouse
 /// - Cursor virtual cuando se usa mando/teclado
-/// Compatible con UI y con clicks en ClickableMachine.
+
 /// </summary>
 public class CursorController : MonoBehaviour
 {

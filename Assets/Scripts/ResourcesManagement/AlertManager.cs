@@ -28,6 +28,15 @@ public class AlertManager : MonoBehaviour
     private void OnResourceCritical(ResourceType _resourceType)
     {
         Debug.Log($"ALERTA: {_resourceType} en nivel crítico");
-        // Comentario audio/UI: aquí se podría disparar popup/sonido de alerta.
+        // SFX de alerta (rúbrica - feedback audiovisual).
+        if (PersistentMusic.instance != null)
+            PersistentMusic.instance.PlayAlert();
+
+
+        VFXManager.EnsureInstance();
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.PlayOnCamera(VFXKind.ResourceCritical);
+        }
     }
 }

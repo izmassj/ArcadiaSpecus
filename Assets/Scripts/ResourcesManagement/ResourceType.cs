@@ -3,6 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Tipos de recursos disponibles en el juego
+/// IMPORTANTE: Añadimos nuevos valores AL FINAL para no romper referencias serializadas.
 /// </summary>
 public enum ResourceType
 {
@@ -11,5 +12,11 @@ public enum ResourceType
     Energy,
     Materials,
     Oxygen,
-    Medicine
+    Medicine,
+
+
+    Rations,
+    Fuel,
+    Metal,
+    Electronics
 }

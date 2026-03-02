@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Utilidad para guardar/cargar remapeos del New Input System.
-/// En este lote se deja la base lista; la UI de remapping la haremos en otro lote.
+
 /// </summary>
 public static class InputBindingSaveManager
 {
@@ -13,7 +13,7 @@ public static class InputBindingSaveManager
     {
         if (playerInput == null || playerInput.actions == null)
         {
-            Debug.LogWarning("InputBindingSaveManager: PlayerInput no válido al guardar remapeos.");
+            Debug.LogWarning("InputBindingSaveManager: PlayerInput no vlido al guardar remapeos.");
             return;
         }
 
@@ -26,7 +26,7 @@ public static class InputBindingSaveManager
     {
         if (playerInput == null || playerInput.actions == null)
         {
-            Debug.LogWarning("InputBindingSaveManager: PlayerInput no válido al cargar remapeos.");
+            Debug.LogWarning("InputBindingSaveManager: PlayerInput no vlido al cargar remapeos.");
             return;
         }
 
@@ -45,7 +45,7 @@ public static class InputBindingSaveManager
     {
         if (playerInput == null || playerInput.actions == null)
         {
-            Debug.LogWarning("InputBindingSaveManager: PlayerInput no válido al resetear remapeos.");
+            Debug.LogWarning("InputBindingSaveManager: PlayerInput no vlido al resetear remapeos.");
             return;
         }
 

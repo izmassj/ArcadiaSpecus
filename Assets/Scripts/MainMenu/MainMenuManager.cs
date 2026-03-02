@@ -3,8 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Menú principal + settings.
-/// Mantiene métodos públicos usados por botones del inspector.
+/// MenÃº principal + settings.
+/// Mantiene mÃ©todos pÃºblicos usados por botones del inspector.
 /// </summary>
 public class MainMenuManager : MonoBehaviour
 {
@@ -50,12 +50,12 @@ public class MainMenuManager : MonoBehaviour
     }
 
     // ---------------------------
-    //      MENÚ PRINCIPAL
+    //      MENÃš PRINCIPAL
     // ---------------------------
 
     public void PlayGame()
     {
-        // Aquí iría un SFX de botón al integrarlo.
+        // AquÃ­ irÃ­a un SFX de botÃ³n al integrarlo.
         SceneFlowManager.EnsureInstance().LoadBunker();
     }
 
@@ -68,7 +68,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void QuitGame()
     {
-        // Aquí iría un SFX de botón al integrarlo.
+        // AquÃ­ irÃ­a un SFX de botÃ³n al integrarlo.
         Application.Quit();
 
 #if UNITY_EDITOR
@@ -77,7 +77,7 @@ public class MainMenuManager : MonoBehaviour
     }
 
     // ---------------------------
-    //      HELP / ABOUT (rúbrica)
+    //      HELP / ABOUT (rÃºbrica)
     // ---------------------------
 
     public void OpenHelp()
@@ -127,8 +127,8 @@ public class MainMenuManager : MonoBehaviour
         GameSettingsService.ApplyRuntime(currentSettings, _resolutions);
         GameSettingsService.SaveToPrefs(currentSettings);
 
-        // Aquí iría la aplicación de volúmenes reales a AudioMixer/FM0D.
-        // Por ahora solo se guardan los valores y se aplica resolución/fullscreen.
+        // AquÃ­ irÃ­a la aplicaciÃ³n de volÃºmenes reales a AudioMixer/FM0D.
+        // Por ahora solo se guardan los valores y se aplica resoluciÃ³n/fullscreen.
 
         SaveTempSettings();
         SafeSetActive(unsavedChangesPanel, false);

@@ -1,6 +1,10 @@
 using TMPro;
+using System;
+using System.Reflection;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -22,6 +26,10 @@ public class TestingManager : MonoBehaviour
     [SerializeField] private Key _killAllKey = Key.F4;
     [SerializeField] private Key _forceGameOverKey = Key.F5;
     [SerializeField] private Key _reviveAllKey = Key.F6;
+
+    [Header("Exterior debug (opcionales)")]
+    [SerializeField] private Key _advanceExterior6hKey = Key.F7;
+    [SerializeField] private Key _resetExteriorKey = Key.F8;
 
     private void Awake()
     {
@@ -61,6 +69,17 @@ public class TestingManager : MonoBehaviour
         if (WasKeyPressedThisFrame(_reviveAllKey))
         {
             ReviveAllNPCs();
+        }
+
+        // Estas teclas no rompen nada si no existe el manager de exterior.
+        if (WasKeyPressedThisFrame(_advanceExterior6hKey))
+        {
+            TryAdvanceExteriorHours(6f);
+        }
+
+        if (WasKeyPressedThisFrame(_resetExteriorKey))
+        {
+            TryResetExteriorState();
         }
     }
 
@@ -225,19 +244,213 @@ public class TestingManager : MonoBehaviour
             }
         }
 
-        string _text = "DEBUG INFO\n";
-        _text += $"Alive NPCs: {_alive}\n";
-        _text += $"Dead NPCs: {_dead}\n";
-        _text += $"Critical NPCs: {_critical}\n";
+        StringBuilder _sb = new StringBuilder(768);
+        _sb.AppendLine("DEBUG INFO");
+
+        // Contexto rápido (ayuda mucho a entender por qué algo "no sale")
+        try
+        {
+            _sb.AppendLine($"Scene: {SceneManager.GetActiveScene().name}");
+        }
+        catch { /* ignore */ }
+        _sb.AppendLine($"TimeScale: {Time.timeScale:0.00}");
+        _sb.AppendLine();
+
+        _sb.AppendLine($"Alive NPCs: {_alive}");
+        _sb.AppendLine($"Dead NPCs: {_dead}");
+        _sb.AppendLine($"Critical NPCs: {_critical}");
 
         if (ResourceManager.Instance != null)
         {
-            _text += $"Total Deaths: {ResourceManager.Instance.GetDeadNPCCount()}\n";
-            _text += $"Game Over Limit: {ResourceManager.Instance.GetMaxAllowedDeaths()}\n";
-            _text += $"Game Over: {(ResourceManager.Instance.IsGameOverTriggered() ? "ACTIVE" : "INACTIVE")}";
+            _sb.AppendLine($"Total Deaths: {ResourceManager.Instance.GetDeadNPCCount()}");
+            _sb.AppendLine($"Game Over Limit: {ResourceManager.Instance.GetMaxAllowedDeaths()}");
+            _sb.AppendLine($"Game Over: {(ResourceManager.Instance.IsGameOverTriggered() ? "ACTIVE" : "INACTIVE")}");
+
+
+            _sb.AppendLine();
+            _sb.AppendLine("RESOURCES");
+
+            try
+            {
+                Array _values = Enum.GetValues(typeof(ResourceType));
+                for (int i = 0; i < _values.Length; i++)
+                {
+                    ResourceType _rt = (ResourceType)_values.GetValue(i);
+                    int _amount = ResourceManager.Instance.GetResourceAmount(_rt);
+                    int _warn = ResourceManager.Instance.GetWarningLevel(_rt);
+                    int _min = ResourceManager.Instance.GetMinimumLevel(_rt);
+                    string _state = _amount <= _min ? "CRIT" : (_amount <= _warn ? "WARN" : "OK");
+                    _sb.AppendLine($"{_rt}: {_amount}  (warn {_warn}, min {_min})  [{_state}]");
+                }
+
+                _sb.AppendLine($"ProdMult: {ResourceManager.Instance.GetGlobalProductionMultiplier():0.00}");
+            }
+            catch (Exception _ex)
+            {
+                _sb.AppendLine($"[RESOURCES] Error leyendo recursos: {_ex.GetType().Name}");
+            }
         }
 
-        debugText.text = _text;
+        // Exterior (solo si existe un manager en tu proyecto; funciona por reflection)
+        AppendExteriorDebug(_sb);
+
+        debugText.text = _sb.ToString();
+    }
+
+    private void AppendExteriorDebug(StringBuilder _sb)
+    {
+        Type _t = FindType("ExteriorWorldManager");
+        if (_t == null)
+        {
+            return;
+        }
+
+        UnityEngine.Object _mgr = FindFirstObjectOfTypeAll(_t);
+        _sb.AppendLine();
+        _sb.AppendLine("EXTERIOR");
+        _sb.AppendLine(_mgr != null ? "ExteriorWorldManager: FOUND" : "ExteriorWorldManager: NOT FOUND IN SCENE");
+        _sb.AppendLine("F7: advance 6h | F8: reset");
+    }
+
+    private void TryAdvanceExteriorHours(float _hours)
+    {
+        Type _t = FindType("ExteriorWorldManager");
+        if (_t == null)
+        {
+            return;
+        }
+
+        UnityEngine.Object _mgr = FindFirstObjectOfTypeAll(_t);
+        if (_mgr == null)
+        {
+            return;
+        }
+
+        // Intentar varios nombres por si cambia la implementación.
+        string[] _names = new string[] { "DebugAdvanceHours", "AdvanceHours", "SimulateHours", "FastForwardHours" };
+        for (int i = 0; i < _names.Length; i++)
+        {
+            MethodInfo _mi = _t.GetMethod(_names[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (_mi == null)
+            {
+                continue;
+            }
+
+            ParameterInfo[] _p = _mi.GetParameters();
+            try
+            {
+                if (_p.Length == 1 && _p[0].ParameterType == typeof(float))
+                {
+                    _mi.Invoke(_mgr, new object[] { _hours });
+                    Debug.Log($"[Testing] Exterior advanced {_hours}h via {_names[i]}(float)");
+                    return;
+                }
+                if (_p.Length == 1 && _p[0].ParameterType == typeof(int))
+                {
+                    _mi.Invoke(_mgr, new object[] { Mathf.RoundToInt(_hours) });
+                    Debug.Log($"[Testing] Exterior advanced {(int)_hours}h via {_names[i]}(int)");
+                    return;
+                }
+            }
+            catch (Exception _ex)
+            {
+                Debug.LogWarning($"[Testing] Exterior advance failed on {_names[i]}: {_ex.GetType().Name}");
+            }
+        }
+    }
+
+    private void TryResetExteriorState()
+    {
+        Type _t = FindType("ExteriorWorldManager");
+        if (_t == null)
+        {
+            return;
+        }
+
+        UnityEngine.Object _mgr = FindFirstObjectOfTypeAll(_t);
+        if (_mgr == null)
+        {
+            return;
+        }
+
+        string[] _names = new string[] { "ResetWorldState", "DebugResetWorldState", "ResetState", "DebugReset" };
+        for (int i = 0; i < _names.Length; i++)
+        {
+            MethodInfo _mi = _t.GetMethod(_names[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (_mi == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                if (_mi.GetParameters().Length == 0)
+                {
+                    _mi.Invoke(_mgr, null);
+                    Debug.Log($"[Testing] Exterior reset via {_names[i]}()");
+                    return;
+                }
+            }
+            catch (Exception _ex)
+            {
+                Debug.LogWarning($"[Testing] Exterior reset failed on {_names[i]}: {_ex.GetType().Name}");
+            }
+        }
+    }
+
+    private static Type FindType(string _typeName)
+    {
+        if (string.IsNullOrWhiteSpace(_typeName))
+        {
+            return null;
+        }
+
+        Assembly[] _assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        for (int i = 0; i < _assemblies.Length; i++)
+        {
+            Type _t = _assemblies[i].GetType(_typeName);
+            if (_t != null)
+            {
+                return _t;
+            }
+
+            try
+            {
+                Type[] _types = _assemblies[i].GetTypes();
+                for (int j = 0; j < _types.Length; j++)
+                {
+                    if (_types[j] != null && _types[j].Name == _typeName)
+                    {
+                        return _types[j];
+                    }
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        return null;
+    }
+
+    private static UnityEngine.Object FindFirstObjectOfTypeAll(Type _t)
+    {
+        UnityEngine.Object[] _all = Resources.FindObjectsOfTypeAll(_t);
+        if (_all == null || _all.Length == 0)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < _all.Length; i++)
+        {
+            if (_all[i] is Component _c && _c != null && _c.gameObject != null && _c.gameObject.scene.IsValid())
+            {
+                return _c;
+            }
+        }
+
+        return _all[0];
     }
 
     public void KillNPCByName(string _npcName)

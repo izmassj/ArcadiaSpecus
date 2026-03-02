@@ -262,6 +262,13 @@ public class MachinePlacementSystem : MonoBehaviour
             currentMachine.transform.position = bestTargetCorner - offset;
         }
 
+
+        VFXManager.EnsureInstance();
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.Play(VFXKind.MachinePlaced, currentMachine.transform.position);
+        }
+
         currentMachine = null;
         isBuilding = false;
         canPlaceMachine = false;

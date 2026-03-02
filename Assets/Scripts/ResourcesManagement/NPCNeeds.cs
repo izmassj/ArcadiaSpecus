@@ -42,9 +42,16 @@ public class NPCNeeds
             return;
         }
 
-        hunger = Mathf.Clamp(hunger + hungerRate * _deltaTime, 0f, 100f);
-        thirst = Mathf.Clamp(thirst + thirstRate * _deltaTime, 0f, 100f);
-        fatigue = Mathf.Clamp(fatigue + fatigueRate * _deltaTime, 0f, 100f);
+        float mult = 1f;
+        if (ResourceManager.Instance != null)
+        {
+            // Dinámica Bé: si falta comida/agua/oxígeno, el deterioro se acelera y el rendimiento baja.
+            mult = ResourceManager.Instance.GetNeedsDegradationMultiplier();
+        }
+
+        hunger = Mathf.Clamp(hunger + hungerRate * mult * _deltaTime, 0f, 100f);
+        thirst = Mathf.Clamp(thirst + thirstRate * mult * _deltaTime, 0f, 100f);
+        fatigue = Mathf.Clamp(fatigue + fatigueRate * mult * _deltaTime, 0f, 100f);
 
         if (IsDead())
         {
@@ -83,7 +90,6 @@ public class NPCNeeds
             return ResourceType.Food;
         }
 
-        // Fallback (sin necesidad crítica real).
         return ResourceType.Materials;
     }
 
@@ -163,7 +169,6 @@ public class NPCNeeds
         thirstRate = 12f;
         fatigueRate = 8f;
 
-        // Subimos bastante pero sin matar al instante.
         hunger = Mathf.Clamp(hunger + 40f, 0f, 95f);
         thirst = Mathf.Clamp(thirst + 45f, 0f, 95f);
         fatigue = Mathf.Clamp(fatigue + 35f, 0f, 95f);

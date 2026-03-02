@@ -413,7 +413,7 @@ public class AssignmentManager : MonoBehaviour
             return false;
         }
 
-        // 1) Preferir NPCs libres/sin estación para no tocar estaciones que ya producen.
+
         for (int i = 0; i < _unassignedAvailableWorkers.Count; i++)
         {
             DwellerNPC _npc = _unassignedAvailableWorkers[i];

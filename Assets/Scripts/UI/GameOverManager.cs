@@ -124,6 +124,14 @@ public class GameOverManager : MonoBehaviour
         _isGameOver = true;
         Time.timeScale = 0f;
 
+        // Música/SFX de derrota (rúbrica: feedback al Game Over).
+        if (PersistentMusic.instance != null)
+            PersistentMusic.instance.PlayAlert();
+
+        VFXManager.EnsureInstance();
+        if (VFXManager.Instance != null)
+            VFXManager.Instance.PlayOnCamera(VFXKind.GameOver);
+
         ShowGameOverPanelFromRuntimeData();
     }
 
@@ -137,8 +145,7 @@ public class GameOverManager : MonoBehaviour
 
         gameOverPanel.SetActive(true);
         SetupGameOverUIFromResourceManager();
-
-        // Aquí iría SFX de derrota / transición visual de Game Over.
+        // Feedback ya disparado en HandleGameOverFromResourceEvent (evitamos doble SFX).
     }
 
     private void SetupGameOverUIFromResourceManager()
@@ -223,7 +230,15 @@ public class GameOverManager : MonoBehaviour
         if (gameOverStats != null)
             gameOverStats.text = statsText ?? string.Empty;
 
-        // Aquí iría sonido de Game Over / animación del panel.
+        // Feedback audiovisual (VFX + SFX)
+        if (PersistentMusic.instance != null)
+            PersistentMusic.instance.PlayAlert();
+
+        VFXManager.EnsureInstance();
+        if (VFXManager.Instance != null)
+            VFXManager.Instance.PlayOnCamera(VFXKind.GameOver);
+
+        // (Si quieres animar el panel: aquí es el sitio.)
     }
 
     public void HideGameOver()
@@ -268,6 +283,9 @@ public class GameOverManager : MonoBehaviour
 
     public void RestartGame()
     {
+        if (PersistentMusic.instance != null)
+            PersistentMusic.instance.PlayUiClick();
+
         Time.timeScale = 1f;
 
         // Reinicio de estado global si existe ResourceManager persistente.
@@ -285,6 +303,9 @@ public class GameOverManager : MonoBehaviour
 
     public void GoToMainMenu()
     {
+        if (PersistentMusic.instance != null)
+            PersistentMusic.instance.PlayUiBack();
+
         Time.timeScale = 1f;
 
         if (ResourceManager.Instance != null)

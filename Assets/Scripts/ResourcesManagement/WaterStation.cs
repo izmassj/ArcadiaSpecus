@@ -19,11 +19,22 @@ public class WaterStation : WorkStation
         base.Awake();
         stationName = string.IsNullOrWhiteSpace(stationName) ? "Dispensador de Agua" : stationName;
         isConsumptionStation = true;
+
+        requiresPower = true;
     }
 
     private void Update()
     {
         if (_drinkingNPCs.Count == 0)
+        {
+            return;
+        }
+
+        // Apagón
+        if (ResourceManager.Instance != null &&
+            requiresPower &&
+            ResourceManager.Instance.ShouldPowerOutageDisableStations() &&
+            !ResourceManager.Instance.IsPowerOnline())
         {
             return;
         }

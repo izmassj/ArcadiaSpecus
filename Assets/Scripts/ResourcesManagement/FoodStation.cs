@@ -19,11 +19,23 @@ public class FoodStation : WorkStation
         base.Awake();
         stationName = string.IsNullOrWhiteSpace(stationName) ? "Dispensador de Comida" : stationName;
         isConsumptionStation = true;
+
+        // Normalmente esto es un dispensador interno, así que requiere energía (apagón lo para).
+        requiresPower = true;
     }
 
     private void Update()
     {
         if (_eatingNPCs.Count == 0)
+        {
+            return;
+        }
+
+        // Apagón
+        if (ResourceManager.Instance != null &&
+            requiresPower &&
+            ResourceManager.Instance.ShouldPowerOutageDisableStations() &&
+            !ResourceManager.Instance.IsPowerOnline())
         {
             return;
         }
@@ -54,10 +66,13 @@ public class FoodStation : WorkStation
                 continue;
             }
 
-            bool _consumed = ResourceManager.Instance.ConsumeResource(ResourceType.Food, Mathf.Max(1, foodConsumptionAmount));
+            int amt = Mathf.Max(1, foodConsumptionAmount);
+
+            // Dinámica Bé: si no hay Food, usamos Rations (misma categoría).
+            bool _consumed = ResourceManager.Instance.ConsumeFoodOrRations(amt);
+
             if (_consumed && _npc.needs != null)
             {
-                // Recuperación real la lleva el estado del NPC cada frame; aquí reforzamos tick si hay recurso.
                 _npc.needs.Eat(1f);
             }
         }

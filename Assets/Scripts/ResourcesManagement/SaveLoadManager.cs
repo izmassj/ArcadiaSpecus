@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Sistema de guardado/carga simple y robusto para Arcadia Specus.
-/// Guarda recursos, NPCs y estaciones. Mantiene compatibilidad con los save data de Lote 2.
+
 /// </summary>
 public class SaveLoadManager : MonoBehaviour
 {
@@ -15,7 +15,7 @@ public class SaveLoadManager : MonoBehaviour
     [Serializable]
     public class GameSaveData
     {
-        public string saveVersion = "1.0";
+        public string saveVersion = "1.1";
         public string sceneName;
         public string saveDateUtc;
         public ResourceManager.ResourceSaveData resources;
@@ -191,10 +191,20 @@ public class SaveLoadManager : MonoBehaviour
 
         return new ResourceManager.ResourceSaveData
         {
+            // Legacy (1.0)
             food = _rm.GetResourceAmount(ResourceType.Food),
             water = _rm.GetResourceAmount(ResourceType.Water),
             energy = _rm.GetResourceAmount(ResourceType.Energy),
             materials = _rm.GetResourceAmount(ResourceType.Materials),
+
+            // 1.1+
+            oxygen = _rm.GetResourceAmount(ResourceType.Oxygen),
+            medicine = _rm.GetResourceAmount(ResourceType.Medicine),
+            rations = _rm.GetResourceAmount(ResourceType.Rations),
+            fuel = _rm.GetResourceAmount(ResourceType.Fuel),
+            metal = _rm.GetResourceAmount(ResourceType.Metal),
+            electronics = _rm.GetResourceAmount(ResourceType.Electronics),
+
             deadNPCCount = _rm.GetDeadNPCCount(),
             gameOverTriggered = _rm.IsGameOverTriggered()
         };
@@ -241,7 +251,7 @@ public class SaveLoadManager : MonoBehaviour
     {
         if (_save.resources != null && ResourceManager.Instance != null)
         {
-            ResourceManager.Instance.LoadFromSave(_save.resources);
+            ResourceManager.Instance.LoadFromSave(_save.resources, _save.saveVersion);
             ResourceManager.Instance.ForceCheckGameOver();
         }
 

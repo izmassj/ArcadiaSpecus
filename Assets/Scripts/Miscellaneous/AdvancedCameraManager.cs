@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Gestiona carga aditiva de minijuegos y cambio de c·mara/UI al entrar/salir.
+/// Gestiona carga aditiva de minijuegos y cambio de c√°mara/UI al entrar/salir.
 /// Mantiene la API que ya usa vuestro proyecto.
 /// </summary>
 public class AdvancedSceneCameraManager : MonoBehaviour
@@ -92,7 +92,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
         }
 
         // Se buscan por nombre por compatibilidad con vuestras escenas actuales.
-        // Si luego querÈis, se puede refactorizar a referencias por inspector.
+        // Si luego quer√©is, se puede refactorizar a referencias por inspector.
         if (mainCanvas == null)
         {
             GameObject found = GameObject.Find("Canvas");
@@ -136,7 +136,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     {
         if (_isTransitioning)
         {
-            Debug.LogWarning("AdvancedSceneCameraManager: transiciÛn en curso, se ignora LoadAdditiveScene.");
+            Debug.LogWarning("AdvancedSceneCameraManager: transici√≥n en curso, se ignora LoadAdditiveScene.");
             return;
         }
 
@@ -147,8 +147,16 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(sceneName))
         {
-            Debug.LogWarning("AdvancedSceneCameraManager: nombre de escena inv·lido.");
+            Debug.LogWarning("AdvancedSceneCameraManager: nombre de escena inv√°lido.");
             yield break;
+        }
+
+        // Inicio de sesi√≥n de minijuego: snapshot de recursos para poder mostrar la recompensa
+        // (delta positivo) al volver a la base.
+        if (sceneName.StartsWith("MiniGame"))
+        {
+            MiniGameRewardTracker.EnsureInstance().BeginSession(sceneName);
+            RewardToastManager.EnsureInstance();
         }
 
         _isTransitioning = true;
@@ -171,7 +179,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
 
         Scene newScene = SceneManager.GetSceneByName(sceneName);
 
-        // Un frame para que la escena termine de inicializar objetos/c·maras.
+        // Un frame para que la escena termine de inicializar objetos/c√°maras.
         yield return null;
 
         RegisterSceneCamera(newScene);
@@ -192,7 +200,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     {
         if (_isTransitioning)
         {
-            Debug.LogWarning("AdvancedSceneCameraManager: transiciÛn en curso, se ignora ReturnToBaseScene.");
+            Debug.LogWarning("AdvancedSceneCameraManager: transici√≥n en curso, se ignora ReturnToBaseScene.");
             return;
         }
 
@@ -203,7 +211,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(baseSceneName))
         {
-            Debug.LogWarning("AdvancedSceneCameraManager: baseSceneName inv·lido.");
+            Debug.LogWarning("AdvancedSceneCameraManager: baseSceneName inv√°lido.");
             yield break;
         }
 
@@ -212,7 +220,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
 
         SetCursorForMiniGame(lockedCursor: false);
 
-        // Si la escena base no est· cargada (fallback), cargamos en single.
+        // Si la escena base no est√° cargada (fallback), cargamos en single.
         Scene baseScene = SceneManager.GetSceneByName(baseSceneName);
         if (!baseScene.IsValid() || !baseScene.isLoaded)
         {
@@ -232,11 +240,9 @@ public class AdvancedSceneCameraManager : MonoBehaviour
 
         if (win && ResourceManager.Instance != null)
         {
-            // Recompensa b·sica de minijuego (placeholder funcional)
-            // AquÌ luego podÈis diferenciar por minijuego/tipo de recurso.
+            // Recompensa b√°sica de minijuego (placeholder funcional)
+            // Aqu√≠ luego pod√©is diferenciar por minijuego/tipo de recurso.
             ResourceManager.Instance.AddResource(ResourceType.Materials, 50);
-
-            // AquÌ irÌa feedback visual/sonoro de recompensa.
         }
 
         if (!string.Equals(sceneToUnload, baseSceneName) && SceneManager.GetSceneByName(sceneToUnload).isLoaded)
@@ -255,6 +261,18 @@ public class AdvancedSceneCameraManager : MonoBehaviour
         RefreshCachedReferences();
         SetBaseUIVisible(true);
         ResetCameraPriorities(baseSceneName);
+
+        // Feedback de recompensa (texto verde) al volver ganando.
+        if (win)
+        {
+            var gains = MiniGameRewardTracker.EnsureInstance().EndSession(true);
+            RewardToastManager.EnsureInstance().ShowGreenRewards(gains);
+        }
+        else
+        {
+            // Limpia sesi√≥n si se volvi√≥ perdiendo.
+            MiniGameRewardTracker.EnsureInstance().EndSession(false);
+        }
 
         _isTransitioning = false;
     }
@@ -289,7 +307,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
     {
         if (!_sceneCameras.ContainsKey(sceneName))
         {
-            Debug.LogWarning($"AdvancedSceneCameraManager: no hay c·mara registrada para '{sceneName}'.");
+            Debug.LogWarning($"AdvancedSceneCameraManager: no hay c√°mara registrada para '{sceneName}'.");
             HandleRegularCameras(sceneName);
             return;
         }
@@ -318,7 +336,7 @@ public class AdvancedSceneCameraManager : MonoBehaviour
             bool belongsToActiveScene = cam.gameObject.scene.name == activeSceneName;
 
             // IMPORTANTE:
-            // Esto mantiene la intenciÛn de vuestro cÛdigo original: evitar m˙ltiples c·maras/audio listeners activos.
+            // Esto mantiene la intenci√≥n de vuestro c√≥digo original: evitar m√∫ltiples c√°maras/audio listeners activos.
             cam.enabled = belongsToActiveScene;
 
             AudioListener listener = cam.GetComponent<AudioListener>();

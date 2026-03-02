@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Servicio estático para gestionar settings globales del juego.
-/// Centraliza PlayerPrefs, resolución, fullscreen y utilidades de UI.
+/// Servicio estÃ¡tico para gestionar settings globales del juego.
+/// Centraliza PlayerPrefs, resoluciÃ³n, fullscreen y utilidades de UI.
 /// </summary>
 public static class GameSettingsService
 {
@@ -109,7 +109,7 @@ public static class GameSettingsService
     }
 
     /// <summary>
-    /// Rellena el TMP_Dropdown con resoluciones únicas (por ancho x alto).
+    /// Rellena el TMP_Dropdown con resoluciones Ãºnicas (por ancho x alto).
     /// Devuelve el array final de resoluciones a usar luego al aplicar.
     /// </summary>
     public static Resolution[] PopulateResolutionDropdown(TMP_Dropdown dropdown)
@@ -174,13 +174,13 @@ public static class GameSettingsService
     }
 
     /// <summary>
-    /// Aplica settings técnicos al runtime (pantalla). Audio real lo conectaréis vosotros luego.
+    /// Aplica settings tÃ©cnicos al runtime (pantalla). Audio real lo conectarÃ©is vosotros luego.
     /// </summary>
     public static void ApplyRuntime(SettingsSnapshot settings, Resolution[] availableResolutions)
     {
         ApplyResolution(availableResolutions, settings.resolutionIndex, settings.fullscreen);
 
-        // Aquí iría la aplicación de volumen real (AudioMixer/FM0D) cuando lo integréis.
+        // AquÃ­ irÃ­a la aplicaciÃ³n de volumen real (AudioMixer/FM0D) cuando lo integrÃ©is.
         // Ejemplo futuro:
         // mixer.SetFloat("MusicVolume", ConvertSliderToDb(settings.musicVolume));
         // mixer.SetFloat("SFXVolume", ConvertSliderToDb(settings.sfxVolume));

@@ -13,6 +13,10 @@ public class WorkStation : MonoBehaviour
     public int baseProduction = 1;
     public float productionInterval = 3f;
 
+    [Header("Power")]
+    [Tooltip("Si es true, esta estación se para completamente cuando no hay energía (rúbrica Bé).")]
+    public bool requiresPower = true;
+
     [Header("Puntos opcionales")]
     [SerializeField] private Transform _workerPoint;
 
@@ -34,6 +38,7 @@ public class WorkStation : MonoBehaviour
         public Quaternion rotation;
         public bool isConsumptionStation;
         public ResourceType producedResource;
+        public bool requiresPower;
     }
 
     protected virtual void Awake()
@@ -63,7 +68,6 @@ public class WorkStation : MonoBehaviour
 
         assignedWorkers.Add(_worker);
 
-        // Solo estaciones de producción generan recursos de forma periódica.
         if (!isConsumptionStation && assignedWorkers.Count > 0)
         {
             StartProduction();
@@ -124,6 +128,12 @@ public class WorkStation : MonoBehaviour
                 continue;
             }
 
+            // Apagón: si requiere power, se para totalmente.
+            if (requiresPower && ResourceManager.Instance.ShouldPowerOutageDisableStations() && !ResourceManager.Instance.IsPowerOnline())
+            {
+                continue;
+            }
+
             int _effectiveWorkers = 0;
             for (int i = assignedWorkers.Count - 1; i >= 0; i--)
             {
@@ -145,11 +155,14 @@ public class WorkStation : MonoBehaviour
                 continue;
             }
 
-            int _totalProduction = Mathf.Max(1, baseProduction) * _effectiveWorkers;
+            float _mult = ResourceManager.Instance.GetGlobalProductionMultiplier();
+            int _totalProduction = Mathf.RoundToInt(Mathf.Max(1, baseProduction) * _effectiveWorkers * _mult);
+            _totalProduction = Mathf.Max(1, _totalProduction);
+
             ResourceManager.Instance.AddResource(producedResource, _totalProduction);
             OnProduction?.Invoke(producedResource, _totalProduction);
 
-            // Comentario audio: aquí iría sonido de máquina produciendo / feedback visual.
+            // Aquí iría feedback visual/sonoro de producción (si queréis).
         }
     }
 
@@ -160,7 +173,6 @@ public class WorkStation : MonoBehaviour
             return _workerPoint.position;
         }
 
-        // Fallback sencillo para no romper escenas sin puntos configurados.
         return transform.position + (transform.forward.sqrMagnitude > 0.01f ? transform.forward : Vector3.forward) * 1.5f;
     }
 
@@ -194,7 +206,8 @@ public class WorkStation : MonoBehaviour
             position = transform.position,
             rotation = transform.rotation,
             isConsumptionStation = isConsumptionStation,
-            producedResource = producedResource
+            producedResource = producedResource,
+            requiresPower = requiresPower
         };
     }
 
@@ -211,5 +224,8 @@ public class WorkStation : MonoBehaviour
         transform.rotation = _data.rotation;
         isConsumptionStation = _data.isConsumptionStation;
         producedResource = _data.producedResource;
+
+        // Compatibilidad: si el campo no existía en saves antiguos, queda en default true.
+        requiresPower = _data.requiresPower;
     }
 }
