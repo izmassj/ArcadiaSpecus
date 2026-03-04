@@ -12,11 +12,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d32cf7c32a3ed8347bac48ef5ed56d82, type: 3}
   m_Name: FMODStudioCache
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EventCache
-  EditorBanks: []
+  EditorBanks:
+  - {fileID: 6644189762693444393}
+  - {fileID: 1290566917152440120}
   EditorEvents: []
   EditorParameters: []
-  MasterBanks: []
-  StringsBanks: []
+  MasterBanks:
+  - {fileID: 1290566917152440120}
+  StringsBanks:
+  - {fileID: 6644189762693444393}
   cacheVersion: 131858
-  cacheTime: 0
+  cacheTime: 639082465643073243
   SerializableEventsDict: []
+--- !u!114 &1290566917152440120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: Assets/FMOD/ArcadiaSpecusFMOD/Build/Desktop/Master.bank
+  Name: Master
+  StudioPath: bank:/Master
+  lastModified: 639082465643053085
+  FileSizes:
+  - Name: Desktop
+    Value: 1074
+  Exists: 1
+--- !u!114 &6644189762693444393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.strings.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: Assets/FMOD/ArcadiaSpecusFMOD/Build/Desktop/Master.strings.bank
+  Name: Master.strings
+  StudioPath: bank:/Master.strings
+  lastModified: 639082465643073243
+  FileSizes:
+  - Name: Desktop
+    Value: 724
+  Exists: 1
