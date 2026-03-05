@@ -488,9 +488,11 @@ GameObject:
   - component: {fileID: 1435736953}
   - component: {fileID: 1435736952}
   - component: {fileID: 1435736951}
+  - component: {fileID: 1435736956}
   - component: {fileID: 1435736954}
   - component: {fileID: 1435736955}
-  - component: {fileID: 1435736956}
+  - component: {fileID: 1435736958}
+  - component: {fileID: 1435736957}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -660,19 +662,96 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33842a77fd4574245a2017e91fabd37c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraDrag
-  virtualCamera: {fileID: 1040237740}
-  confiner2D: {fileID: 1040237742}
-  mainCamera: {fileID: 1435736952}
+  _virtualCamera: {fileID: 0}
+  _confiner2D: {fileID: 0}
+  _mainCamera: {fileID: 0}
   _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  mouseSensitivity: 10
-  invert: 0
-  stickSpeed: 10
-  stickDeadzone: 0.1
-  sharpness: 20
-  enableInertia: 1
-  inertiaDecay: 2
-  inertiaMaxSpeed: 600
-  inertiaStopSpeed: 5
+  _mouseSensitivity: 0
+  _invert: 0
+  _stickSpeed: 0
+  _stickDeadzone: 0
+  _sharpness: 0
+  _enableInertia: 0
+  _inertiaDecay: 0
+  _inertiaMaxSpeed: 0
+  _inertiaStopSpeed: 0
+--- !u!114 &1435736957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435736950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b9a305e18de0c04dbd257a21cd47087, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Postprocessing.Runtime::UnityEngine.Rendering.PostProcessing.PostProcessVolume
+  sharedProfile: {fileID: 0}
+  isGlobal: 0
+  blendDistance: 0
+  weight: 1
+  priority: 0
+--- !u!114 &1435736958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435736950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 948f4100a11a5c24981795d21301da5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Postprocessing.Runtime::UnityEngine.Rendering.PostProcessing.PostProcessLayer
+  volumeTrigger: {fileID: 1435736953}
+  volumeLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  stopNaNPropagation: 1
+  finalBlitToCameraTarget: 0
+  antialiasingMode: 0
+  temporalAntialiasing:
+    jitterSpread: 0.75
+    sharpness: 0.25
+    stationaryBlending: 0.95
+    motionBlending: 0.85
+  subpixelMorphologicalAntialiasing:
+    quality: 2
+  fastApproximateAntialiasing:
+    fastMode: 0
+    keepAlpha: 0
+  fog:
+    enabled: 1
+    excludeSkybox: 1
+  debugLayer:
+    lightMeter:
+      width: 512
+      height: 256
+      showCurves: 1
+    histogram:
+      width: 512
+      height: 256
+      channel: 3
+    waveform:
+      exposure: 0.12
+      height: 256
+    vectorscope:
+      size: 256
+      exposure: 0.12
+    overlaySettings:
+      linearDepth: 0
+      motionColorIntensity: 4
+      motionGridSize: 64
+      colorBlindnessType: 0
+      colorBlindnessStrength: 1
+  m_Resources: {fileID: 11400000, guid: d82512f9c8e5d4a4d938b575d47f88d4, type: 2}
+  m_ShowToolkit: 0
+  m_ShowCustomSorter: 0
+  breakBeforeColorGrading: 0
+  m_BeforeTransparentBundles: []
+  m_BeforeStackBundles: []
+  m_AfterStackBundles: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
