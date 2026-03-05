@@ -4,170 +4,174 @@ using UnityEngine.InputSystem;
 
 public class CameraDrag : MonoBehaviour
 {
-    [Header("Cinemachine Components")]
-    [SerializeField] private CinemachineCamera virtualCamera;
-    [SerializeField] private CinemachineConfiner2D confiner2D;
+    [Header("Cinemachine")]
+    [SerializeField] private CinemachineCamera _virtualCamera;
+    [SerializeField] private CinemachineConfiner2D _confiner2D;
 
-    [Header("Camera Reference")]
+    [Header("Camera")]
     [SerializeField] private Camera _mainCamera;
-
-    [Header("Controller Drag Settings")]
-    [SerializeField] private float _controllerSensitivity = 10f;
-    [SerializeField] private float _stickDeadzone = 0.08f;
 
     [Header("Input")]
     [SerializeField] private InputActionAsset _playerBunkerInputAction;
-
-    private Vector3 _dragStartPosition;
-    private Vector3 _cameraStartPosition;
-    private bool _isDragging;
 
     private InputActionMap _gameplayInputActionMap;
     private InputAction _dragInputAction;
     private InputAction _navigateInputAction;
 
-    private Transform _vcamTransform;
+    [Header("Mouse Drag")]
+    [SerializeField] private float _mouseSensitivity;
+    [SerializeField] private bool _invert;
+
+    [Header("Stick")]
+    [SerializeField] private float _stickSpeed;
+    [SerializeField] private float _stickDeadzone;
+
+    [Header("Smooth")]
+    [SerializeField] private float _sharpness;
+
+    [Header("Slide")]
+    [SerializeField] private bool _enableInertia;
+    [SerializeField] private float _inertiaDecay;
+    [SerializeField] private float _inertiaMaxSpeed;
+    [SerializeField] private float _inertiaStopSpeed;
+
+    private Vector3 _desiredPos;
+
+    private bool _wasDragging;
+    private Vector3 _inertiaVel;
 
     private void Awake()
     {
-        if (virtualCamera == null)
-            virtualCamera = GetComponent<CinemachineCamera>();
+        if (_virtualCamera == null) _virtualCamera = GetComponent<CinemachineCamera>();
+        if (_mainCamera == null) _mainCamera = Camera.main;
 
-        if (virtualCamera == null)
-        {
-            enabled = false;
-            return;
-        }
+        _gameplayInputActionMap = _playerBunkerInputAction.FindActionMap("Gameplay", true);
+        _dragInputAction = _gameplayInputActionMap.FindAction("Drag", true);
+        _navigateInputAction = _gameplayInputActionMap.FindAction("Navigate", true);
 
-        virtualCamera.Follow = null;
-        virtualCamera.LookAt = null;
-
-        _vcamTransform = virtualCamera.transform;
-
-        if (_mainCamera == null)
-            _mainCamera = Camera.main;
-
-        if (_playerBunkerInputAction != null)
-        {
-            _gameplayInputActionMap = _playerBunkerInputAction.FindActionMap("Gameplay", true);
-            _dragInputAction = _gameplayInputActionMap.FindAction("Drag", true);
-            _navigateInputAction = _gameplayInputActionMap.FindAction("Navigate", true);
-        }
+        _desiredPos = _virtualCamera.transform.position;
     }
 
     private void OnEnable()
     {
-        if (_playerBunkerInputAction != null)
-            _playerBunkerInputAction.Enable();
-
-        if (_dragInputAction != null)
-        {
-            _dragInputAction.started += DragStarted;
-            _dragInputAction.canceled += DragCanceled;
-        }
+        _gameplayInputActionMap.Enable();
     }
 
     private void OnDisable()
     {
-        if (_dragInputAction != null)
+        _gameplayInputActionMap.Disable();
+    }
+
+    private void Update()
+    {
+        if (_virtualCamera == null || _mainCamera == null) return;
+
+        if ((_desiredPos - _virtualCamera.transform.position).sqrMagnitude > 10000f)
         {
-            _dragInputAction.started -= DragStarted;
-            _dragInputAction.canceled -= DragCanceled;
+            _desiredPos = _virtualCamera.transform.position;
+            _inertiaVel = Vector3.zero;
         }
 
-        if (_playerBunkerInputAction != null)
-            _playerBunkerInputAction.Disable();
-    }
+        bool dragging = _dragInputAction != null && _dragInputAction.IsPressed();
 
-    private void DragStarted(InputAction.CallbackContext ctx) => StartDrag();
-    private void DragCanceled(InputAction.CallbackContext ctx) => EndDrag();
-
-    public void OnDrag(InputAction.CallbackContext ctx)
-    {
-        if (ctx.started) StartDrag();
-        if (ctx.canceled) EndDrag();
-    }
-
-    private void StartDrag()
-    {
-        if (_mainCamera == null || _vcamTransform == null)
-            return;
-
-        _isDragging = true;
-        _dragStartPosition = GetPointerWorldPosition();
-        _cameraStartPosition = _vcamTransform.position;
-    }
-
-    private void EndDrag()
-    {
-        _isDragging = false;
-    }
-
-    private void LateUpdate()
-    {
-        if (_vcamTransform == null)
-            return;
-
-        if (_isDragging)
-            HandlePointerDrag();
-
-        HandleNavigatePan();
-    }
-
-    private void HandlePointerDrag()
-    {
-        if (_mainCamera == null)
-            return;
-
-        Vector3 currentPointerPos = GetPointerWorldPosition();
-        Vector3 difference = _dragStartPosition - currentPointerPos;
-        Vector3 targetPosition = _cameraStartPosition + difference;
-
-        targetPosition = ApplyConfinement(targetPosition);
-        _vcamTransform.position = targetPosition;
-    }
-
-    private void HandleNavigatePan()
-    {
-        if (_navigateInputAction == null)
-            return;
-
-        Vector2 nav = _navigateInputAction.ReadValue<Vector2>();
-
-        if (nav.sqrMagnitude < _stickDeadzone * _stickDeadzone)
-            return;
-
-        Vector3 move = new Vector3(nav.x, -nav.y, 0f) * _controllerSensitivity * Time.deltaTime;
-        Vector3 targetPosition = _vcamTransform.position + move;
-
-        targetPosition = ApplyConfinement(targetPosition);
-        _vcamTransform.position = targetPosition;
-    }
-
-    private Vector3 GetPointerWorldPosition()
-    {
-        if (_mainCamera == null || Pointer.current == null)
-            return _vcamTransform != null ? _vcamTransform.position : Vector3.zero;
-
-        Vector2 pos = Pointer.current.position.ReadValue();
-        Vector3 worldPos = _mainCamera.ScreenToWorldPoint(new Vector3(pos.x, pos.y, 730f));
-        return new Vector3(worldPos.x, worldPos.y, _vcamTransform.position.z);
-    }
-
-    private Vector3 ApplyConfinement(Vector3 desiredPosition)
-    {
-        if (confiner2D == null || confiner2D.BoundingShape2D == null)
-            return desiredPosition;
-
-        Collider2D boundingShape = confiner2D.BoundingShape2D;
-        Vector2 desiredPos2D = new Vector2(desiredPosition.x, desiredPosition.y);
-
-        if (!boundingShape.bounds.Contains(desiredPos2D))
+        if (dragging && Mouse.current != null)
         {
-            Vector2 clampedPos = boundingShape.bounds.ClosestPoint(desiredPos2D);
-            return new Vector3(clampedPos.x, clampedPos.y, desiredPosition.z);
+            Vector2 deltaPx = Mouse.current.delta.ReadValue();
+
+            float wppY = (2f * _mainCamera.orthographicSize) / Screen.height;
+            float wppX = wppY * _mainCamera.aspect;
+
+            float sign = _invert ? 1f : -1f;
+            Vector3 deltaWorld = new Vector3(deltaPx.x * wppX, deltaPx.y * wppY, 0f) * (sign * _mouseSensitivity);
+
+            _desiredPos += deltaWorld;
+
+            float dt = Time.deltaTime;
+            if (_enableInertia && dt > 0.00001f)
+            {
+                Vector3 v = deltaWorld / dt;
+                if (v.magnitude > _inertiaMaxSpeed) v = v.normalized * _inertiaMaxSpeed;
+
+                _inertiaVel = Vector3.Lerp(_inertiaVel, v, 0.6f);
+            }
+        }
+        else
+        {
+            if (_wasDragging && !dragging && !_enableInertia)
+                _inertiaVel = Vector3.zero;
+
+            Vector2 stick = GetStickIfGamepadActive();
+            bool stickActive = stick.sqrMagnitude >= _stickDeadzone * _stickDeadzone;
+
+            if (stickActive)
+            {
+                _inertiaVel = Vector3.zero;
+                _desiredPos += new Vector3(stick.x, stick.y, 0f) * _stickSpeed * Time.deltaTime;
+            }
+            else if (_enableInertia)
+            {
+                if (_inertiaVel.magnitude > _inertiaStopSpeed)
+                {
+                    _desiredPos += _inertiaVel * Time.deltaTime;
+
+                    float k = Mathf.Exp(-_inertiaDecay * Time.deltaTime);
+                    _inertiaVel *= k;
+                }
+                else
+                {
+                    _inertiaVel = Vector3.zero;
+                }
+            }
         }
 
-        return desiredPosition;
+        _wasDragging = dragging;
+
+        if (_confiner2D != null && _confiner2D.BoundingShape2D != null)
+        {
+            Vector3 before = _desiredPos;
+            _desiredPos = ClampToBounds(_desiredPos, _confiner2D.BoundingShape2D.bounds);
+
+            if (!Mathf.Approximately(before.x, _desiredPos.x)) _inertiaVel.x = 0f;
+            if (!Mathf.Approximately(before.y, _desiredPos.y)) _inertiaVel.y = 0f;
+        }
+
+        Vector3 current = _virtualCamera.transform.position;
+        _desiredPos.z = current.z;
+
+        float t = 1f - Mathf.Exp(-_sharpness * Time.deltaTime);
+        Vector3 next = Vector3.Lerp(current, _desiredPos, t);
+
+        if (_confiner2D != null && _confiner2D.BoundingShape2D != null)
+            next = ClampToBounds(next, _confiner2D.BoundingShape2D.bounds);
+
+        next.z = current.z;
+        _virtualCamera.transform.position = next;
+    }
+
+    private Vector2 GetStickIfGamepadActive()
+    {
+        if (_navigateInputAction == null) return Vector2.zero;
+
+        var c = _navigateInputAction.activeControl;
+        if (c == null || c.device is not Gamepad) return Vector2.zero;
+
+        return _navigateInputAction.ReadValue<Vector2>();
+    }
+
+    private Vector3 ClampToBounds(Vector3 p, Bounds b)
+    {
+        if (_mainCamera.orthographic)
+        {
+            float halfH = _mainCamera.orthographicSize;
+            float halfW = halfH * _mainCamera.aspect;
+
+            p.x = Mathf.Clamp(p.x, b.min.x + halfW, b.max.x - halfW);
+            p.y = Mathf.Clamp(p.y, b.min.y + halfH, b.max.y - halfH);
+            return p;
+        }
+
+        p.x = Mathf.Clamp(p.x, b.min.x, b.max.x);
+        p.y = Mathf.Clamp(p.y, b.min.y, b.max.y);
+        return p;
     }
 }

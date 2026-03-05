@@ -238,7 +238,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -252,7 +252,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1920, y: 1090}
+  m_Size: {x: 1920, y: 1080}
   m_EdgeRadius: 0
 --- !u!1 &1040237739
 GameObject:
@@ -265,7 +265,6 @@ GameObject:
   - component: {fileID: 1040237741}
   - component: {fileID: 1040237740}
   - component: {fileID: 1040237742}
-  - component: {fileID: 1040237743}
   m_Layer: 0
   m_Name: CinemachineCamera
   m_TagString: Untagged
@@ -351,24 +350,6 @@ MonoBehaviour:
     MaxWindowSize: 0
     Padding: 0
   m_LegacyMaxWindowSize: -2
---- !u!114 &1040237743
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1040237739}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33842a77fd4574245a2017e91fabd37c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraDrag
-  virtualCamera: {fileID: 1040237740}
-  confiner2D: {fileID: 1040237742}
-  _mainCamera: {fileID: 1435736952}
-  _controllerSensitivity: 10
-  _stickDeadzone: 0.08
-  _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1 &1407862790
 GameObject:
   m_ObjectHideFlags: 0
@@ -509,6 +490,7 @@ GameObject:
   - component: {fileID: 1435736951}
   - component: {fileID: 1435736954}
   - component: {fileID: 1435736955}
+  - component: {fileID: 1435736956}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -666,6 +648,31 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
+--- !u!114 &1435736956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435736950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33842a77fd4574245a2017e91fabd37c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraDrag
+  virtualCamera: {fileID: 1040237740}
+  confiner2D: {fileID: 1040237742}
+  mainCamera: {fileID: 1435736952}
+  _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  mouseSensitivity: 10
+  invert: 0
+  stickSpeed: 10
+  stickDeadzone: 0.1
+  sharpness: 20
+  enableInertia: 1
+  inertiaDecay: 2
+  inertiaMaxSpeed: 600
+  inertiaStopSpeed: 5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
