@@ -15,8 +15,8 @@ MonoBehaviour:
   injectionPoint: 600
   showInSceneView: 1
   outlines:
-  - {fileID: 7675555532237101017}
---- !u!114 &7675555532237101017
+  - {fileID: 3805858708483734045}
+--- !u!114 &3805858708483734045
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -36,19 +36,19 @@ MonoBehaviour:
   layerMask:
     serializedVersion: 2
     m_Bits: 64
-  renderQueue: 0
+  renderQueue: 2
   occlusion: 2
   maskingStrategy: 0
-  color: {r: 1, g: 1, b: 1, a: 1}
+  color: {r: 0, g: 1, b: 0, a: 0.8352941}
   enableOcclusion: 0
   occludedColor: {r: 1, g: 0, b: 0, a: 1}
   blendMode: 0
-  extrusionMethod: 2
+  extrusionMethod: 4
   scaling: 0
-  width: 0
+  width: 11.8
   minWidth: 0
   scaleWithResolution: 0
-  referenceResolution: 0
+  referenceResolution: 2
   customResolution: 0
   materialType: 0
   customMaterial: {fileID: 0}
