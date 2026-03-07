@@ -9,8 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2862527700036723179}
-  - component: {fileID: 140963977093898243}
-  - component: {fileID: 2783466873531028620}
+  - component: {fileID: 8976645118328633135}
   m_Layer: 0
   m_Name: DoorWall
   m_TagString: Untagged
@@ -28,13 +27,13 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1474.106, y: 1474.106, z: 1474.106}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4149815540749260169}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &140963977093898243
+--- !u!65 &8976645118328633135
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -49,28 +48,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.0049986527, y: 0.10657627, z: 0.08514287}
-  m_Center: {x: 0.00035706753, y: 0.028286055, z: 0.00067728007}
---- !u!114 &2783466873531028620
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1531740208369010877}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e05a05169d22c0749b06d0b3158b05b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FourCornerDetector
-  _plane: 1
-  _rebuildOnAwake: 1
-  _cornerTriggerWorldSize: {x: 0.01, y: 0.01, z: 0.01}
-  _cornersRootName: Corners
+  m_Size: {x: 7.3685646, y: 157.10518, z: 125.50997}
+  m_Center: {x: 0.5263567, y: 41.696762, z: 0.9983864}
 --- !u!1 &1542973764736396745
 GameObject:
   m_ObjectHideFlags: 0
@@ -100,7 +83,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2862527700036723179}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

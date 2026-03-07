@@ -4,21 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class FourCornerDetector : MonoBehaviour, ICornerDetectorOwner
 {
-    public enum CornerPlane
-    {
-        XZ,
-        YZ,
-        XY
-    }
-
     [Header("Setup")]
-    [SerializeField] private CornerPlane _plane;
-    [SerializeField] private bool _rebuildOnAwake;
-
-    [Header("Trigger Size In World Units")]
-    [SerializeField] private Vector3 _cornerTriggerWorldSize;
-
     [SerializeField] private string _cornersRootName;
+
+    [Header("Trigger Size")]
+    [SerializeField] private float _cornerTriggerWorldSize;
 
     private BoxCollider _mainBox;
     private CornerTrigger[] _corners = new CornerTrigger[4];
@@ -33,9 +23,9 @@ public class FourCornerDetector : MonoBehaviour, ICornerDetectorOwner
 
     private void Awake()
     {
-        if (_rebuildOnAwake)
-            BuildCorners();
+        BuildCorners();
     }
+
 
     [ContextMenu("Build Corners")]
     public void BuildCorners()
@@ -64,7 +54,7 @@ public class FourCornerDetector : MonoBehaviour, ICornerDetectorOwner
             BoxCollider trigger = corner.GetComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.center = Vector3.zero;
-            trigger.size = _cornerTriggerWorldSize;
+            trigger.size = Vector3.one * _cornerTriggerWorldSize;
 
             corner.Setup(this, CornerNames[i]);
             _corners[i] = corner;
@@ -73,35 +63,13 @@ public class FourCornerDetector : MonoBehaviour, ICornerDetectorOwner
 
     private Vector3[] GetCornerPositions(Vector3 center, Vector3 half)
     {
-        switch (_plane)
+        return new Vector3[]
         {
-            case CornerPlane.YZ:
-                return new Vector3[]
-                {
-                    new Vector3(center.x, center.y + half.y, center.z - half.z),
-                    new Vector3(center.x, center.y + half.y, center.z + half.z),
-                    new Vector3(center.x, center.y - half.y, center.z - half.z),
-                    new Vector3(center.x, center.y - half.y, center.z + half.z)
-                };
-
-            case CornerPlane.XY:
-                return new Vector3[]
-                {
-                    new Vector3(center.x - half.x, center.y + half.y, center.z),
-                    new Vector3(center.x + half.x, center.y + half.y, center.z),
-                    new Vector3(center.x - half.x, center.y - half.y, center.z),
-                    new Vector3(center.x + half.x, center.y - half.y, center.z)
-                };
-
-            default: // XZ
-                return new Vector3[]
-                {
-                    new Vector3(center.x - half.x, center.y, center.z - half.z),
-                    new Vector3(center.x + half.x, center.y, center.z - half.z),
-                    new Vector3(center.x - half.x, center.y, center.z + half.z),
-                    new Vector3(center.x + half.x, center.y, center.z + half.z)
-                };
-        }
+            new Vector3(center.x, center.y + half.y, center.z - half.z),
+            new Vector3(center.x, center.y + half.y, center.z + half.z),
+            new Vector3(center.x, center.y - half.y, center.z - half.z),
+            new Vector3(center.x, center.y - half.y, center.z + half.z)
+        };
     }
 
     private CornerTrigger GetOrCreateCorner(Transform parent, string cornerName)

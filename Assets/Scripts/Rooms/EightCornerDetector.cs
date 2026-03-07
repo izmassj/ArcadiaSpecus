@@ -4,13 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class EightCornerDetector : MonoBehaviour, ICornerDetectorOwner
 {
-    [Header("Trigger Size In World Units")]
-    [SerializeField] private Vector3 _cornerTriggerWorldSize;
-
-    [Header("Auto Rebuild")]
-    [SerializeField] private bool _rebuildOnAwake;
-
+    [Header("Setup")]
     [SerializeField] private string CornersRootName;
+
+    [Header("Trigger Size")]
+    [SerializeField] private float _cornerTriggerWorldSize;
 
     private BoxCollider _mainBox;
     private CornerTrigger[] _corners = new CornerTrigger[8];
@@ -29,8 +27,7 @@ public class EightCornerDetector : MonoBehaviour, ICornerDetectorOwner
 
     private void Awake()
     {
-        if (_rebuildOnAwake)
-            BuildCorners();
+        BuildCorners();
     }
 
     [ContextMenu("Build Corners")]
@@ -71,7 +68,7 @@ public class EightCornerDetector : MonoBehaviour, ICornerDetectorOwner
             BoxCollider trigger = corner.GetComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.center = Vector3.zero;
-            trigger.size = _cornerTriggerWorldSize;
+            trigger.size = Vector3.one * _cornerTriggerWorldSize;
 
             corner.Setup(this, CornerNames[i]);
             _corners[i] = corner;
