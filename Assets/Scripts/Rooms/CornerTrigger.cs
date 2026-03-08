@@ -1,9 +1,6 @@
 using UnityEngine;
 
-public interface ICornerDetectorOwner
-{
-    void PrintDetectedCorners();
-}
+
 
 public class CornerTrigger : MonoBehaviour
 {
