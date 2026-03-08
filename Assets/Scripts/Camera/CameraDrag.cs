@@ -105,7 +105,7 @@ public class CameraDrag : MonoBehaviour
                 float wppY = (2f * _mainCamera.orthographicSize) / Screen.height;
                 float wppX = wppY * _mainCamera.aspect;
 
-                float sign = _invert ? 1f : -1f;
+                float sign = _invert ? -1f : 1f;
                 Vector3 deltaWorld = new Vector3(stick.x * wppX, stick.y * wppY, 0f) * (sign * _stickSpeed) * 8;
 
                 _desiredPos += deltaWorld;
