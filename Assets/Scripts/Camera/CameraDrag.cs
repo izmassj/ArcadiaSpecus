@@ -1,6 +1,7 @@
 ﻿using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class CameraDrag : MonoBehaviour
 {
@@ -76,50 +77,46 @@ public class CameraDrag : MonoBehaviour
 
         if (dragging && Mouse.current != null)
         {
-            Vector2 deltaPx = Mouse.current.delta.ReadValue();
-
-            float wppY = (2f * _mainCamera.orthographicSize) / Screen.height;
-            float wppX = wppY * _mainCamera.aspect;
-
-            float sign = _invert ? 1f : -1f;
-            Vector3 deltaWorld = new Vector3(deltaPx.x * wppX, deltaPx.y * wppY, 0f) * (sign * _mouseSensitivity);
-
-            _desiredPos += deltaWorld;
-
-            float dt = Time.deltaTime;
-            if (_enableInertia && dt > 0.00001f)
+            if (GetStickIfGamepadActive() == Vector2.zero)
             {
-                Vector3 v = deltaWorld / dt;
-                if (v.magnitude > _inertiaMaxSpeed) v = v.normalized * _inertiaMaxSpeed;
+                Vector2 deltaPx = Mouse.current.delta.ReadValue();
 
-                _inertiaVel = Vector3.Lerp(_inertiaVel, v, 0.6f);
-            }
-        }
-        else
-        {
-            if (_wasDragging && !dragging && !_enableInertia)
-                _inertiaVel = Vector3.zero;
+                float wppY = (2f * _mainCamera.orthographicSize) / Screen.height;
+                float wppX = wppY * _mainCamera.aspect;
 
-            Vector2 stick = GetStickIfGamepadActive();
-            bool stickActive = stick.sqrMagnitude >= _stickDeadzone * _stickDeadzone;
+                float sign = _invert ? 1f : -1f;
+                Vector3 deltaWorld = new Vector3(deltaPx.x * wppX, deltaPx.y * wppY, 0f) * (sign * _mouseSensitivity);
 
-            if (stickActive)
-            {
-                _inertiaVel = Vector3.zero;
-                _desiredPos += new Vector3(stick.x, stick.y, 0f) * _stickSpeed * Time.deltaTime;
-            }
-            else if (_enableInertia)
-            {
-                if (_inertiaVel.magnitude > _inertiaStopSpeed)
+                _desiredPos += deltaWorld;
+
+                float dt = Time.deltaTime;
+                if (_enableInertia && dt > 0.00001f)
                 {
-                    _desiredPos += _inertiaVel * Time.deltaTime;
+                    Vector3 v = deltaWorld / dt;
+                    if (v.magnitude > _inertiaMaxSpeed) v = v.normalized * _inertiaMaxSpeed;
 
-                    float k = Mathf.Exp(-_inertiaDecay * Time.deltaTime);
-                    _inertiaVel *= k;
+                    _inertiaVel = Vector3.Lerp(_inertiaVel, v, 0.6f);
                 }
-                else
+            }
+            else
+            {
+                Vector2 stick = GetStickIfGamepadActive();
+
+                float wppY = (2f * _mainCamera.orthographicSize) / Screen.height;
+                float wppX = wppY * _mainCamera.aspect;
+
+                float sign = _invert ? 1f : -1f;
+                Vector3 deltaWorld = new Vector3(stick.x * wppX, stick.y * wppY, 0f) * (sign * _stickSpeed) * 8;
+
+                _desiredPos += deltaWorld;
+
+                float dt = Time.deltaTime;
+                if (_enableInertia && dt > 0.00001f)
                 {
-                    _inertiaVel = Vector3.zero;
+                    Vector3 v = deltaWorld / dt;
+                    if (v.magnitude > _inertiaMaxSpeed) v = v.normalized * _inertiaMaxSpeed;
+
+                    _inertiaVel = Vector3.Lerp(_inertiaVel, v, 0.6f);
                 }
             }
         }
@@ -152,10 +149,15 @@ public class CameraDrag : MonoBehaviour
     {
         if (_navigateInputAction == null) return Vector2.zero;
 
-        var c = _navigateInputAction.activeControl;
-        if (c == null || c.device is not Gamepad) return Vector2.zero;
+        for (int i = 0; i < _navigateInputAction.controls.Count; i++)
+        {
+            var control = _navigateInputAction.controls[i];
 
-        return _navigateInputAction.ReadValue<Vector2>();
+            if (control.device is Gamepad && control is StickControl stick)
+                return stick.ReadValue();
+        }
+
+        return Gamepad.current != null ? Gamepad.current.rightStick.ReadValue() : Vector2.zero;
     }
 
     private Vector3 ClampToBounds(Vector3 p, Bounds b)

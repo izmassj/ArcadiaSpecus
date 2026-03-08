@@ -191,7 +191,6 @@ GameObject:
   - component: {fileID: 128091701}
   - component: {fileID: 128091700}
   - component: {fileID: 128091699}
-  - component: {fileID: 128091698}
   - component: {fileID: 128091697}
   - component: {fileID: 128091696}
   - component: {fileID: 128091695}
@@ -356,31 +355,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!114 &128091698
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 128091693}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33842a77fd4574245a2017e91fabd37c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraDrag
-  _virtualCamera: {fileID: 0}
-  _confiner2D: {fileID: 0}
-  _mainCamera: {fileID: 0}
-  _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  _mouseSensitivity: 0
-  _invert: 0
-  _stickSpeed: 0
-  _stickDeadzone: 0
-  _sharpness: 0
-  _enableInertia: 0
-  _inertiaDecay: 0
-  _inertiaMaxSpeed: 0
-  _inertiaStopSpeed: 0
 --- !u!81 &128091699
 AudioListener:
   m_ObjectHideFlags: 0
