@@ -1,7 +1,6 @@
 using UnityEngine;
 
 
-
 public class CornerTrigger : MonoBehaviour
 {
     private ICornerDetectorOwner _owner;
