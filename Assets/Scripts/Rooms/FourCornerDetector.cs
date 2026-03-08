@@ -113,7 +113,6 @@ public class FourCornerDetector : MonoBehaviour, ICornerDetectorOwner
     }
 
 
-
     public void PrintDetectedCorners()
     {
         List<string> detected = new List<string>();

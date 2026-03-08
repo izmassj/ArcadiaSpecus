@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2862527700036723179}
   - component: {fileID: 8976645118328633135}
+  - component: {fileID: 6666650739889101802}
+  - component: {fileID: 5441178787586633565}
   m_Layer: 0
   m_Name: DoorWall
   m_TagString: Untagged
@@ -53,7 +55,48 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 7.3685646, y: 157.10518, z: 125.50997}
-  m_Center: {x: 0.5263567, y: 41.696762, z: 0.9983864}
+  m_Center: {x: 0.5263567, y: 0, z: 0.9983864}
+--- !u!114 &6666650739889101802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531740208369010877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e05a05169d22c0749b06d0b3158b05b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FourCornerDetector
+  _cornersRootName: Corners
+  _cornerTriggerWorldSize: 10
+--- !u!54 &5441178787586633565
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531740208369010877}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1542973764736396745
 GameObject:
   m_ObjectHideFlags: 0
@@ -81,7 +124,7 @@ Transform:
   m_GameObject: {fileID: 1542973764736396745}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -41.69676, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []

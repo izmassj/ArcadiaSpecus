@@ -22,12 +22,11 @@ public class CornerTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log($"Trigger Enter {gameObject.name}");
+
         CornerTrigger otherCorner = other.GetComponent<CornerTrigger>();
 
         if (otherCorner == null)
-            return;
-
-        if (otherCorner.transform.root == transform.root)
             return;
 
         _touchCount++;
@@ -39,12 +38,11 @@ public class CornerTrigger : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        Debug.Log($"Trigger Exit {gameObject.name}");
+
         CornerTrigger otherCorner = other.GetComponent<CornerTrigger>();
 
         if (otherCorner == null)
-            return;
-
-        if (otherCorner.transform.root == transform.root)
             return;
 
         _touchCount = Mathf.Max(0, _touchCount - 1);
