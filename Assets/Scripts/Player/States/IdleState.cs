@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class IdleState : PlayerState
 {
-    public IdleState(PlayerManager manager) : base(manager) {}
+    public IdleState(PlayerBunkerManager manager) : base(manager) {}
 
     public override void Enter()
     {

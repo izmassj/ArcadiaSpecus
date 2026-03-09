@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class BuildState : PlayerState
 {
-    public BuildState(PlayerManager manager) : base(manager) {}
+    public BuildState(PlayerBunkerManager manager) : base(manager) {}
 
     public override void Enter()
     {

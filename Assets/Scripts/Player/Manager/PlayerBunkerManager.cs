@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerBunkerManager : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private PlayerUIManager playerUIManager;
+    [SerializeField] private PlayerBunkerUIManager playerUIManager;
 
     private PlayerState _currentState;
 
@@ -13,7 +13,7 @@ public class PlayerManager : MonoBehaviour
     public NavigateState navigateState;
 
     // referencia para la UI para los estados
-    public PlayerUIManager UI
+    public PlayerBunkerUIManager UI
     {
         get
         {

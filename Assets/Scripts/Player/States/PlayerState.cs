@@ -1,8 +1,8 @@
 public abstract class PlayerState
 {
-    protected PlayerManager playerManager;
+    protected PlayerBunkerManager playerManager;
 
-    public PlayerState(PlayerManager manager)
+    public PlayerState(PlayerBunkerManager manager)
     {
         playerManager = manager;
     }

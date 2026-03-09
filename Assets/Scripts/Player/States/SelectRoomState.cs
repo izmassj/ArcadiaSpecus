@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class SelectRoomState : PlayerState
 {
-    public SelectRoomState(PlayerManager manager) : base(manager) { }
+    public SelectRoomState(PlayerBunkerManager manager) : base(manager) { }
 
     public override void Enter()
     {
