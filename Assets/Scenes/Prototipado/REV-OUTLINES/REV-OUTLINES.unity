@@ -509,13 +509,14 @@ PrefabInstance:
       propertyPath: m_Center.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8976645118328633135, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
+      propertyPath: m_Center.y
+      value: 40
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1531740208369010877, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1521481126}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
 --- !u!1001 &865988796
 PrefabInstance:
@@ -1164,32 +1165,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraSync
   cameraToSync: {fileID: 128091700}
---- !u!1 &1521481123 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1531740208369010877, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
-  m_PrefabInstance: {fileID: 837506729}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &1521481126
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1521481123}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.0049986527, y: 0.10657627, z: 0.08514287}
-  m_Center: {x: 0.00035706753, y: 0.028286055, z: 0.00067728007}
 --- !u!1001 &1828504389598896773
 PrefabInstance:
   m_ObjectHideFlags: 0

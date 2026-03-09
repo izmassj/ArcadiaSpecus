@@ -43,7 +43,7 @@
                     "path": "<Gamepad>/leftTrigger",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Gamepad",
+                    "groups": ";Joystick;Gamepad",
                     "action": "Drag",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -51,10 +51,10 @@
                 {
                     "name": "",
                     "id": "0c62ea1b-9da2-4104-a48a-c613196e12b4",
-                    "path": "<XInputController>/rightStick",
+                    "path": "<Gamepad>/rightStick",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Joystick",
+                    "groups": ";Gamepad;Joystick",
                     "action": "Navigate",
                     "isComposite": false,
                     "isPartOfComposite": false

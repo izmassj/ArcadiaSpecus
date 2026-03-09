@@ -45,10 +45,10 @@ MonoBehaviour:
   blendMode: 0
   extrusionMethod: 4
   scaling: 0
-  width: 16.4
+  width: 3
   minWidth: 0
   scaleWithResolution: 0
-  referenceResolution: 2
-  customResolution: 0
+  referenceResolution: 3
+  customResolution: 1080
   materialType: 0
   customMaterial: {fileID: 0}

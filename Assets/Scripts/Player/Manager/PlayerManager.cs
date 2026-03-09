@@ -2,12 +2,24 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
+    [Header("References")]
+    [SerializeField] private PlayerUIManager playerUIManager;
+
     private PlayerState _currentState;
 
     public IdleState idleState;
     public BuildState buildState;
     public SelectRoomState selectRoomState;
     public NavigateState navigateState;
+
+    // referencia para la UI para los estados
+    public PlayerUIManager UI
+    {
+        get
+        {
+            return playerUIManager;
+        }
+    }
 
     void Awake()
     {
