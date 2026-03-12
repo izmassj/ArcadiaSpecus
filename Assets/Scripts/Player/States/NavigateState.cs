@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class NavigateState : PlayerState
+public class NavigateState : PlayerBunkerState
 {
     public NavigateState(PlayerBunkerManager manager) : base(manager) { }
 

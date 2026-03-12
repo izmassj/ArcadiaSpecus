@@ -1,14 +1,15 @@
+using System;
 using UnityEngine;
 
 public class PlayerBunkerManager : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private PlayerBunkerUIManager playerUIManager;
+    [SerializeField] private PlayerBunkerUIManager _playerUIManager;
 
-    private PlayerState _currentState;
+    private PlayerBunkerState _currentState;
 
     public IdleState idleState;
-    public BuildState buildState;
+    public BuildRoomState buildRoomState;
     public SelectRoomState selectRoomState;
     public NavigateState navigateState;
 
@@ -17,14 +18,14 @@ public class PlayerBunkerManager : MonoBehaviour
     {
         get
         {
-            return playerUIManager;
+            return _playerUIManager;
         }
     }
 
     void Awake()
     {
         idleState = new IdleState(this);
-        buildState = new BuildState(this);
+        buildRoomState = new BuildRoomState(this);
         selectRoomState = new SelectRoomState(this);
         navigateState = new NavigateState(this);
     }
@@ -40,7 +41,7 @@ public class PlayerBunkerManager : MonoBehaviour
         _currentState.Update();
     }
 
-    public void ChangeState(PlayerState newState)
+    public void ChangeState(PlayerBunkerState newState)
     {
         if (_currentState != null)
             _currentState.Exit();
@@ -48,5 +49,15 @@ public class PlayerBunkerManager : MonoBehaviour
         _currentState = newState;
 
         _currentState.Enter();
+    }
+
+    public void EnterBuildRoomMode()
+    {
+        ChangeState(buildRoomState);
+    }
+
+    public void EnterPlaceMachineMode()
+    {
+
     }
 }

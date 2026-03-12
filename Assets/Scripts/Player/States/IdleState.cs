@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class IdleState : PlayerState
+public class IdleState : PlayerBunkerState
 {
     public IdleState(PlayerBunkerManager manager) : base(manager) {}
 
