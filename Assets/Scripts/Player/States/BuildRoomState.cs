@@ -6,6 +6,7 @@ public class BuildRoomState : PlayerBunkerState
     public BuildRoomState(PlayerBunkerManager manager) : base(manager) { }
 
     private GameObject _currentGameObject;
+
     private Vector3 _currentRoomPosition = Vector3.zero;
 
     public override void Enter()

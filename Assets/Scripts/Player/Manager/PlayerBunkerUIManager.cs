@@ -37,13 +37,13 @@ public class PlayerBunkerUIManager : MonoBehaviour
     //////////////////////
     //      ROOMS       //
     //////////////////////
-    ///
 
     public void OnBuildRoomsButtonPressed()
     {
         if (_buildRoomsPanel.gameObject.activeInHierarchy) 
         { 
             _buildRoomsPanel.gameObject.SetActive(false);
+            _playerManager.ChangeState(_playerManager.idleState);
         }
         else
         {
@@ -59,18 +59,20 @@ public class PlayerBunkerUIManager : MonoBehaviour
         if (_playerManager.GetCurrentState() is BuildRoomState buildRoomState)
         {
             buildRoomState.InstantiateRoom((RoomKind)kind);
+            _buildRoomsPanel.gameObject.SetActive(false);
         }
     }
 
     //////////////////////
     //     MACHINES     //
     //////////////////////
-    ///
+    
     public void OnPlaceMachinesButtonPressed()
     {
         if (_placeMachinesPanel.gameObject.activeInHierarchy)
         {
             _placeMachinesPanel.gameObject.SetActive(false);
+            _playerManager.ChangeState(_playerManager.idleState);
         }
         else
         {
@@ -80,4 +82,5 @@ public class PlayerBunkerUIManager : MonoBehaviour
             _playerManager.EnterPlaceMachineMode();
         }
     }
+
 }

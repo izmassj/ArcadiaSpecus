@@ -669,7 +669,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 266450440}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnBuildSpecificRoomButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &266450440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1192,7 +1204,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 432050402}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnBuildSpecificRoomButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &432050402
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2510,7 +2534,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 763085165}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnBuildSpecificRoomButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 4
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &763085165
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5661,7 +5697,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1843091818}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnBuildSpecificRoomButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1843091818
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6079,7 +6127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55999e805351fd448a1e702541396ce8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
-  _mainCamera: {fileID: 1435736952}
+  mainCamera: {fileID: 0}
   _playerUIManager: {fileID: 2004328271}
   _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   roomPlacementDistance: 700
