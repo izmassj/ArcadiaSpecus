@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 public class PlayerBunkerManager : MonoBehaviour
 {
     [Header("Camera")]
-    [SerializeField] private Camera _mainCamera;
+    [SerializeField] public Camera mainCamera;
 
     [Header("References")]
     [SerializeField] private PlayerBunkerUIManager _playerUIManager;
@@ -60,7 +60,7 @@ public class PlayerBunkerManager : MonoBehaviour
 
     private void StartInputActions()
     {
-        if (_mainCamera == null) _mainCamera = Camera.main;
+        if (mainCamera == null) mainCamera = Camera.main;
 
         _gameplayInputActionMap = _playerBunkerInputAction.FindActionMap("Gameplay", true);
         navigateInputAction = _gameplayInputActionMap.FindAction("Navigate", true);
