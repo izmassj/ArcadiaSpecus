@@ -1,10 +1,26 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerBunkerManager : MonoBehaviour
 {
+    [Header("Camera")]
+    [SerializeField] private Camera _mainCamera;
+
     [Header("References")]
     [SerializeField] private PlayerBunkerUIManager _playerUIManager;
+
+    [Header("Input")]
+    [SerializeField] private InputActionAsset _playerBunkerInputAction;
+
+    [Header("Room Building")]
+    [SerializeField] public float roomPlacementDistance;
+    [SerializeField] public List<RoomPrefab> prefabsRoom;
+
+
+    private InputActionMap _gameplayInputActionMap;
+    [HideInInspector] public InputAction navigateInputAction;
 
     private PlayerBunkerState _currentState;
 
@@ -32,6 +48,7 @@ public class PlayerBunkerManager : MonoBehaviour
 
     void Start()
     {
+        StartInputActions();
         ChangeState(idleState);
     }
 
@@ -39,6 +56,19 @@ public class PlayerBunkerManager : MonoBehaviour
     {
         _currentState.HandleInput();
         _currentState.Update();
+    }
+
+    private void StartInputActions()
+    {
+        if (_mainCamera == null) _mainCamera = Camera.main;
+
+        _gameplayInputActionMap = _playerBunkerInputAction.FindActionMap("Gameplay", true);
+        navigateInputAction = _gameplayInputActionMap.FindAction("Navigate", true);
+    }
+
+    public PlayerBunkerState GetCurrentState()
+    {
+        return _currentState;
     }
 
     public void ChangeState(PlayerBunkerState newState)

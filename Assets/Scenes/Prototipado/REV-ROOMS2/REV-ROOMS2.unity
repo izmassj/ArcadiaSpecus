@@ -847,7 +847,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 272335128}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnBuildSpecificRoomButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &272335128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6025,11 +6037,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 432050400}
-  - {fileID: 763085163}
-  - {fileID: 1843091816}
-  - {fileID: 266450438}
   - {fileID: 272335126}
+  - {fileID: 266450438}
+  - {fileID: 432050400}
+  - {fileID: 1843091816}
+  - {fileID: 763085163}
   m_Father: {fileID: 451114930}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -6067,7 +6079,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55999e805351fd448a1e702541396ce8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
-  _playerUIManager: {fileID: 0}
+  _mainCamera: {fileID: 1435736952}
+  _playerUIManager: {fileID: 2004328271}
+  _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  roomPlacementDistance: 700
+  prefabsRoom:
+  - kind: 0
+    prefab: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+  - kind: 1
+    prefab: {fileID: 2690438700912278352, guid: 6208900a4afd2b0498a0e13021b0b5db, type: 3}
+  - kind: 2
+    prefab: {fileID: 8194872860481656872, guid: e0b00ffaafaac7041a309f8876cfd223, type: 3}
+  - kind: 3
+    prefab: {fileID: 2668456162854339732, guid: 51f2b08e20609c94cac5315083b7f4c2, type: 3}
+  - kind: 4
+    prefab: {fileID: 1531740208369010877, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
+  navigateInputAction:
+    m_Name: Navigate Input
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 06f31bd9-faee-4662-85b4-b3f2a300ee92
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
 --- !u!4 &2004328270
 Transform:
   m_ObjectHideFlags: 0

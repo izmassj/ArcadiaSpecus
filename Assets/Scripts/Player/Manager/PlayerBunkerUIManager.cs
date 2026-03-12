@@ -54,6 +54,14 @@ public class PlayerBunkerUIManager : MonoBehaviour
         }
     }
 
+    public void OnBuildSpecificRoomButtonPressed(int kind)
+    {
+        if (_playerManager.GetCurrentState() is BuildRoomState buildRoomState)
+        {
+            buildRoomState.InstantiateRoom((RoomKind)kind);
+        }
+    }
+
     //////////////////////
     //     MACHINES     //
     //////////////////////
@@ -71,7 +79,5 @@ public class PlayerBunkerUIManager : MonoBehaviour
 
             _playerManager.EnterPlaceMachineMode();
         }
-
-
     }
 }
