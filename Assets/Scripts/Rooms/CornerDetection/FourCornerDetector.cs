@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider))]
-public class FourCornerDetector : MonoBehaviour, ICornerDetectorOwner
+public class FourCornerDetector : MonoBehaviour
 {
     [Header("Setup")]
     [SerializeField] private string _cornersRootName;
@@ -56,7 +56,7 @@ public class FourCornerDetector : MonoBehaviour, ICornerDetectorOwner
             trigger.center = Vector3.zero;
             trigger.size = Vector3.one * _cornerTriggerWorldSize;
 
-            corner.Setup(this, CornerNames[i]);
+            corner.Setup(CornerNames[i]);
             _corners[i] = corner;
         }
     }

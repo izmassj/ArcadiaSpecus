@@ -772,6 +772,42 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: _cornersRule.m_keys.Array.size
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: _cornersRule.m_values.Array.size
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: '_cornersRule.m_keys.Array.data[1]'
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: '_cornersRule.m_keys.Array.data[2]'
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: '_cornersRule.m_keys.Array.data[3]'
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: '_cornersRule.m_keys.Array.data[4]'
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: '_cornersRule.m_keys.Array.data[5]'
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: '_cornersRule.m_keys.Array.data[6]'
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: '_cornersRule.m_keys.Array.data[7]'
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6127,7 +6163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55999e805351fd448a1e702541396ce8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
-  mainCamera: {fileID: 0}
+  mainCamera: {fileID: 1435736952}
   _playerUIManager: {fileID: 2004328271}
   _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   roomPlacementDistance: 700

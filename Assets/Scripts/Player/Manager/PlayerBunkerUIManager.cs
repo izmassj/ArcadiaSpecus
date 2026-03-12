@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class PlayerBunkerUIManager : MonoBehaviour
 {
-    [Header("References")]
+    [Header("Refs")]
     [SerializeField] private PlayerBunkerManager _playerManager;
 
     [Header("Construction - Pre-Action Buttons")]

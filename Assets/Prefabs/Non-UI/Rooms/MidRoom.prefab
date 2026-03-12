@@ -100,8 +100,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6715487623888359331}
   - component: {fileID: 5383413597436364162}
-  - component: {fileID: 7104311958376463971}
   - component: {fileID: 2974902914088803945}
+  - component: {fileID: 8034104835539783522}
   m_Layer: 0
   m_Name: MidRoom
   m_TagString: Untagged
@@ -146,20 +146,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 134.5276, y: 157.1047, z: 125.5096}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7104311958376463971
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8194872860481656872}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5989416604b6d404fb3207aa63b94456, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EightCornerDetector
-  CornersRootName: Corners
-  _cornerTriggerWorldSize: 10
 --- !u!54 &2974902914088803945
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -187,3 +173,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8034104835539783522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8194872860481656872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d501195f0edcf14192e8257ad7bdec2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CornerDetector
+  _cornersRootName: Corners
+  _cornerMode: 1
+  _cornerTriggerWorldSize: 10
+  _cornersRule:
+    m_keys: 0000000001000000020000000300000004000000050000000600000007000000
+    m_values: 0000000000000000
+  _cornersDetected:
+    m_keys: 
+    m_values: 

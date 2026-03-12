@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5119897850601132777}
   - component: {fileID: 776626560614535527}
-  - component: {fileID: 6239526747285594154}
   - component: {fileID: 495847162291588915}
+  - component: {fileID: 8875153151868775149}
   m_Layer: 0
   m_Name: Intersection
   m_TagString: Untagged
@@ -56,20 +56,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 81.749825, y: 157.10474, z: 125.47756}
   m_Center: {x: 0, y: 0, z: -0.015094757}
---- !u!114 &6239526747285594154
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3548510308215117091}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5989416604b6d404fb3207aa63b94456, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EightCornerDetector
-  CornersRootName: Corners
-  _cornerTriggerWorldSize: 10
 --- !u!54 &495847162291588915
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -97,6 +83,27 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8875153151868775149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3548510308215117091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d501195f0edcf14192e8257ad7bdec2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CornerDetector
+  _cornersRootName: Corners
+  _cornerMode: 1
+  _cornerTriggerWorldSize: 10
+  _cornersRule:
+    m_keys: 0000000001000000020000000300000004000000050000000600000007000000
+    m_values: 0000000000000000
+  _cornersDetected:
+    m_keys: 
+    m_values: 
 --- !u!1 &5444585497677808811
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,14 +1,20 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider))]
-public class EightCornerDetector : MonoBehaviour, ICornerDetectorOwner
+public class EightCornerDetector : MonoBehaviour
 {
     [Header("Setup")]
     [SerializeField] private string CornersRootName;
 
     [Header("Trigger Size")]
     [SerializeField] private float _cornerTriggerWorldSize;
+
+    [Header("Corners")]
+    [SerializeField] public CornerTypeBoolDictionary _cornersRule;
+    [SerializeField] public CornerTypeBoolDictionary _cornersDetected;
+
 
     private BoxCollider _mainBox;
     private CornerTrigger[] _corners = new CornerTrigger[8];
@@ -30,7 +36,19 @@ public class EightCornerDetector : MonoBehaviour, ICornerDetectorOwner
         BuildCorners();
     }
 
-    [ContextMenu("Build Corners")]
+    private void Start()
+    {
+        _cornersDetected = new CornerTypeBoolDictionary();
+
+        for (int i = 0; i < 8; i++)
+            _cornersDetected[(CornerType)i] = false;
+    }
+
+    private void Update()
+    {
+        UpdateDetectedCorners();
+    }
+
     public void BuildCorners()
     {
         _mainBox = GetComponent<BoxCollider>();
@@ -70,7 +88,7 @@ public class EightCornerDetector : MonoBehaviour, ICornerDetectorOwner
             trigger.center = Vector3.zero;
             trigger.size = Vector3.one * _cornerTriggerWorldSize;
 
-            corner.Setup(this, CornerNames[i]);
+            corner.Setup(CornerNames[i]);
             _corners[i] = corner;
         }
     }
@@ -113,6 +131,21 @@ public class EightCornerDetector : MonoBehaviour, ICornerDetectorOwner
             box = child.gameObject.AddComponent<BoxCollider>();
 
         return trigger;
+    }
+
+    public void UpdateDetectedCorners()
+    {
+        for (int i = 0; i < _corners.Length; i++)
+        {
+            if (_corners[i] != null && _corners[i].IsTouching)
+            {
+                _cornersDetected[_corners[i].type] = true;
+            }
+            else
+            {
+                _cornersDetected[_corners[i].type] = false;
+            }
+        }
     }
 
 
