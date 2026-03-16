@@ -1,4 +1,5 @@
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class BuildRoomState : PlayerBunkerState
@@ -11,11 +12,19 @@ public class BuildRoomState : PlayerBunkerState
 
     public override void Enter()
     {
+
     }
 
     public override void Exit()
     {
-        _currentGameObject = null;
+        if (_currentGameObject != null && !_currentGameObject.GetComponent<RoomManager>().GetPlaced()) 
+        { 
+            Object.Destroy(_currentGameObject);
+        }
+        else
+        {
+            _currentGameObject = null;
+        }
     }
 
     public override void HandleInput()
@@ -26,8 +35,7 @@ public class BuildRoomState : PlayerBunkerState
             {
                 _currentGameObject.GetComponent<RoomManager>().SetPlaced();
                 _currentGameObject.GetComponent<RoomManager>().SetOriginalMaterial();
-                // iria aqui lo del snapped
-                _currentGameObject.GetComponent<CornerDetector>().SnapToDetectedCorner();
+                _currentGameObject.GetComponent<CornerDetector>().SnapToDetectedCorner(playerManager.roomPlacementDistance);
                 playerManager.ChangeState(playerManager.idleState);
             }
         }

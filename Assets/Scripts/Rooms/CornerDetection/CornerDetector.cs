@@ -118,13 +118,14 @@ public class CornerDetector : MonoBehaviour
             }
     }
 
-    public void SnapToDetectedCorner()
+    public void SnapToDetectedCorner(float distance)
     {
         if (!TryGetSnapCorners(out CornerTrigger myCorner, out CornerTrigger otherCorner))
             return;
 
         Vector3 delta = otherCorner.transform.position - myCorner.transform.position;
         transform.position += delta;
+        transform.position = new Vector3(transform.position.x, transform.position.y, distance);
     }
 
     public bool TryGetSnapCorners(out CornerTrigger myCorner, out CornerTrigger otherCorner)
