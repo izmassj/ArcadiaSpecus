@@ -111,32 +111,36 @@ public class CornerDetector : MonoBehaviour
 
     public CornerInteractionType EvaluateDetectedCorners()
     {
+        bool isTouchingAnything = false;
+
         for (int i = 0; i < _corners.Length; i++)
         {
-            if (_corners[i] == null)
+            CornerTrigger corner = _corners[i];
+
+            if (corner == null)
                 continue;
 
-            if (!_cornersRule.ContainsKey(_corners[i].type))
-            {
-                return CornerInteractionType.NonBuildable;
-            }
+            _cornersDetected[corner.type] = corner.IsTouching;
 
-            if (!_corners[i].DetectedType.HasValue)
-            {
-                return CornerInteractionType.NonBuildable;
-            }
+            if (!corner.IsTouching)
+                continue;
 
-            if (_cornersRule[_corners[i].type] == _corners[i].DetectedType.Value)
-            {
-                return CornerInteractionType.Buildable;
-            }
-            else
-            {
+            isTouchingAnything = true;
+
+            if (!_cornersRule.ContainsKey(corner.type))
                 return CornerInteractionType.NonBuildable;
-            }
+
+            if (!corner.DetectedType.HasValue)
+                return CornerInteractionType.NonBuildable;
+
+            if (_cornersRule[corner.type] != corner.DetectedType.Value)
+                return CornerInteractionType.NonBuildable;
         }
 
-        return CornerInteractionType.Static;
+        if (!isTouchingAnything)
+            return CornerInteractionType.Static;
+
+        return CornerInteractionType.Buildable;
     }
 
     public void PrintDetectedCorners()

@@ -34,6 +34,7 @@ public class BuildRoomState : PlayerBunkerState
         GameObject prefabRoom = playerManager.prefabsRoom.First(foo => foo.kind == kind).prefab;
 
         _currentGameObject = Object.Instantiate(prefabRoom, _currentRoomPosition, Quaternion.identity);
+        _currentGameObject.GetComponent<RoomManager>().SetOnRoomBuildMaterial();
     }
 
     public override void Update()

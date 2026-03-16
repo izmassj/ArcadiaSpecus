@@ -186,6 +186,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 127420280de81c3489bf2d00916aef9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomManager
+  _placed: 0
   _cornerDetector: {fileID: -5798445500930681777}
   _modelRenderer: {fileID: 4075378811539830109}
   _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
@@ -193,7 +194,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 74117f645ca87544896e430b75e9a316, type: 2}
   _buildableColor: {r: 0.8191824, g: 1, b: 0.5990566, a: 1}
   _nonBuildableColor: {r: 1, g: 0.50251573, b: 0.43867922, a: 1}
-  _normalColor: {r: 1, g: 1, b: 1, a: 1}
+  _staticColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &-5798445500930681777
 MonoBehaviour:
   m_ObjectHideFlags: 0
