@@ -728,6 +728,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 848783902952189714, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: eb50936a8588075429b465d28661f3bb, type: 2}
     - target: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Name
       value: Intersection
@@ -3224,6 +3228,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: DoorWall
       objectReference: {fileID: 0}
+    - target: {fileID: 1537893557989658676, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: eb50936a8588075429b465d28661f3bb, type: 2}
     - target: {fileID: 2862527700036723179, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
       propertyPath: m_LocalPosition.x
       value: 261.48334
@@ -3544,6 +3552,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LeftRoom
       objectReference: {fileID: 0}
+    - target: {fileID: 5219325710763673767, guid: 6208900a4afd2b0498a0e13021b0b5db, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: eb50936a8588075429b465d28661f3bb, type: 2}
     - target: {fileID: 5905420240282746819, guid: 6208900a4afd2b0498a0e13021b0b5db, type: 3}
       propertyPath: m_LocalPosition.x
       value: 163.99117
