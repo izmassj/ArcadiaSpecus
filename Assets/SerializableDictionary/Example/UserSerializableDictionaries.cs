@@ -19,6 +19,9 @@ public class StringColorArrayDictionary : SerializableDictionary<string, Color[]
 public class CornerTypeBoolDictionary : SerializableDictionary<CornerType, bool> { }
 
 [Serializable]
+public class CornerTypeCornerTypeDictionary : SerializableDictionary<CornerType, CornerType> { }
+
+[Serializable]
 public class MyClass
 {
     public int i;

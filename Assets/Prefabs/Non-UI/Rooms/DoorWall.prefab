@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2862527700036723179}
   - component: {fileID: 8976645118328633135}
-  - component: {fileID: 6666650739889101802}
   - component: {fileID: 5441178787586633565}
+  - component: {fileID: -2320371323929668015}
   m_Layer: 0
   m_Name: DoorWall
   m_TagString: Untagged
@@ -56,20 +56,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7.3685646, y: 157.10518, z: 125.50997}
   m_Center: {x: 0.5263567, y: 40, z: 0.9983864}
---- !u!114 &6666650739889101802
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1531740208369010877}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e05a05169d22c0749b06d0b3158b05b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FourCornerDetector
-  _cornersRootName: Corners
-  _cornerTriggerWorldSize: 10
 --- !u!54 &5441178787586633565
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -97,6 +83,27 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-2320371323929668015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531740208369010877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d501195f0edcf14192e8257ad7bdec2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CornerDetector
+  _cornersRootName: Corners
+  _cornerMode: 0
+  _cornerTriggerWorldSize: 0.1
+  _cornersRule:
+    m_keys: 00000000
+    m_values: 00
+  _cornersDetected:
+    m_keys: 
+    m_values: 
 --- !u!1 &1542973764736396745
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,10 +10,12 @@ public class CornerDetector : MonoBehaviour
     [SerializeField] private CornerMode _cornerMode;
 
     [Header("Trigger Size")]
-    [SerializeField] private float _cornerTriggerWorldSize = 0.1f;
+    [SerializeField] private float _cornerTriggerWorldSize;
 
     [Header("Corners")]
-    [SerializeField] public CornerTypeBoolDictionary _cornersRule;
+    [SerializeField] public CornerTypeCornerTypeDictionary _cornersRule;
+
+    [Header("Debug")]
     [SerializeField] public CornerTypeBoolDictionary _cornersDetected;
 
     private BoxCollider _mainBox;
@@ -21,10 +23,10 @@ public class CornerDetector : MonoBehaviour
 
     private static readonly string[] FourCornerNames =
     {
-        "TopLeft",
-        "TopRight",
-        "BottomLeft",
-        "BottomRight"
+        "TopFrontLeft",
+        "TopBackLeft",
+        "BottomFrontLeft",
+        "BottomBackLeft"
     };
 
     private static readonly string[] EightCornerNames =

@@ -13,3 +13,6 @@ public class AnySerializableDictionaryStoragePropertyDrawer: SerializableDiction
 
 [CustomPropertyDrawer(typeof(CornerTypeBoolDictionary))]
 public class CornerTypeBoolDictionaryDrawer : SerializableDictionaryPropertyDrawer { }
+
+[CustomPropertyDrawer(typeof(CornerTypeCornerTypeDictionary))]
+public class CornerTypeCornerTypeDictionaryDrawer : SerializableDictionaryPropertyDrawer { }
