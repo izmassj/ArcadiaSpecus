@@ -7,7 +7,6 @@ public class CornerDetector : MonoBehaviour
 {
     [Header("Setup")]
     [SerializeField] private string _cornersRootName;
-    [SerializeField] private CornerMode _cornerMode;
 
     [Header("Trigger Size")]
     [SerializeField] private float _cornerTriggerWorldSize;
@@ -20,14 +19,6 @@ public class CornerDetector : MonoBehaviour
 
     private BoxCollider _mainBox;
     private CornerTrigger[] _corners;
-
-    private static readonly string[] FourCornerNames =
-    {
-        "TopFrontLeft",
-        "TopBackLeft",
-        "BottomFrontLeft",
-        "BottomBackLeft"
-    };
 
     private static readonly string[] EightCornerNames =
     {
@@ -64,7 +55,7 @@ public class CornerDetector : MonoBehaviour
 
         Transform cornersParent = GetOrCreateCornersParent();
 
-        string[] names = GetCornerNames();
+        string[] names = EightCornerNames;
         Vector3[] positions = GetCornerPositions();
 
         _corners = new CornerTrigger[names.Length];
@@ -141,28 +132,10 @@ public class CornerDetector : MonoBehaviour
         Debug.Log($"{name} -> {detected.Count} esquinas detectadas: {string.Join(", ", detected)}");
     }
 
-    private string[] GetCornerNames()
-    {
-        return _cornerMode == CornerMode.FourCorners
-            ? FourCornerNames
-            : EightCornerNames;
-    }
-
     private Vector3[] GetCornerPositions()
     {
         Vector3 c = _mainBox.center;
         Vector3 h = _mainBox.size * 0.5f;
-
-        if (_cornerMode == CornerMode.FourCorners)
-        {
-            return new Vector3[]
-            {
-                new Vector3(c.x, c.y + h.y, c.z - h.z),
-                new Vector3(c.x, c.y + h.y, c.z + h.z),
-                new Vector3(c.x, c.y - h.y, c.z - h.z),
-                new Vector3(c.x, c.y - h.y, c.z + h.z)
-            };
-        }
 
         return new Vector3[]
         {

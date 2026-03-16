@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2862527700036723179}
   - component: {fileID: 8976645118328633135}
   - component: {fileID: 5441178787586633565}
+  - component: {fileID: 8836419173062116257}
   - component: {fileID: -2320371323929668015}
   m_Layer: 0
   m_Name: DoorWall
@@ -55,7 +56,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 7.3685646, y: 157.10518, z: 125.50997}
-  m_Center: {x: 0.5263567, y: 40, z: 0.9983864}
+  m_Center: {x: 0.5263567, y: 41.5, z: 0.9983864}
 --- !u!54 &5441178787586633565
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -83,6 +84,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8836419173062116257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531740208369010877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 127420280de81c3489bf2d00916aef9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomManager
+  _cornerDetector: {fileID: -2320371323929668015}
+  _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
+  _roomMats:
+  - {fileID: 2100000, guid: 0f29e3c1c576f6641b9e474f6b194480, type: 2}
 --- !u!114 &-2320371323929668015
 MonoBehaviour:
   m_ObjectHideFlags: 0

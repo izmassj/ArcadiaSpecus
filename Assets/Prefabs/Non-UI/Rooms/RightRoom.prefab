@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 7927541235868188953}
   - component: {fileID: 7914486231842572353}
   - component: {fileID: 8232397600155580249}
+  - component: {fileID: 8386739265403137964}
   - component: {fileID: -5798445500930681777}
   m_Layer: 0
   m_Name: RightRoom
@@ -173,6 +174,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8386739265403137964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2668456162854339732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 127420280de81c3489bf2d00916aef9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomManager
+  _cornerDetector: {fileID: -5798445500930681777}
+  _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
+  _roomMats:
+  - {fileID: 2100000, guid: 74117f645ca87544896e430b75e9a316, type: 2}
 --- !u!114 &-5798445500930681777
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -189,8 +206,8 @@ MonoBehaviour:
   _cornerMode: 1
   _cornerTriggerWorldSize: 6
   _cornersRule:
-    m_keys: 
-    m_values: 
+    m_keys: 00000000020000000400000006000000
+    m_values: 01000000030000000500000007000000
   _cornersDetected:
     m_keys: 
     m_values: 

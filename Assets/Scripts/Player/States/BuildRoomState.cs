@@ -20,6 +20,13 @@ public class BuildRoomState : PlayerBunkerState
 
     public override void HandleInput()
     {
+        if (_currentGameObject != null) 
+        { 
+            if (playerManager.confirmInputAction.triggered) 
+            { 
+
+            }
+        }
     }
 
     public void InstantiateRoom(RoomKind kind)

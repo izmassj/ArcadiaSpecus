@@ -21,6 +21,7 @@ public class PlayerBunkerManager : MonoBehaviour
 
     private InputActionMap _gameplayInputActionMap;
     [HideInInspector] public InputAction navigateInputAction;
+    [HideInInspector] public InputAction confirmInputAction;
 
     private PlayerBunkerState _currentState;
 
@@ -64,6 +65,7 @@ public class PlayerBunkerManager : MonoBehaviour
 
         _gameplayInputActionMap = _playerBunkerInputAction.FindActionMap("Gameplay", true);
         navigateInputAction = _gameplayInputActionMap.FindAction("Navigate", true);
+        confirmInputAction = _gameplayInputActionMap.FindAction("Confirm", true);
     }
 
     public PlayerBunkerState GetCurrentState()
