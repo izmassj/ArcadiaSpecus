@@ -23,6 +23,8 @@ public class RoomManager : MonoBehaviour
     [SerializeField] Color _nonBuildableColor;
     [SerializeField] Color _staticColor;
 
+    public CornerInteractionType cornerInteractionType;
+
     // Update is called once per frame
     void Update()
     {
@@ -38,12 +40,15 @@ public class RoomManager : MonoBehaviour
             switch (_cornerDetector.EvaluateDetectedCorners())
             {
                 case CornerInteractionType.Buildable:
+                    cornerInteractionType = CornerInteractionType.Buildable;
                     _modelRenderer.material.DOColor(_buildableColor, 0.5f);
                     break;
                 case CornerInteractionType.NonBuildable:
+                    cornerInteractionType = CornerInteractionType.NonBuildable;
                     _modelRenderer.material.DOColor(_nonBuildableColor, 0.5f);
                     break;
                 case CornerInteractionType.Static:
+                    cornerInteractionType = CornerInteractionType.Static;
                     _modelRenderer.material.DOColor(_staticColor, 0.5f);
                     break;
             }

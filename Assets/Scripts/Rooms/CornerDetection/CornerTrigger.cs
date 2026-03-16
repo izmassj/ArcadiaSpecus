@@ -14,11 +14,13 @@ public class CornerTrigger : MonoBehaviour
     public string CornerName => _cornerName;
 
     public CornerType? DetectedType { get; private set; }
+    public CornerTrigger DetectedCorner { get; private set; }
 
     public void Setup(string cornerName)
     {
         _cornerName = cornerName;
         type = Enum.Parse<CornerType>(cornerName);
+        DetectedCorner = null;  
     }
 
     private void OnTriggerEnter(Collider other)
@@ -30,10 +32,11 @@ public class CornerTrigger : MonoBehaviour
         if (otherCorner == null)
             return;
 
-        _parent = other.gameObject;
+        _parent = other.gameObject.transform.parent.gameObject;
 
         _touchCount++;
         DetectedType = otherCorner.type;
+        DetectedCorner = otherCorner;
 
         Debug.Log($"{transform.root.name} -> esquina {_cornerName} tocando con {otherCorner.transform.root.name}:{otherCorner.CornerName}");
 
@@ -49,6 +52,7 @@ public class CornerTrigger : MonoBehaviour
             return;
 
         _parent = null;
+        DetectedCorner = null;
 
         _touchCount = Mathf.Max(0, _touchCount - 1);
 

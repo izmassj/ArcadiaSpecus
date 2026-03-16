@@ -118,6 +118,44 @@ public class CornerDetector : MonoBehaviour
             }
     }
 
+    public void SnapToDetectedCorner()
+    {
+        if (!TryGetSnapCorners(out CornerTrigger myCorner, out CornerTrigger otherCorner))
+            return;
+
+        Vector3 delta = otherCorner.transform.position - myCorner.transform.position;
+        transform.position += delta;
+    }
+
+    public bool TryGetSnapCorners(out CornerTrigger myCorner, out CornerTrigger otherCorner)
+    {
+        myCorner = null;
+        otherCorner = null;
+
+        if (_corners == null)
+            return false;
+
+        for (int i = 0; i < _corners.Length; i++)
+        {
+            CornerTrigger corner = _corners[i];
+
+            if (corner == null)
+                continue;
+
+            if (!corner.IsTouching)
+                continue;
+
+            if (corner.DetectedCorner == null)
+                continue;
+
+            myCorner = corner;
+            otherCorner = corner.DetectedCorner;
+            return true;
+        }
+
+        return false;
+    }
+
     public CornerInteractionType EvaluateDetectedCorners()
     {
         bool isTouchingAnything = false;

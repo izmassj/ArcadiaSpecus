@@ -22,11 +22,12 @@ public class BuildRoomState : PlayerBunkerState
     {
         if (_currentGameObject != null) 
         { 
-            if (playerManager.confirmInputAction.triggered) 
+            if (playerManager.confirmInputAction.triggered && _currentGameObject.GetComponent<RoomManager>().cornerInteractionType == CornerInteractionType.Buildable) 
             {
                 _currentGameObject.GetComponent<RoomManager>().SetPlaced();
                 _currentGameObject.GetComponent<RoomManager>().SetOriginalMaterial();
-                _currentGameObject.transform.position = _currentGameObject.GetComponent<CornerDetector>().GetForeignRoom().transform.position;
+                // iria aqui lo del snapped
+                _currentGameObject.GetComponent<CornerDetector>().SnapToDetectedCorner();
                 playerManager.ChangeState(playerManager.idleState);
             }
         }
