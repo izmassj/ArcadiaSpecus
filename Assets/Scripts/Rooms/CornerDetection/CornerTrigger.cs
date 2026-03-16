@@ -11,6 +11,8 @@ public class CornerTrigger : MonoBehaviour
     public bool IsTouching => _touchCount > 0;
     public string CornerName => _cornerName;
 
+    public CornerType? DetectedType { get; private set; }
+
     public void Setup(string cornerName)
     {
         _cornerName = cornerName;
@@ -27,6 +29,7 @@ public class CornerTrigger : MonoBehaviour
             return;
 
         _touchCount++;
+        DetectedType = otherCorner.type;
 
         Debug.Log($"{transform.root.name} -> esquina {_cornerName} tocando con {otherCorner.transform.root.name}:{otherCorner.CornerName}");
 
@@ -42,6 +45,7 @@ public class CornerTrigger : MonoBehaviour
             return;
 
         _touchCount = Mathf.Max(0, _touchCount - 1);
+
 
         Debug.Log($"{transform.root.name} -> esquina {_cornerName} dejó de tocar con {otherCorner.transform.root.name}:{otherCorner.CornerName}");
     }

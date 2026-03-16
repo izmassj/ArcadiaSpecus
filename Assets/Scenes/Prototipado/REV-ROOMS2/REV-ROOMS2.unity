@@ -728,6 +728,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -2714958276269511650, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: _placed
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Name
       value: Intersection
@@ -2324,6 +2328,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -2714958276269511650, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: _placed
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Name
       value: Intersection (1)
@@ -6147,6 +6155,15 @@ MonoBehaviour:
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: 06f31bd9-faee-4662-85b4-b3f2a300ee92
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  confirmInputAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 8856fba2-f2bc-4b51-92d6-e33f00e60e23
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []

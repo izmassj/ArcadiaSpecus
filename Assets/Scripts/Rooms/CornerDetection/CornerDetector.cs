@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.UI.GridLayoutGroup;
 
 [RequireComponent(typeof(BoxCollider))]
 public class CornerDetector : MonoBehaviour
@@ -78,8 +79,6 @@ public class CornerDetector : MonoBehaviour
             corner.Setup(names[i]);
             _corners[i] = corner;
         }
-
-        //RemoveUnusedCorners(cornersParent, names);
     }
 
     private void InitializeDetectedDictionary()
@@ -108,6 +107,36 @@ public class CornerDetector : MonoBehaviour
               
             _cornersDetected[_corners[i].type] = _corners[i].IsTouching;
         }
+    }
+
+    public CornerInteractionType EvaluateDetectedCorners()
+    {
+        for (int i = 0; i < _corners.Length; i++)
+        {
+            if (_corners[i] == null)
+                continue;
+
+            if (!_cornersRule.ContainsKey(_corners[i].type))
+            {
+                return CornerInteractionType.NonBuildable;
+            }
+
+            if (!_corners[i].DetectedType.HasValue)
+            {
+                return CornerInteractionType.NonBuildable;
+            }
+
+            if (_cornersRule[_corners[i].type] == _corners[i].DetectedType.Value)
+            {
+                return CornerInteractionType.Buildable;
+            }
+            else
+            {
+                return CornerInteractionType.NonBuildable;
+            }
+        }
+
+        return CornerInteractionType.Static;
     }
 
     public void PrintDetectedCorners()
@@ -189,40 +218,5 @@ public class CornerDetector : MonoBehaviour
             box = child.gameObject.AddComponent<BoxCollider>();
 
         return trigger;
-    }
-
-    private void RemoveUnusedCorners(Transform parent, string[] validNames)
-    {
-        List<Transform> toRemove = new List<Transform>();
-
-        for (int i = 0; i < parent.childCount; i++)
-        {
-            Transform child = parent.GetChild(i);
-
-            bool isValid = false;
-            for (int j = 0; j < validNames.Length; j++)
-            {
-                if (child.name == validNames[j])
-                {
-                    isValid = true;
-                    break;
-                }
-            }
-
-            if (!isValid)
-                toRemove.Add(child);
-        }
-
-        for (int i = 0; i < toRemove.Count; i++)
-        {
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                DestroyImmediate(toRemove[i].gameObject);
-            else
-                Destroy(toRemove[i].gameObject);
-#else
-            Destroy(toRemove[i].gameObject);
-#endif
-        }
     }
 }
