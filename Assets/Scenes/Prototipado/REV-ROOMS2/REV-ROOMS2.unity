@@ -927,7 +927,7 @@ GameObject:
   - component: {fileID: 276567297}
   - component: {fileID: 276567296}
   m_Layer: 5
-  m_Name: BuildRoomsButton
+  m_Name: PlaceMachinesButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4444,7 +4444,7 @@ GameObject:
   - component: {fileID: 1223894143}
   - component: {fileID: 1223894142}
   m_Layer: 5
-  m_Name: PlaceMachinesButton
+  m_Name: BuildRoomsButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6136,6 +6136,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
   mainCamera: {fileID: 1435736952}
+  outlineSettings: {fileID: 0}
+  interactaingRoomsLayer:
+    serializedVersion: 2
+    m_Bits: 128
   _playerUIManager: {fileID: 2004328271}
   _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   roomPlacementDistance: 700

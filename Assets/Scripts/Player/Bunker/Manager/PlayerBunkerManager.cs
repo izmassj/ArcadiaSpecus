@@ -1,3 +1,4 @@
+using LineworkLite.FreeOutline;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +9,9 @@ public class PlayerBunkerManager : MonoBehaviour
     [Header("Camera")]
     [SerializeField] public Camera mainCamera;
 
+    [Header("Layers")]
+    [SerializeField] public LayerMask interactaingRoomsLayer;
+
     [Header("References")]
     [SerializeField] private PlayerBunkerUIManager _playerUIManager;
 
@@ -17,7 +21,6 @@ public class PlayerBunkerManager : MonoBehaviour
     [Header("Room Building")]
     [SerializeField] public float roomPlacementDistance;
     [SerializeField] public List<RoomPrefab> prefabsRoom;
-
 
     private InputActionMap _gameplayInputActionMap;
     [HideInInspector] public InputAction navigateInputAction;

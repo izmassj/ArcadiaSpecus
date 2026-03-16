@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6195307785960821264}
   - component: {fileID: 5281449619043604640}
   - component: {fileID: -1481693534775565051}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: LeftRoom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -96,6 +96,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 127420280de81c3489bf2d00916aef9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomManager
+  typeOfRoom: 1
+  outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
   _placed: 0
   _cornerDetector: {fileID: -1481693534775565051}
   _modelRenderer: {fileID: 5219325710763673767}

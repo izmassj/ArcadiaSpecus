@@ -1,11 +1,18 @@
+using DG.Tweening;
+using LineworkLite.FreeOutline;
 using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
-using DG.Tweening;
 
 public class RoomManager : MonoBehaviour 
 {
     [Header("Parameters")]
+    [SerializeField] public RoomKind typeOfRoom;
+
+    [Header("Post-Processing")]
+    [SerializeField] public FreeOutlineSettings outlineSettings;
+
+    [Header("Positioning")]
     [SerializeField] private bool _placed;
 
     [Header("Refs")]
@@ -23,7 +30,7 @@ public class RoomManager : MonoBehaviour
     [SerializeField] Color _nonBuildableColor;
     [SerializeField] Color _staticColor;
 
-    public CornerInteractionType cornerInteractionType;
+    [HideInInspector] public CornerInteractionType cornerInteractionType;
 
     // Update is called once per frame
     void Update()
@@ -35,8 +42,6 @@ public class RoomManager : MonoBehaviour
     {
         if (!_placed)
         {
-            Debug.Log(_cornerDetector.EvaluateDetectedCorners());
-
             switch (_cornerDetector.EvaluateDetectedCorners())
             {
                 case CornerInteractionType.Buildable:

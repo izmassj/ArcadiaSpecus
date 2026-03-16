@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 2974902914088803945}
   - component: {fileID: 2405992283527533813}
   - component: {fileID: 8034104835539783522}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: MidRoom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -186,6 +186,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 127420280de81c3489bf2d00916aef9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomManager
+  typeOfRoom: 2
+  outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
   _placed: 0
   _cornerDetector: {fileID: 8034104835539783522}
   _modelRenderer: {fileID: 5125552036170901664}

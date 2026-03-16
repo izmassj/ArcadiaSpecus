@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 495847162291588915}
   - component: {fileID: -2714958276269511650}
   - component: {fileID: 8875153151868775149}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Intersection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -96,6 +96,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 127420280de81c3489bf2d00916aef9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomManager
+  typeOfRoom: 0
+  outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
   _placed: 0
   _cornerDetector: {fileID: 8875153151868775149}
   _modelRenderer: {fileID: 848783902952189714}
@@ -137,7 +139,7 @@ GameObject:
   - component: {fileID: 1347146974882133032}
   - component: {fileID: 8162452745531402265}
   - component: {fileID: 848783902952189714}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
