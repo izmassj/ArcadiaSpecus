@@ -23,8 +23,11 @@ public class BuildRoomState : PlayerBunkerState
         if (_currentGameObject != null) 
         { 
             if (playerManager.confirmInputAction.triggered) 
-            { 
-
+            {
+                _currentGameObject.GetComponent<RoomManager>().SetPlaced();
+                _currentGameObject.GetComponent<RoomManager>().SetOriginalMaterial();
+                _currentGameObject.transform.position = _currentGameObject.GetComponent<CornerDetector>().GetForeignRoom().transform.position;
+                playerManager.ChangeState(playerManager.idleState);
             }
         }
     }
@@ -39,7 +42,7 @@ public class BuildRoomState : PlayerBunkerState
 
     public override void Update()
     {
-        if (_currentGameObject != null)
+        if (_currentGameObject != null && !_currentGameObject.GetComponent<RoomManager>().GetPlaced())
         {
             Vector2 input = playerManager.navigateInputAction.ReadValue<Vector2>();
             _currentRoomPosition = new Vector3(input.x, input.y, playerManager.roomPlacementDistance);

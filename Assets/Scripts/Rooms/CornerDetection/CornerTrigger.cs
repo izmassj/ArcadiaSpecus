@@ -6,8 +6,10 @@ public class CornerTrigger : MonoBehaviour
 {
     private string _cornerName;
     private int _touchCount;
+    private GameObject _parent;
 
     public CornerType type;
+    public GameObject Parent => _parent;
     public bool IsTouching => _touchCount > 0;
     public string CornerName => _cornerName;
 
@@ -28,6 +30,8 @@ public class CornerTrigger : MonoBehaviour
         if (otherCorner == null)
             return;
 
+        _parent = other.gameObject;
+
         _touchCount++;
         DetectedType = otherCorner.type;
 
@@ -43,6 +47,8 @@ public class CornerTrigger : MonoBehaviour
 
         if (otherCorner == null)
             return;
+
+        _parent = null;
 
         _touchCount = Mathf.Max(0, _touchCount - 1);
 

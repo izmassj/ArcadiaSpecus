@@ -21,6 +21,8 @@ public class CornerDetector : MonoBehaviour
     private BoxCollider _mainBox;
     private CornerTrigger[] _corners;
 
+    private GameObject _foreignRoom;
+
     private static readonly string[] EightCornerNames =
     {
         "TopFrontLeft",
@@ -98,15 +100,22 @@ public class CornerDetector : MonoBehaviour
     public void UpdateDetectedCorners()
     {
         if (_corners == null || _cornersDetected == null)
-            return;
-
-        for (int i = 0; i < _corners.Length; i++)
         {
-            if (_corners[i] == null)
-                continue;
-              
-            _cornersDetected[_corners[i].type] = _corners[i].IsTouching;
+            _foreignRoom = null;
+            return;
         }
+        else
+        {
+            _foreignRoom = _corners[0].Parent;
+        }
+
+            for (int i = 0; i < _corners.Length; i++)
+            {
+                if (_corners[i] == null)
+                    continue;
+
+                _cornersDetected[_corners[i].type] = _corners[i].IsTouching;
+            }
     }
 
     public CornerInteractionType EvaluateDetectedCorners()
@@ -222,5 +231,14 @@ public class CornerDetector : MonoBehaviour
             box = child.gameObject.AddComponent<BoxCollider>();
 
         return trigger;
+    }
+
+    public GameObject GetForeignRoom()
+    {
+        if (_foreignRoom != null)
+        {
+            return _foreignRoom; 
+        }
+        return null;
     }
 }

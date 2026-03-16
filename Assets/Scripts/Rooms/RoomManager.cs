@@ -23,39 +23,15 @@ public class RoomManager : MonoBehaviour
     [SerializeField] Color _nonBuildableColor;
     [SerializeField] Color _staticColor;
 
-
-    public void SetOnRoomBuildMaterial()
-    {
-        if (_modelRenderer != null)
-        {
-            _modelRenderer.material = _onRoomBuildMat;
-        }
-    }
-
-    public void SetOriginalMaterial()
-    {
-        if (_roomMats.Count > 1) 
-        {
-            for (int i = 0; i < _roomMats.Count; i++)
-            {
-                _modelRenderer.materials[i] = _roomMats[i];
-            }
-        }
-        else
-        {
-            _modelRenderer.material = _roomMats[0];
-        }
-    }
-
-    public void SetPlaced()
-    {
-        _placed = _placed ? false : true;
-    }
-
     // Update is called once per frame
     void Update()
     {
-        if (!_placed) 
+        OnRoomBuild();
+    }
+
+    private void OnRoomBuild()
+    {
+        if (!_placed)
         {
             Debug.Log(_cornerDetector.EvaluateDetectedCorners());
 
@@ -72,9 +48,38 @@ public class RoomManager : MonoBehaviour
                     break;
             }
         }
+    }
+
+    public void SetOnRoomBuildMaterial()
+    {
+        if (_modelRenderer != null)
+        {
+            _modelRenderer.material = _onRoomBuildMat;
+        }
+    }
+
+    public void SetOriginalMaterial()
+    {
+        if (_roomMats.Count > 1)
+        {
+            for (int i = 0; i < _roomMats.Count; i++)
+            {
+                _modelRenderer.materials[i] = _roomMats[i];
+            }
+        }
         else
         {
-
+            _modelRenderer.material = _roomMats[0];
         }
+    }
+
+    public bool GetPlaced()
+    {
+        return _placed;
+    }
+
+    public void SetPlaced()
+    {
+        _placed = _placed ? false : true;
     }
 }
