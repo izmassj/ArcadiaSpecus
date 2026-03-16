@@ -97,10 +97,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CornerDetector
   _cornersRootName: Corners
   _cornerMode: 1
-  _cornerTriggerWorldSize: 10
+  _cornerTriggerWorldSize: 6
   _cornersRule:
-    m_keys: 0000000001000000020000000300000004000000050000000600000007000000
-    m_values: 0000000000000000
+    m_keys: 01000000030000000500000007000000
+    m_values: 00000000020000000400000006000000
   _cornersDetected:
     m_keys: 
     m_values: 
