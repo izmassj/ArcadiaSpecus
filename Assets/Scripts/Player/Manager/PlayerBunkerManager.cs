@@ -29,6 +29,7 @@ public class PlayerBunkerManager : MonoBehaviour
     public BuildRoomState buildRoomState;
     public SelectRoomState selectRoomState;
     public NavigateState navigateState;
+    public PlaceMachineState placeMachineState;
 
     // referencia para la UI para los estados
     public PlayerBunkerUIManager UI
@@ -44,6 +45,7 @@ public class PlayerBunkerManager : MonoBehaviour
         idleState = new IdleState(this);
         buildRoomState = new BuildRoomState(this);
         selectRoomState = new SelectRoomState(this);
+        placeMachineState = new PlaceMachineState(this);
         navigateState = new NavigateState(this);
     }
 
@@ -90,6 +92,6 @@ public class PlayerBunkerManager : MonoBehaviour
 
     public void EnterPlaceMachineMode()
     {
-
+        ChangeState(placeMachineState);
     }
 }
