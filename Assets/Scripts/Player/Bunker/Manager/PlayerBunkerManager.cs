@@ -11,6 +11,8 @@ public class PlayerBunkerManager : MonoBehaviour
 
     [Header("Layers")]
     [SerializeField] public LayerMask interactaingRoomsLayer;
+    [SerializeField] public LayerMask defaultLayer;
+    [SerializeField] public LayerMask outlineLayer;
 
     [Header("References")]
     [SerializeField] private PlayerBunkerUIManager _playerUIManager;

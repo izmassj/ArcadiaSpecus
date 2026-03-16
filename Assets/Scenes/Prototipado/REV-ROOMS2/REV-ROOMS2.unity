@@ -776,6 +776,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5444585497677808811, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6136,10 +6140,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
   mainCamera: {fileID: 1435736952}
-  outlineSettings: {fileID: 0}
   interactaingRoomsLayer:
     serializedVersion: 2
     m_Bits: 128
+  defaultLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  outlineLayer:
+    serializedVersion: 2
+    m_Bits: 64
   _playerUIManager: {fileID: 2004328271}
   _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   roomPlacementDistance: 700

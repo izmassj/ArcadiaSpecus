@@ -3,6 +3,7 @@ using LineworkLite.FreeOutline;
 using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Purchasing;
 
 public class RoomManager : MonoBehaviour 
 {
@@ -91,5 +92,29 @@ public class RoomManager : MonoBehaviour
     public void SetPlaced()
     {
         _placed = _placed ? false : true;
+    }
+
+    public void ActivateOutline(LayerMask layerMask)
+    {
+        int layer = Mathf.RoundToInt(Mathf.Log(layerMask.value, 2));
+
+        if (gameObject.transform.GetChild(0).gameObject.layer != layer)
+        {
+            gameObject.transform.GetChild(0).gameObject.layer = layer;
+        }
+
+        float width = outlineSettings.Outlines[0].width;
+        DOTween.To(() => width, x => width = x, 6f, 2f);
+    }
+
+    public void DeactivateOutline(LayerMask layer)
+    {
+        if (gameObject.transform.GetChild(0).gameObject.layer != layer)
+        {
+            gameObject.transform.GetChild(0).gameObject.layer = (int) layer;
+        }
+
+        float width = outlineSettings.Outlines[0].width;
+        DOTween.To(() => width, x => width = x, 0, 1f);
     }
 }
