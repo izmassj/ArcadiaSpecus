@@ -98,6 +98,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomManager
   typeOfRoom: 4
   outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
+  _outlineWidth: 6
   _placed: 0
   _cornerDetector: {fileID: -2320371323929668015}
   _modelRenderer: {fileID: 1537893557989658676}

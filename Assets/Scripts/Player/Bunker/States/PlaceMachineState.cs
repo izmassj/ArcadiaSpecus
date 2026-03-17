@@ -22,9 +22,19 @@ public class PlaceMachineState : PlayerBunkerState
 
     public override void HandleInput()
     {
-        Ray ray = playerManager.mainCamera.ScreenPointToRay(
-            playerManager.navigateInputAction.ReadValue<Vector2>()
-        );
+        if (playerManager.confirmInputAction.triggered && _currentRoom != null)
+        {
+            if (!_currentRoom.GetComponent<RoomManager>().IsRoomFocused())
+            {
+                _currentRoom.GetComponent<RoomManager>().FocusRoom();
+                _currentRoom.DeactivateOutline(playerManager.defaultLayer);
+            }
+        }
+    }
+
+    public override void Update() 
+    {
+        Ray ray = playerManager.mainCamera.ScreenPointToRay(playerManager.navigateInputAction.ReadValue<Vector2>());
 
         RaycastHit hit;
 
@@ -42,17 +52,12 @@ public class PlaceMachineState : PlayerBunkerState
                 _currentRoom.DeactivateOutline(playerManager.defaultLayer);
             }
 
-            if (newRoom != null)
+            if (newRoom != null && !_currentRoom.GetComponent<RoomManager>().IsRoomFocused())
             {
                 newRoom.ActivateOutline(playerManager.outlineLayer);
             }
 
             _currentRoom = newRoom;
         }
-    }
-
-    public override void Update() 
-    { 
-    
     }
 }

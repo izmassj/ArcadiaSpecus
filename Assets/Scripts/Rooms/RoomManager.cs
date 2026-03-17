@@ -10,8 +10,9 @@ public class RoomManager : MonoBehaviour
     [Header("Parameters")]
     [SerializeField] public RoomKind typeOfRoom;
 
-    [Header("Post-Processing")]
+    [Header("Post-Processing - Outline")]
     [SerializeField] public FreeOutlineSettings outlineSettings;
+    [SerializeField] private int _outlineWidth;
 
     [Header("Positioning")]
     [SerializeField] private bool _placed;
@@ -33,7 +34,13 @@ public class RoomManager : MonoBehaviour
 
     [HideInInspector] public CornerInteractionType cornerInteractionType;
 
-    // Update is called once per frame
+    private bool _focusedRoom;
+
+    private void Start()
+    {
+        _focusedRoom = false;
+    }
+
     void Update()
     {
         OnRoomBuild();
@@ -103,8 +110,7 @@ public class RoomManager : MonoBehaviour
             gameObject.transform.GetChild(0).gameObject.layer = layer;
         }
 
-        float width = outlineSettings.Outlines[0].width;
-        DOTween.To(() => width, x => width = x, 6f, 2f);
+        outlineSettings.Outlines[0].width = _outlineWidth;
     }
 
     public void DeactivateOutline(LayerMask layer)
@@ -114,7 +120,17 @@ public class RoomManager : MonoBehaviour
             gameObject.transform.GetChild(0).gameObject.layer = (int) layer;
         }
 
-        float width = outlineSettings.Outlines[0].width;
-        DOTween.To(() => width, x => width = x, 0, 1f);
+        outlineSettings.Outlines[0].width = _outlineWidth;
+    }
+
+    public bool IsRoomFocused()
+    {
+        return _focusedRoom; 
+    }
+
+    public void FocusRoom()
+    {
+        _focusedRoom = true;
+        CameraBunkerManager.Instance.MoveCameraTo(transform.GetChild(1).transform);
     }
 }

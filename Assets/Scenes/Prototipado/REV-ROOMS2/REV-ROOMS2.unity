@@ -728,13 +728,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -2714958276269511650, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: _placed
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Name
       value: Intersection
+      objectReference: {fileID: 0}
+    - target: {fileID: 4013021137285665468, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -231
       objectReference: {fileID: 0}
     - target: {fileID: 5119897850601132777, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -774,10 +774,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5119897850601132777, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5444585497677808811, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Layer
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -3477,7 +3473,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1920, y: 1080}
+  m_Size: {x: 960, y: 540}
   m_EdgeRadius: 0
 --- !u!1 &1026497802
 GameObject:
@@ -4812,6 +4808,7 @@ GameObject:
   - component: {fileID: 1435736953}
   - component: {fileID: 1435736952}
   - component: {fileID: 1435736951}
+  - component: {fileID: 1435736960}
   - component: {fileID: 1435736956}
   - component: {fileID: 1435736954}
   - component: {fileID: 1435736955}
@@ -5090,6 +5087,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraSync
   cameraToSync: {fileID: 128091700}
+--- !u!114 &1435736960
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435736950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2a02e0579ea1964281d4a9342857421, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraBunkerManager
+  _mainVirtualCamera: {fileID: 1040237740}
 --- !u!1 &1521008661
 GameObject:
   m_ObjectHideFlags: 0
