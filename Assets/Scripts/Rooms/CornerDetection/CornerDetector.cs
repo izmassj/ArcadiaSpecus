@@ -183,6 +183,18 @@ public class CornerDetector : MonoBehaviour
 
             if (_cornersRule[corner.type] != corner.DetectedType.Value)
                 return CornerInteractionType.NonBuildable;
+
+            RoomManager ownRoomManager = GetComponent<RoomManager>();
+            RoomManager collidingRoomManager = corner.DetectedCorner.transform.root.GetComponent<RoomManager>();
+
+            if (ownRoomManager != null && collidingRoomManager != null)
+            {
+                if (ownRoomManager.typeOfRoom == RoomKind.Right && collidingRoomManager.typeOfRoom == RoomKind.Right)
+                    return CornerInteractionType.NonBuildable;
+
+                if (ownRoomManager.typeOfRoom == RoomKind.Left && collidingRoomManager.typeOfRoom == RoomKind.Left)
+                    return CornerInteractionType.NonBuildable;
+            }
         }
 
         if (!isTouchingAnything)
