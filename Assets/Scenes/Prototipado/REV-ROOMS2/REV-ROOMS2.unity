@@ -732,10 +732,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Intersection
       objectReference: {fileID: 0}
-    - target: {fileID: 4013021137285665468, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -231
-      objectReference: {fileID: 0}
     - target: {fileID: 5119897850601132777, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2335,6 +2331,10 @@ PrefabInstance:
     - target: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Name
       value: Intersection (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 4013021137285665468, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -230
       objectReference: {fileID: 0}
     - target: {fileID: 5119897850601132777, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4979,7 +4979,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1435736950}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 33842a77fd4574245a2017e91fabd37c, type: 3}
   m_Name: 
@@ -4988,9 +4988,9 @@ MonoBehaviour:
   _confiner2D: {fileID: 1040237742}
   _mainCamera: {fileID: 1435736952}
   _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  _mouseSensitivity: 20
+  _mouseSensitivity: 30
   _invert: 0
-  _stickSpeed: 20
+  _stickSpeed: 30
   _stickDeadzone: 0.1
   _sharpness: 20
   _enableInertia: 1
@@ -6150,6 +6150,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
   mainCamera: {fileID: 1435736952}
+  syncedCamera: {fileID: 1435736952}
+  navigationVirtualCamera: {fileID: 1040237740}
+  navigationConfiner2D: {fileID: 1040237742}
+  cameraMouseSensitivity: 1
+  cameraInvert: 0
+  cameraStickSpeed: 12
+  cameraStickDeadzone: 0.15
+  cameraSharpness: 12
+  cameraEnableInertia: 1
+  cameraInertiaDecay: 8
+  cameraInertiaMaxSpeed: 35
+  cameraInertiaStopSpeed: 0.05
   interactaingRoomsLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -6187,6 +6199,24 @@ MonoBehaviour:
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: 8856fba2-f2bc-4b51-92d6-e33f00e60e23
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  unconfirmInputAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 89bc7fc3-c127-4311-97cf-2f476fccd4c4
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  dragInputAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 6d762a5f-35dc-4ee0-8d32-fff8971637eb
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []

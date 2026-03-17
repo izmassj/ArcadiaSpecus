@@ -1,6 +1,7 @@
 using LineworkLite.FreeOutline;
 using System;
 using System.Collections.Generic;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +9,26 @@ public class PlayerBunkerManager : MonoBehaviour
 {
     [Header("Camera")]
     [SerializeField] public Camera mainCamera;
+    [SerializeField] public Camera syncedCamera;
+    [SerializeField] public CinemachineCamera navigationVirtualCamera;
+    [SerializeField] public CinemachineConfiner2D navigationConfiner2D;
+
+    [Header("Navigate State - Mouse Drag")]
+    [SerializeField] public float cameraMouseSensitivity = 1f;
+    [SerializeField] public bool cameraInvert = false;
+
+    [Header("Navigate State - Stick")]
+    [SerializeField] public float cameraStickSpeed = 12f;
+    [SerializeField] public float cameraStickDeadzone = 0.15f;
+
+    [Header("Navigate State - Smooth")]
+    [SerializeField] public float cameraSharpness = 12f;
+
+    [Header("Navigate State - Inertia")]
+    [SerializeField] public bool cameraEnableInertia = true;
+    [SerializeField] public float cameraInertiaDecay = 8f;
+    [SerializeField] public float cameraInertiaMaxSpeed = 35f;
+    [SerializeField] public float cameraInertiaStopSpeed = 0.05f;
 
     [Header("Layers")]
     [SerializeField] public LayerMask interactaingRoomsLayer;
@@ -25,8 +46,11 @@ public class PlayerBunkerManager : MonoBehaviour
     [SerializeField] public List<RoomPrefab> prefabsRoom;
 
     private InputActionMap _gameplayInputActionMap;
+
     [HideInInspector] public InputAction navigateInputAction;
     [HideInInspector] public InputAction confirmInputAction;
+    [HideInInspector] public InputAction unconfirmInputAction;
+    [HideInInspector] public InputAction dragInputAction;
 
     private PlayerBunkerState _currentState;
 
@@ -36,16 +60,9 @@ public class PlayerBunkerManager : MonoBehaviour
     public NavigateState navigateState;
     public PlaceMachineState placeMachineState;
 
-    // referencia para la UI para los estados
-    public PlayerBunkerUIManager UI
-    {
-        get
-        {
-            return _playerUIManager;
-        }
-    }
+    public PlayerBunkerUIManager UI => _playerUIManager;
 
-    void Awake()
+    private void Awake()
     {
         idleState = new IdleState(this);
         buildRoomState = new BuildRoomState(this);
@@ -54,25 +71,32 @@ public class PlayerBunkerManager : MonoBehaviour
         navigateState = new NavigateState(this);
     }
 
-    void Start()
+    private void Start()
     {
         StartInputActions();
-        ChangeState(idleState);
+        ChangeState(navigateState);
     }
 
-    void Update()
+    private void Update()
     {
-        _currentState.HandleInput();
-        _currentState.Update();
+        _currentState?.HandleInput();
+        _currentState?.Update();
     }
 
     private void StartInputActions()
     {
-        if (mainCamera == null) mainCamera = Camera.main;
+        if (mainCamera == null)
+            mainCamera = Camera.main;
 
         _gameplayInputActionMap = _playerBunkerInputAction.FindActionMap("Gameplay", true);
+
         navigateInputAction = _gameplayInputActionMap.FindAction("Navigate", true);
         confirmInputAction = _gameplayInputActionMap.FindAction("Confirm", true);
+        unconfirmInputAction = _gameplayInputActionMap.FindAction("Unconfirm", true);
+        dragInputAction = _gameplayInputActionMap.FindAction("Drag", true);
+
+        if (!_gameplayInputActionMap.enabled)
+            _gameplayInputActionMap.Enable();
     }
 
     public PlayerBunkerState GetCurrentState()
@@ -82,12 +106,14 @@ public class PlayerBunkerManager : MonoBehaviour
 
     public void ChangeState(PlayerBunkerState newState)
     {
-        if (_currentState != null)
-            _currentState.Exit();
-
+        _currentState?.Exit();
         _currentState = newState;
+        _currentState?.Enter();
+    }
 
-        _currentState.Enter();
+    public void EnterNavigateMode()
+    {
+        ChangeState(navigateState);
     }
 
     public void EnterBuildRoomMode()

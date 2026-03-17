@@ -117,7 +117,7 @@ public class RoomManager : MonoBehaviour
     {
         if (gameObject.transform.GetChild(0).gameObject.layer != layer)
         {
-            gameObject.transform.GetChild(0).gameObject.layer = (int) layer;
+            gameObject.transform.GetChild(0).gameObject.layer = (int)layer;
         }
 
         outlineSettings.Outlines[0].width = _outlineWidth;
@@ -132,5 +132,11 @@ public class RoomManager : MonoBehaviour
     {
         _focusedRoom = true;
         CameraBunkerManager.Instance.MoveCameraTo(transform.GetChild(1).transform);
+    }
+
+    public void UnFocusRoom()
+    {
+        _focusedRoom = false;
+        CameraBunkerManager.Instance.MoveCameraToOriginalPos();
     }
 }

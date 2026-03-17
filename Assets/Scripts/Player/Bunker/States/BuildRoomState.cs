@@ -36,7 +36,7 @@ public class BuildRoomState : PlayerBunkerState
                 _currentGameObject.GetComponent<RoomManager>().SetPlaced();
                 _currentGameObject.GetComponent<RoomManager>().SetOriginalMaterial();
                 _currentGameObject.GetComponent<CornerDetector>().SnapToDetectedCorner(playerManager.roomPlacementDistance);
-                playerManager.ChangeState(playerManager.idleState);
+                playerManager.ChangeState(playerManager.navigateState);
             }
         }
     }

@@ -40,10 +40,10 @@ public class PlayerBunkerUIManager : MonoBehaviour
 
     public void OnBuildRoomsButtonPressed()
     {
-        if (_buildRoomsPanel.gameObject.activeInHierarchy) 
-        { 
+        if (_buildRoomsPanel.gameObject.activeInHierarchy)
+        {
             _buildRoomsPanel.gameObject.SetActive(false);
-            _playerManager.ChangeState(_playerManager.idleState);
+            _playerManager.ChangeState(_playerManager.navigateState);
         }
         else
         {
@@ -72,7 +72,7 @@ public class PlayerBunkerUIManager : MonoBehaviour
         if (_placeMachinesPanel.gameObject.activeInHierarchy)
         {
             _placeMachinesPanel.gameObject.SetActive(false);
-            _playerManager.ChangeState(_playerManager.idleState);
+            _playerManager.ChangeState(_playerManager.navigateState);
         }
         else
         {
@@ -82,5 +82,29 @@ public class PlayerBunkerUIManager : MonoBehaviour
             _playerManager.EnterPlaceMachineMode();
         }
     }
+
+    public void UninteractAllMachineButtons()
+    {
+        foreach (Transform child in _placeMachinesPanel.transform)
+        {
+            if (child.GetComponent<Button>() == null)
+                return;
+
+            child.GetComponent<Button>().interactable = false; 
+        }
+    }
+
+    public void InteractableAllMachineButtons()
+    {
+        foreach (Transform child in _placeMachinesPanel.transform)
+        {
+            if (child.GetComponent<Button>() == null)
+                return;
+
+            child.GetComponent<Button>().interactable = true;
+        }
+    }
+
+
 
 }
