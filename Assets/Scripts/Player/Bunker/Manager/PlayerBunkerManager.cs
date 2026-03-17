@@ -14,21 +14,21 @@ public class PlayerBunkerManager : MonoBehaviour
     [SerializeField] public CinemachineConfiner2D navigationConfiner2D;
 
     [Header("Navigate State - Mouse Drag")]
-    [SerializeField] public float cameraMouseSensitivity = 1f;
-    [SerializeField] public bool cameraInvert = false;
+    [SerializeField] public float cameraMouseSensitivity;
+    [SerializeField] public bool cameraInvert;
 
     [Header("Navigate State - Stick")]
-    [SerializeField] public float cameraStickSpeed = 12f;
-    [SerializeField] public float cameraStickDeadzone = 0.15f;
+    [SerializeField] public float cameraStickSpeed;
+    [SerializeField] public float cameraStickDeadzone;
 
     [Header("Navigate State - Smooth")]
-    [SerializeField] public float cameraSharpness = 12f;
+    [SerializeField] public float cameraSharpness;
 
     [Header("Navigate State - Inertia")]
-    [SerializeField] public bool cameraEnableInertia = true;
-    [SerializeField] public float cameraInertiaDecay = 8f;
-    [SerializeField] public float cameraInertiaMaxSpeed = 35f;
-    [SerializeField] public float cameraInertiaStopSpeed = 0.05f;
+    [SerializeField] public bool cameraEnableInertia;
+    [SerializeField] public float cameraInertiaDecay;
+    [SerializeField] public float cameraInertiaMaxSpeed;
+    [SerializeField] public float cameraInertiaStopSpeed;
 
     [Header("Layers")]
     [SerializeField] public LayerMask interactaingRoomsLayer;

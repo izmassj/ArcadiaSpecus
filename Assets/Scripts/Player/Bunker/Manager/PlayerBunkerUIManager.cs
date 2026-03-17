@@ -20,8 +20,11 @@ public class PlayerBunkerUIManager : MonoBehaviour
     [SerializeField] private Button _leftRoomButton;
     [SerializeField] private Button _intersectionButton;
 
-    [Header("Construction - Place Panel")]
+    [Header("Construction - Place Machines Panel")]
     [SerializeField] private RectTransform _placeMachinesPanel;
+
+    [Header("Construction - Deactivated Buttons Machines Panel")]
+    [SerializeField] private RectTransform _deactivatedButtonsPanel;
 
     [Header("Construction - Place Produce Machines")]
     [SerializeField] private Button _electricityMachineButton;
@@ -33,6 +36,7 @@ public class PlayerBunkerUIManager : MonoBehaviour
     [SerializeField] private Button _bedroomStationButton;
     [SerializeField] private Button _waterStationButton;
     [SerializeField] private Button _foodStationButton;
+
 
     //////////////////////
     //      ROOMS       //
@@ -81,6 +85,16 @@ public class PlayerBunkerUIManager : MonoBehaviour
 
             _playerManager.EnterPlaceMachineMode();
         }
+    }
+
+    public void EnableMachineButtonsBlockPanel()
+    {
+        UninteractAllMachineButtons();
+    }
+
+    public void DisableMachineButtonsBlockPanel()
+    {
+
     }
 
     public void UninteractAllMachineButtons()
