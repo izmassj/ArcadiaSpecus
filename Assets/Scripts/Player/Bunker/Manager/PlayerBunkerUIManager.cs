@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,7 +25,7 @@ public class PlayerBunkerUIManager : MonoBehaviour
     [SerializeField] private RectTransform _placeMachinesPanel;
 
     [Header("Construction - Deactivated Buttons Machines Panel")]
-    [SerializeField] private RectTransform _deactivatedButtonsPanel;
+    [SerializeField] private RectTransform _deactivatedMachineButtonsPanel;
 
     [Header("Construction - Place Produce Machines")]
     [SerializeField] private Button _electricityMachineButton;
@@ -89,15 +90,17 @@ public class PlayerBunkerUIManager : MonoBehaviour
 
     public void EnableMachineButtonsBlockPanel()
     {
-        UninteractAllMachineButtons();
+        UninteractableAllMachineButtons();
+        _deactivatedMachineButtonsPanel.GetComponent<CanvasGroup>().DOFade(1f, 0.5f);
     }
 
     public void DisableMachineButtonsBlockPanel()
     {
-
+        InteractableAllMachineButtons();
+        _deactivatedMachineButtonsPanel.GetComponent<CanvasGroup>().DOFade(0f, 0.5f);
     }
 
-    public void UninteractAllMachineButtons()
+    public void UninteractableAllMachineButtons()
     {
         foreach (Transform child in _placeMachinesPanel.transform)
         {

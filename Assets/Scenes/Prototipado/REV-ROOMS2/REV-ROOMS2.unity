@@ -7682,6 +7682,7 @@ GameObject:
   - component: {fileID: 1844351252}
   - component: {fileID: 1844351254}
   - component: {fileID: 1844351253}
+  - component: {fileID: 1844351255}
   m_Layer: 5
   m_Name: DeactivatedButtonsPanel
   m_TagString: Untagged
@@ -7747,6 +7748,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1844351251}
   m_CullTransparentMesh: 1
+--- !u!225 &1844351255
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844351251}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1845286107
 GameObject:
   m_ObjectHideFlags: 0
@@ -8607,7 +8620,7 @@ MonoBehaviour:
   _leftRoomButton: {fileID: 266450439}
   _intersectionButton: {fileID: 272335127}
   _placeMachinesPanel: {fileID: 402358818}
-  _deactivatedButtonsPanel: {fileID: 1844351252}
+  _deactivatedMachineButtonsPanel: {fileID: 1844351252}
   _electricityMachineButton: {fileID: 1044202056}
   _waterMachineButton: {fileID: 927083920}
   _foodMachineButton: {fileID: 1650419572}

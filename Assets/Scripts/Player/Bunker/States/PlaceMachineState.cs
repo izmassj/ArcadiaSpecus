@@ -18,11 +18,18 @@ public class PlaceMachineState : PlayerBunkerState
 
     public override void Exit()
     {
+        if (CameraBunkerManager.Instance.IsCameraDisplaced())
+        {
+            CameraBunkerManager.Instance.MoveCameraToOriginalPos();
+        }
+
         if (_currentRoom != null)
         {
+            _currentRoom.GetComponent<RoomManager>().UnFocusRoom();
             _currentRoom.DeactivateOutline(playerManager.defaultLayer);
             _currentRoom = null;
         }
+
     }
 
     public override void HandleInput()
@@ -34,6 +41,7 @@ public class PlaceMachineState : PlayerBunkerState
                 _isFocusing = true;
                 _currentRoom.GetComponent<RoomManager>().FocusRoom();
                 _currentRoom.DeactivateOutline(playerManager.defaultLayer);
+                playerManager.UI.DisableMachineButtonsBlockPanel();
             }
         }
 
@@ -41,6 +49,7 @@ public class PlaceMachineState : PlayerBunkerState
         {
             _isFocusing = false;
             _currentRoom.GetComponent<RoomManager>().UnFocusRoom();
+            playerManager.UI.EnableMachineButtonsBlockPanel();
         }
     }
 
