@@ -23,13 +23,17 @@ public class PlaceMachineState : PlayerBunkerState
             CameraBunkerManager.Instance.MoveCameraToOriginalPos();
         }
 
+        if (!playerManager.UI.IsMachineButtonsBlockPanelEnabled()) 
+        { 
+            playerManager.UI.EnableMachineButtonsBlockPanel();
+        }
+
         if (_currentRoom != null)
         {
             _currentRoom.GetComponent<RoomManager>().UnFocusRoom();
             _currentRoom.DeactivateOutline(playerManager.defaultLayer);
             _currentRoom = null;
         }
-
     }
 
     public override void HandleInput()

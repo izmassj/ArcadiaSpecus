@@ -88,16 +88,25 @@ public class PlayerBunkerUIManager : MonoBehaviour
         }
     }
 
+    public bool IsMachineButtonsBlockPanelEnabled()
+    {
+        return _deactivatedMachineButtonsPanel.gameObject.activeInHierarchy;
+    }
+
     public void EnableMachineButtonsBlockPanel()
     {
         UninteractableAllMachineButtons();
+        _deactivatedMachineButtonsPanel.gameObject.SetActive(true);
         _deactivatedMachineButtonsPanel.GetComponent<CanvasGroup>().DOFade(1f, 0.5f);
     }
 
     public void DisableMachineButtonsBlockPanel()
     {
         InteractableAllMachineButtons();
-        _deactivatedMachineButtonsPanel.GetComponent<CanvasGroup>().DOFade(0f, 0.5f);
+        _deactivatedMachineButtonsPanel.GetComponent<CanvasGroup>().DOFade(0f, 0.5f).OnComplete(() =>
+        {
+            _deactivatedMachineButtonsPanel.gameObject.SetActive(false);
+        });
     }
 
     public void UninteractableAllMachineButtons()
