@@ -16,6 +16,12 @@ public class ColorArrayStorage : SerializableDictionary.Storage<Color[]> {}
 public class StringColorArrayDictionary : SerializableDictionary<string, Color[], ColorArrayStorage> {}
 
 [Serializable]
+public class MachineKindGameObjectDictionary : SerializableDictionary<MachineKind, GameObject> { }
+
+[Serializable]
+public class RoomKindGameObjectDictionary : SerializableDictionary<RoomKind, GameObject> { }
+
+[Serializable]
 public class CornerTypeBoolDictionary : SerializableDictionary<CornerType, bool> { }
 
 [Serializable]

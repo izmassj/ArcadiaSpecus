@@ -43,7 +43,7 @@ public class BuildRoomState : PlayerBunkerState
 
     public void InstantiateRoom(RoomKind kind)
     {
-        GameObject prefabRoom = playerManager.prefabsRoom.First(foo => foo.kind == kind).prefab;
+        GameObject prefabRoom = playerManager.prefabsRoom[kind];
 
         _currentGameObject = Object.Instantiate(prefabRoom, _currentRoomPosition, Quaternion.identity);
         _currentGameObject.GetComponent<RoomManager>().SetOnRoomBuildMaterial();

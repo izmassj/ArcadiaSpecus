@@ -7252,6 +7252,12 @@ MonoBehaviour:
   syncedCamera: {fileID: 1435736952}
   navigationVirtualCamera: {fileID: 1040237740}
   navigationConfiner2D: {fileID: 1040237742}
+  machinesPrefab:
+    m_keys: 040000000500000006000000
+    m_values:
+    - {fileID: 4814320175348361186, guid: 4ae1628cf40ddd84ca37617813d7e454, type: 3}
+    - {fileID: 8424221054884683333, guid: 02e4dc357e514424b8da9b4c4def3c2b, type: 3}
+    - {fileID: 7215532924190227440, guid: 9a798a3e77fb6324f80b77d5509588ac, type: 3}
   cameraMouseSensitivity: 1
   cameraInvert: 0
   cameraStickSpeed: 12
@@ -7274,16 +7280,13 @@ MonoBehaviour:
   _playerBunkerInputAction: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   roomPlacementDistance: 700
   prefabsRoom:
-  - kind: 0
-    prefab: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-  - kind: 1
-    prefab: {fileID: 2690438700912278352, guid: 6208900a4afd2b0498a0e13021b0b5db, type: 3}
-  - kind: 2
-    prefab: {fileID: 8194872860481656872, guid: e0b00ffaafaac7041a309f8876cfd223, type: 3}
-  - kind: 3
-    prefab: {fileID: 2668456162854339732, guid: 51f2b08e20609c94cac5315083b7f4c2, type: 3}
-  - kind: 4
-    prefab: {fileID: 1531740208369010877, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
+    m_keys: 0000000001000000020000000300000004000000
+    m_values:
+    - {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+    - {fileID: 2690438700912278352, guid: 6208900a4afd2b0498a0e13021b0b5db, type: 3}
+    - {fileID: 8194872860481656872, guid: e0b00ffaafaac7041a309f8876cfd223, type: 3}
+    - {fileID: 2668456162854339732, guid: 51f2b08e20609c94cac5315083b7f4c2, type: 3}
+    - {fileID: 1531740208369010877, guid: a034540fc3cc4c34caa77d0999838eae, type: 3}
   navigateInputAction:
     m_Name: Navigate Input
     m_Type: 0

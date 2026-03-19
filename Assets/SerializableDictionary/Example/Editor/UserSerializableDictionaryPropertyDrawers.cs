@@ -11,8 +11,16 @@ public class AnySerializableDictionaryPropertyDrawer : SerializableDictionaryPro
 [CustomPropertyDrawer(typeof(ColorArrayStorage))]
 public class AnySerializableDictionaryStoragePropertyDrawer: SerializableDictionaryStoragePropertyDrawer { }
 
+[CustomPropertyDrawer(typeof(MachineKindGameObjectDictionary))]
+public class MachineKindGameObjectDrawer : SerializableDictionaryPropertyDrawer { }
+
+[CustomPropertyDrawer(typeof(RoomKindGameObjectDictionary))]
+public class RoomKindGameObjectDrawer : SerializableDictionaryPropertyDrawer { }
+
 [CustomPropertyDrawer(typeof(CornerTypeBoolDictionary))]
 public class CornerTypeBoolDictionaryDrawer : SerializableDictionaryPropertyDrawer { }
 
 [CustomPropertyDrawer(typeof(CornerTypeCornerTypeDictionary))]
 public class CornerTypeCornerTypeDictionaryDrawer : SerializableDictionaryPropertyDrawer { }
+
+

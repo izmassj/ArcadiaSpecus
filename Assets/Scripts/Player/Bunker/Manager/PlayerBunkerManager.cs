@@ -13,6 +13,9 @@ public class PlayerBunkerManager : MonoBehaviour
     [SerializeField] public CinemachineCamera navigationVirtualCamera;
     [SerializeField] public CinemachineConfiner2D navigationConfiner2D;
 
+    [Header("Place Machine State - Prefabs")]
+    [SerializeField] public MachineKindGameObjectDictionary machinesPrefab;
+
     [Header("Navigate State - Mouse Drag")]
     [SerializeField] public float cameraMouseSensitivity;
     [SerializeField] public bool cameraInvert;
@@ -43,7 +46,7 @@ public class PlayerBunkerManager : MonoBehaviour
 
     [Header("Room Building")]
     [SerializeField] public float roomPlacementDistance;
-    [SerializeField] public List<RoomPrefab> prefabsRoom;
+    [SerializeField] public RoomKindGameObjectDictionary prefabsRoom;
 
     private InputActionMap _gameplayInputActionMap;
 

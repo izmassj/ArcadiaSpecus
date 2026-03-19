@@ -115,6 +115,5 @@ public class PlaceMachineState : PlayerBunkerState
     public override void Update()
     {
         RoomRaycasting();
-        MachinePlacement();
     }
 }
