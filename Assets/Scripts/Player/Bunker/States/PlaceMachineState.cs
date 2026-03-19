@@ -1,4 +1,6 @@
 using FMOD.Studio;
+using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlaceMachineState : PlayerBunkerState
@@ -57,13 +59,11 @@ public class PlaceMachineState : PlayerBunkerState
         }
     }
 
-    public override void Update()
+    private void RoomRaycasting()
     {
-        Debug.Log(_isOverRoom);
-
         Ray ray = playerManager.mainCamera.ScreenPointToRay(
-            playerManager.navigateInputAction.ReadValue<Vector2>()
-        );
+           playerManager.navigateInputAction.ReadValue<Vector2>()
+       );
 
         RaycastHit hit;
         RoomManager newRoom = null;
@@ -110,5 +110,11 @@ public class PlaceMachineState : PlayerBunkerState
                 _currentRoom = newRoom;
             }
         }
+    }
+
+    public override void Update()
+    {
+        RoomRaycasting();
+        MachinePlacement();
     }
 }
