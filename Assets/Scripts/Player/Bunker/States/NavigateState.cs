@@ -26,7 +26,6 @@ public class NavigateState : PlayerBunkerState
     public override void Update()
     {
         UpdateCameraMovement();
-        SyncSecondaryCamera();
     }
 
     private void UpdateCameraMovement()
@@ -159,15 +158,4 @@ public class NavigateState : PlayerBunkerState
         return p;
     }
 
-    private void SyncSecondaryCamera()
-    {
-        if (playerManager.syncedCamera == null || playerManager.mainCamera == null)
-            return;
-
-        playerManager.syncedCamera.fieldOfView = playerManager.mainCamera.fieldOfView;
-        playerManager.syncedCamera.transform.SetPositionAndRotation(
-            playerManager.mainCamera.transform.position,
-            playerManager.mainCamera.transform.rotation
-        );
-    }
 }

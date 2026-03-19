@@ -7253,11 +7253,15 @@ MonoBehaviour:
   navigationVirtualCamera: {fileID: 1040237740}
   navigationConfiner2D: {fileID: 1040237742}
   machinesPrefab:
-    m_keys: 040000000500000006000000
+    m_keys: 04000000050000000600000000000000010000000200000003000000
     m_values:
     - {fileID: 4814320175348361186, guid: 4ae1628cf40ddd84ca37617813d7e454, type: 3}
     - {fileID: 8424221054884683333, guid: 02e4dc357e514424b8da9b4c4def3c2b, type: 3}
     - {fileID: 7215532924190227440, guid: 9a798a3e77fb6324f80b77d5509588ac, type: 3}
+    - {fileID: 1874550062254430, guid: ef88eb88f02ef884aa69191f15c9aca5, type: 3}
+    - {fileID: 1691938523932972, guid: 94c9f8e38367ae34fb8ce147cfb4c201, type: 3}
+    - {fileID: 1957870760614942, guid: f865f100c8ad72f40b79a7784c68f64e, type: 3}
+    - {fileID: 1423445880175314, guid: fb282f302e96ea24686dda923bf8cb72, type: 3}
   cameraMouseSensitivity: 1
   cameraInvert: 0
   cameraStickSpeed: 12

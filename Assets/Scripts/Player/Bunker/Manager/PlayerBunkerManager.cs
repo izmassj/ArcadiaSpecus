@@ -9,7 +9,6 @@ public class PlayerBunkerManager : MonoBehaviour
 {
     [Header("Camera")]
     [SerializeField] public Camera mainCamera;
-    [SerializeField] public Camera syncedCamera;
     [SerializeField] public CinemachineCamera navigationVirtualCamera;
     [SerializeField] public CinemachineConfiner2D navigationConfiner2D;
 
