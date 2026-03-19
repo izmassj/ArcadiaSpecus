@@ -185,7 +185,7 @@ public class CornerDetector : MonoBehaviour
                 return CornerInteractionType.NonBuildable;
 
             RoomManager ownRoomManager = GetComponent<RoomManager>();
-            RoomManager collidingRoomManager = corner.DetectedCorner.transform.root.GetComponent<RoomManager>();
+            RoomManager collidingRoomManager = corner.DetectedCorner.transform.root.GetComponent<RoomManager>();    
 
             if (ownRoomManager != null && collidingRoomManager != null)
             {
