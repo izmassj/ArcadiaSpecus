@@ -26,7 +26,8 @@ public class PlaceMachineState : PlayerBunkerState
         }
 
         if (!playerManager.UI.IsMachineButtonsBlockPanelEnabled()) 
-        { 
+        {
+            playerManager.UI.SetMachineButtonsTextChooseRoom();
             playerManager.UI.EnableMachineButtonsBlockPanel();
         }
 
@@ -47,7 +48,17 @@ public class PlaceMachineState : PlayerBunkerState
                 _isFocusing = true;
                 _currentRoom.GetComponent<RoomManager>().FocusRoom();
                 _currentRoom.DeactivateOutline(playerManager.defaultLayer);
-                playerManager.UI.DisableMachineButtonsBlockPanel();
+
+                if (_currentRoom.GetComponent<RoomManager>().IsRoomOccupied())
+                {
+                    playerManager.UI.SetMachineButtonsTextOccupiedRoom();
+                    playerManager.UI.EnableMachineButtonsBlockPanel();
+                }
+                else
+                {
+                    playerManager.UI.SetMachineButtonsTextChooseRoom();
+                    playerManager.UI.DisableMachineButtonsBlockPanel();
+                }
             }
         }
 
@@ -115,5 +126,10 @@ public class PlaceMachineState : PlayerBunkerState
     public override void Update()
     {
         RoomRaycasting();
+    }
+
+    public RoomManager GetCurrentRoom()
+    {
+        return _currentRoom;
     }
 }

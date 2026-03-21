@@ -2,6 +2,7 @@ using DG.Tweening;
 using LineworkLite.FreeOutline;
 using NUnit.Framework;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Purchasing;
 
@@ -15,7 +16,7 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private int _outlineWidth;
 
     [Header("Positioning")]
-    [SerializeField] private bool _placed;
+    [SerializeField] private Transform _objectPlacePosition;
 
     [Header("Refs")]
     [SerializeField] private CornerDetector _cornerDetector;
@@ -32,13 +33,21 @@ public class RoomManager : MonoBehaviour
     [SerializeField] Color _nonBuildableColor;
     [SerializeField] Color _staticColor;
 
+    [Header("Occupation")]
+    [SerializeField] private bool _placed;
+    [SerializeField] private bool _occupied;
+
+
     [HideInInspector] public CornerInteractionType cornerInteractionType;
 
     private bool _focusedRoom;
 
+    private GameObject _currentMachine;
+
     private void Start()
     {
         _focusedRoom = false;
+        _currentMachine = null;
     }
 
     void Update()
@@ -128,6 +137,11 @@ public class RoomManager : MonoBehaviour
         return _focusedRoom; 
     }
 
+    public bool IsRoomOccupied()
+    {
+        return _occupied;
+    }
+
     public void FocusRoom()
     {
         _focusedRoom = true;
@@ -138,5 +152,17 @@ public class RoomManager : MonoBehaviour
     {
         _focusedRoom = false;
         CameraBunkerManager.Instance.MoveCameraToOriginalPos();
+    }
+
+    public void InstatiateMachine(GameObject machine)
+    {
+        if (machine.GetComponent<MachineManager>() != null)
+        {
+            if (!_occupied)
+            {
+                _occupied = true;
+                Instantiate(machine, _objectPlacePosition);
+            }
+        }
     }
 }

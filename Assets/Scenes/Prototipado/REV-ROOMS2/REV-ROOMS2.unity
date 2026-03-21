@@ -163,7 +163,7 @@ GameObject:
   - component: {fileID: 125129466}
   - component: {fileID: 125129465}
   m_Layer: 5
-  m_Name: WaterStationButton
+  m_Name: 'FoodStationButton '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -232,7 +232,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 125129466}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnPlaceSpecificMachineButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 5
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &125129466
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1164,7 +1176,6 @@ GameObject:
   m_Component:
   - component: {fileID: 402358818}
   - component: {fileID: 402358820}
-  - component: {fileID: 402358819}
   m_Layer: 5
   m_Name: PlaceMachinesPanel
   m_TagString: Untagged
@@ -1184,6 +1195,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 691732857}
   - {fileID: 1044202055}
   - {fileID: 927083919}
   - {fileID: 1650419571}
@@ -1199,36 +1211,6 @@ RectTransform:
   m_AnchoredPosition: {x: -93.97351, y: 0}
   m_SizeDelta: {x: 772.0499, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &402358819
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 402358817}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.2509804}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 0.15
 --- !u!222 &402358820
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1711,7 +1693,7 @@ GameObject:
   - component: {fileID: 485623035}
   - component: {fileID: 485623034}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: PanelInfo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1734,7 +1716,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -169.103, y: -89.3484}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &485623034
 MonoBehaviour:
@@ -1756,7 +1738,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Selecciona una habitaci\xF3n para poner una maquina"
+  m_text: "Selecciona una habitaci\xF3n para poner una maquina."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1986,7 +1968,7 @@ GameObject:
   - component: {fileID: 566067993}
   - component: {fileID: 566067992}
   m_Layer: 5
-  m_Name: BedroomStationButton
+  m_Name: WaterStationButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2055,7 +2037,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 566067993}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnPlaceSpecificMachineButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 6
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &566067993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2149,7 +2143,7 @@ MonoBehaviour:
   typeOfRoom: 2
   outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
   _outlineWidth: 6
-  _placed: 1
+  _objectPlacePosition: {fileID: 2102197566}
   _cornerDetector: {fileID: 568042025}
   _modelRenderer: {fileID: 1522940685}
   _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
@@ -2158,6 +2152,8 @@ MonoBehaviour:
   _buildableColor: {r: 0.8191824, g: 1, b: 0.5990566, a: 1}
   _nonBuildableColor: {r: 1, g: 0.50251573, b: 0.43867922, a: 1}
   _staticColor: {r: 1, g: 1, b: 1, a: 1}
+  _placed: 1
+  _occupied: 0
   cornerInteractionType: 0
 --- !u!54 &568042027
 Rigidbody:
@@ -2239,7 +2235,7 @@ GameObject:
   - component: {fileID: 590866225}
   - component: {fileID: 590866224}
   m_Layer: 5
-  m_Name: FoodStationButton
+  m_Name: BedroomStationButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2308,7 +2304,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 590866225}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnPlaceSpecificMachineButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 4
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &590866225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2480,7 +2488,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Water
+  m_text: 'Food
 
     Station'
   m_isRightToLeft: 0
@@ -2619,7 +2627,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Electri.
+  m_text: 'Water
 
     Mach.'
   m_isRightToLeft: 0
@@ -2767,6 +2775,81 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &691732856
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 691732857}
+  - component: {fileID: 691732859}
+  - component: {fileID: 691732858}
+  m_Layer: 5
+  m_Name: BackgroundPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &691732857
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 691732856}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 402358818}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -7.5, y: 0}
+  m_SizeDelta: {x: -15, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &691732858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 691732856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 0
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.15
+--- !u!222 &691732859
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 691732856}
+  m_CullTransparentMesh: 1
 --- !u!1001 &699479610
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3807,7 +3890,7 @@ GameObject:
   - component: {fileID: 927083921}
   - component: {fileID: 927083920}
   m_Layer: 5
-  m_Name: WaterMachineButton
+  m_Name: 'ScrapMachineButton '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3876,7 +3959,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 927083921}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnPlaceSpecificMachineButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &927083921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4117,7 +4212,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Bed
+  m_text: 'Water
 
     Station'
   m_isRightToLeft: 0
@@ -4383,7 +4478,7 @@ GameObject:
   - component: {fileID: 1044202057}
   - component: {fileID: 1044202056}
   m_Layer: 5
-  m_Name: ElectricityMachineButton
+  m_Name: WaterMachineButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4452,7 +4547,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1044202057}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnPlaceSpecificMachineButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1044202057
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5001,7 +5108,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Scrap
+  m_text: 'Electri.
 
     Mach.'
   m_isRightToLeft: 0
@@ -6156,7 +6263,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1650419573}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnPlaceSpecificMachineButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1650419573
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6370,7 +6489,7 @@ GameObject:
   - component: {fileID: 1781887907}
   - component: {fileID: 1781887906}
   m_Layer: 5
-  m_Name: ScrapMachineButton
+  m_Name: ElectricityMachineButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6439,7 +6558,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1781887907}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2004328271}
+        m_TargetAssemblyTypeName: PlayerBunkerUIManager, Assembly-CSharp
+        m_MethodName: OnPlaceSpecificMachineButtonPressed
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1781887907
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6859,7 +6990,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Food
+  m_text: 'Bed
 
     Station'
   m_isRightToLeft: 0
@@ -7029,7 +7160,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Water
+  m_text: 'Scrap
 
     Mach.'
   m_isRightToLeft: 0
@@ -7249,7 +7380,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
   mainCamera: {fileID: 1435736952}
-  syncedCamera: {fileID: 1435736952}
   navigationVirtualCamera: {fileID: 1040237740}
   navigationConfiner2D: {fileID: 1040237742}
   machinesPrefab:
@@ -7262,6 +7392,9 @@ MonoBehaviour:
     - {fileID: 1691938523932972, guid: 94c9f8e38367ae34fb8ce147cfb4c201, type: 3}
     - {fileID: 1957870760614942, guid: f865f100c8ad72f40b79a7784c68f64e, type: 3}
     - {fileID: 1423445880175314, guid: fb282f302e96ea24686dda923bf8cb72, type: 3}
+  chooseRoomText: "Selecciona una habitaci\xF3n para poner una maquina."
+  occupiedRoomText: "Esta habitaci\xF3n est\xE1 ocupada, selecciona una vac\xEDa
+    o destruye la maquina en esta habitaci\xF3n."
   cameraMouseSensitivity: 1
   cameraInvert: 0
   cameraStickSpeed: 12
@@ -7364,6 +7497,7 @@ MonoBehaviour:
   _leftRoomButton: {fileID: 266450439}
   _intersectionButton: {fileID: 272335127}
   _placeMachinesPanel: {fileID: 402358818}
+  _placeMachineText: {fileID: 485623034}
   _deactivatedMachineButtonsPanel: {fileID: 1844351252}
   _electricityMachineButton: {fileID: 1044202056}
   _waterMachineButton: {fileID: 927083920}

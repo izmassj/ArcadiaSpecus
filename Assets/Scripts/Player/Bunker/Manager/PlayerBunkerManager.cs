@@ -1,6 +1,7 @@
 using LineworkLite.FreeOutline;
 using System;
 using System.Collections.Generic;
+using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,6 +15,10 @@ public class PlayerBunkerManager : MonoBehaviour
 
     [Header("Place Machine State - Prefabs")]
     [SerializeField] public MachineKindGameObjectDictionary machinesPrefab;
+
+    [Header("Place Machine State - Text")]
+    [SerializeField] public string chooseRoomText;
+    [SerializeField] public string occupiedRoomText;
 
     [Header("Navigate State - Mouse Drag")]
     [SerializeField] public float cameraMouseSensitivity;

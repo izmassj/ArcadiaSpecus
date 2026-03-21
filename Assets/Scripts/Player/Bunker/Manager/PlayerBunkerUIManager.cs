@@ -1,4 +1,5 @@
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,6 +24,9 @@ public class PlayerBunkerUIManager : MonoBehaviour
 
     [Header("Construction - Place Machines Panel")]
     [SerializeField] private RectTransform _placeMachinesPanel;
+
+    [Header("Construction - Place Machines Text")]
+    [SerializeField] private TMP_Text _placeMachineText;
 
     [Header("Construction - Deactivated Buttons Machines Panel")]
     [SerializeField] private RectTransform _deactivatedMachineButtonsPanel;
@@ -88,6 +92,24 @@ public class PlayerBunkerUIManager : MonoBehaviour
         }
     }
 
+    public void OnPlaceSpecificMachineButtonPressed(int kind)
+    {
+        if (_playerManager.GetCurrentState() is PlaceMachineState placeMachineState)
+        {
+            placeMachineState.GetCurrentRoom().InstatiateMachine(_playerManager.machinesPrefab[(MachineKind)kind]);
+        }
+    }
+
+    public void SetMachineButtonsTextChooseRoom()
+    {
+        _placeMachineText.text = _playerManager.chooseRoomText;
+    }
+
+    public void SetMachineButtonsTextOccupiedRoom()
+    {
+        _placeMachineText.text = _playerManager.occupiedRoomText;
+    }
+
     public bool IsMachineButtonsBlockPanelEnabled()
     {
         return _deactivatedMachineButtonsPanel.gameObject.activeInHierarchy;
@@ -114,7 +136,7 @@ public class PlayerBunkerUIManager : MonoBehaviour
         foreach (Transform child in _placeMachinesPanel.transform)
         {
             if (child.GetComponent<Button>() == null)
-                return;
+                continue;
 
             child.GetComponent<Button>().interactable = false; 
         }
@@ -125,7 +147,7 @@ public class PlayerBunkerUIManager : MonoBehaviour
         foreach (Transform child in _placeMachinesPanel.transform)
         {
             if (child.GetComponent<Button>() == null)
-                return;
+                continue;
 
             child.GetComponent<Button>().interactable = true;
         }

@@ -253,7 +253,7 @@ MonoBehaviour:
   typeOfRoom: 2
   outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
   _outlineWidth: 6
-  _placed: 0
+  _objectPlacePosition: {fileID: 2284010487265003725}
   _cornerDetector: {fileID: 8034104835539783522}
   _modelRenderer: {fileID: 5125552036170901664}
   _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
@@ -262,6 +262,8 @@ MonoBehaviour:
   _buildableColor: {r: 0.8191824, g: 1, b: 0.5990566, a: 1}
   _nonBuildableColor: {r: 1, g: 0.50251573, b: 0.43867922, a: 1}
   _staticColor: {r: 1, g: 1, b: 1, a: 1}
+  _placed: 0
+  _occupied: 0
   cornerInteractionType: 0
 --- !u!114 &8034104835539783522
 MonoBehaviour:
