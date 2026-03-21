@@ -13,6 +13,9 @@ public class PlayerBunkerManager : MonoBehaviour
     [SerializeField] public CinemachineCamera navigationVirtualCamera;
     [SerializeField] public CinemachineConfiner2D navigationConfiner2D;
 
+    [Header("Build Room State - Managers")]
+    [SerializeField] public IntersectionManager intersectionManager;
+
     [Header("Place Machine State - Prefabs")]
     [SerializeField] public MachineKindGameObjectDictionary machinesPrefab;
 

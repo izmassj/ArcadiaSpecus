@@ -45,6 +45,13 @@ public class BuildRoomState : PlayerBunkerState
     {
         GameObject prefabRoom = playerManager.prefabsRoom[kind];
 
+        if (kind == RoomKind.Intersection)
+        {
+            playerManager.intersectionManager.AddIntersection(prefabRoom);
+            playerManager.ChangeState(playerManager.navigateState);
+            return;
+        }
+
         _currentGameObject = Object.Instantiate(prefabRoom, _currentRoomPosition, Quaternion.identity);
         _currentGameObject.GetComponent<RoomManager>().SetOnRoomBuildMaterial();
     }
