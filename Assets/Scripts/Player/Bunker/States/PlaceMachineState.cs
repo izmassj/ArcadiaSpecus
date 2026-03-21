@@ -66,6 +66,7 @@ public class PlaceMachineState : PlayerBunkerState
         {
             _isFocusing = false;
             _currentRoom.GetComponent<RoomManager>().UnFocusRoom();
+            playerManager.UI.SetMachineButtonsTextChooseRoom();
             playerManager.UI.EnableMachineButtonsBlockPanel();
         }
     }
