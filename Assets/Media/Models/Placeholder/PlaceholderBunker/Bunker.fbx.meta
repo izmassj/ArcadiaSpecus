@@ -1,0 +1,290 @@
+fileFormatVersion: 2
+guid: b16f1f7e70db15249887b552b39963d2
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ACUnitNSafe
+    second: {fileID: 2100000, guid: 663fff28483e1f24fadeec4bb4bf721d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ComputerNCam
+    second: {fileID: 2100000, guid: 00a5f12008d9822458babda858eb1161, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Correspondence
+    second: {fileID: 2100000, guid: cff1634f6df29844c97ce7be3f2cb688, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DoorsVents
+    second: {fileID: 2100000, guid: eda82ef6c0d0bc94b8291c297df81cdd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: FloorGrass
+    second: {fileID: 2100000, guid: 752c65efa3b77c64fbf809ce69e27fa9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GrassTransp
+    second: {fileID: 2100000, guid: 65fb0cbad8ae94043a5fe70fb1505e9b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LightNTransparency
+    second: {fileID: 2100000, guid: 111e407ba07419e43aa48ffd8408a749, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LightReflectd
+    second: {fileID: 2100000, guid: 7aab6889c6649494aa76616ceb8277bd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MetalFloor
+    second: {fileID: 2100000, guid: 836fed0dc007c6f43aa9fbe46d0e792a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PultNPeripherals
+    second: {fileID: 2100000, guid: 8735bf22cd82e714fa33823325ac753f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Roof
+    second: {fileID: 2100000, guid: 102116e1541420d4ca8ee298d09c000f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shadows
+    second: {fileID: 2100000, guid: 59c8f6f39ee851b498b848e071eefc47, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TVsNshit
+    second: {fileID: 2100000, guid: 24106e0ac840c5541a44eb280cfcfd84, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TrashCanMat
+    second: {fileID: 2100000, guid: b7feeb684b6924742bf5355981cb80c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TreeMat
+    second: {fileID: 2100000, guid: 3e72a0c4d56e7d5489d85a6b1be32568, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TvScreens
+    second: {fileID: 2100000, guid: 67ac2aa64b59ed94aac409a80702e693, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wall
+    second: {fileID: 2100000, guid: 919a6427bfa2d2b4fa208c29e1e156a1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WoodNPaper
+    second: {fileID: 2100000, guid: 4df186f183b2ffd4e8569d12f155bd15, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ACUnitNSafe_albedo
+    second: {fileID: 2800000, guid: 57464f505ce4a6b4183a9e28102c45a4, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ComputerNCam_albedo
+    second: {fileID: 2800000, guid: e1bd115d707a9834b839563649e987ed, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Correspondence_albedo
+    second: {fileID: 2800000, guid: cd9ee3bb8daea4749ab14d5304784797, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: DoorsVents_albedo
+    second: {fileID: 2800000, guid: 7c6d7c846e8b2084fbc946e120398b7b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: FloorGrass_albedo
+    second: {fileID: 2800000, guid: 15962e1b2d13c8f489a18d0cd5f3f431, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: GrassTransp_albedo
+    second: {fileID: 2800000, guid: cd9b2b6cccdd1c642b10a4a23857f488, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: GrassTransp_opacity
+    second: {fileID: 2800000, guid: 884d78fe89ef87649b2e9f5de568525c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LightNTransparency_albedo
+    second: {fileID: 2800000, guid: 891b5f914f0c7464fabf74bf037f0bc2, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LightNTransparency_opacity
+    second: {fileID: 2800000, guid: f028abdc7437e9540b91a4a238cefbe9, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: MetalFloor_albedo
+    second: {fileID: 2800000, guid: 040ff452556214643ae8b6d915a54567, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: PultNPeripherals_albedo
+    second: {fileID: 2800000, guid: 5026b7489c6352c4cb1cfebca60ba77b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Roof_albedo
+    second: {fileID: 2800000, guid: 98825b76e08b79b42ab5d36a16a94821, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shadows_opacityInverted
+    second: {fileID: 2800000, guid: a3103863978ca044f8faf273c7a35508, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: TVScreens_emissive
+    second: {fileID: 2800000, guid: 5a6ceb3d51980db409b92ff06b0eea19, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: TVsNshit_albedo
+    second: {fileID: 2800000, guid: 6e8ecfa93d7fdb0489bc1d938de350f8, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: TreeMat_albedo
+    second: {fileID: 2800000, guid: 4d96cfc105cfc5b4bafc0033bec93215, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Wall_albedo
+    second: {fileID: 2800000, guid: 33af18462a6ae9749a16f738412648d1, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: WoodNPaper_albedo
+    second: {fileID: 2800000, guid: 7a26de8476cf40b4aa539a246d6527ad, type: 3}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
