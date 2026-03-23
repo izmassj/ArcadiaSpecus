@@ -191,7 +191,7 @@ MonoBehaviour:
   typeOfRoom: 3
   outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
   _outlineWidth: 6
-  _objectPlacePosition: {fileID: 7927541235868188953}
+  _objectPlacePosition: {fileID: 5639556044248862318}
   _cornerDetector: {fileID: -5798445500930681777}
   _modelRenderer: {fileID: 4075378811539830109}
   _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
