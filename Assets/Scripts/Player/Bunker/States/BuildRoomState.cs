@@ -1,5 +1,3 @@
-using System.Linq;
-using UnityEditor;
 using UnityEngine;
 
 public class BuildRoomState : PlayerBunkerState
@@ -17,8 +15,8 @@ public class BuildRoomState : PlayerBunkerState
 
     public override void Exit()
     {
-        if (_currentGameObject != null && !_currentGameObject.GetComponent<RoomManager>().GetPlaced()) 
-        { 
+        if (_currentGameObject != null && !_currentGameObject.GetComponent<RoomManager>().GetPlaced())
+        {
             Object.Destroy(_currentGameObject);
         }
         else
@@ -29,13 +27,18 @@ public class BuildRoomState : PlayerBunkerState
 
     public override void HandleInput()
     {
-        if (_currentGameObject != null) 
-        { 
-            if (playerManager.confirmInputAction.triggered && _currentGameObject.GetComponent<RoomManager>().cornerInteractionType == CornerInteractionType.Buildable) 
+        if (_currentGameObject != null)
+        {
+            if (playerManager.confirmInputAction.triggered && _currentGameObject.GetComponent<RoomManager>().cornerInteractionType == CornerInteractionType.Buildable)
             {
-                _currentGameObject.GetComponent<RoomManager>().SetPlaced();
-                _currentGameObject.GetComponent<RoomManager>().SetOriginalMaterial();
-                _currentGameObject.GetComponent<CornerDetector>().SnapToDetectedCorner(playerManager.roomPlacementDistance);
+                RoomManager roomManager = _currentGameObject.GetComponent<RoomManager>();
+                CornerDetector cornerDetector = _currentGameObject.GetComponent<CornerDetector>();
+
+                roomManager.SetPlaced();
+                roomManager.SetOriginalMaterial();
+                cornerDetector.SnapToDetectedCorner(playerManager.roomPlacementDistance);
+                roomManager.ResolveRailAfterPlacement();
+
                 playerManager.ChangeState(playerManager.navigateState);
             }
         }

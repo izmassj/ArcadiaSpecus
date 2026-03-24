@@ -1,12 +1,10 @@
 using DG.Tweening;
 using LineworkLite.FreeOutline;
-using NUnit.Framework;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Purchasing;
 
-public class RoomManager : MonoBehaviour 
+public class RoomManager : MonoBehaviour
 {
     [Header("Parameters")]
     [SerializeField] public RoomKind typeOfRoom;
@@ -37,12 +35,26 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private bool _placed;
     [SerializeField] private bool _occupied;
 
+    [Header("Rail")]
+    [SerializeField] private List<Transform> _railPoints = new();
+    [SerializeField] private IntersectionSplineExpander _railOwner;
 
     [HideInInspector] public CornerInteractionType cornerInteractionType;
 
     private bool _focusedRoom;
-
+    private bool _railRegistered;
     private GameObject _currentMachine;
+    public GameObject originalIntersectionFloor;
+
+    public int RailPointCount => _railPoints != null ? _railPoints.Count : 0;
+
+    private void Awake()
+    {
+        if (typeOfRoom == RoomKind.Intersection && _railOwner == null)
+        {
+            _railOwner = GetComponent<IntersectionSplineExpander>();
+        }
+    }
 
     private void Start()
     {
@@ -134,7 +146,7 @@ public class RoomManager : MonoBehaviour
 
     public bool IsRoomFocused()
     {
-        return _focusedRoom; 
+        return _focusedRoom;
     }
 
     public bool IsRoomOccupied()
@@ -164,5 +176,97 @@ public class RoomManager : MonoBehaviour
                 Instantiate(machine, _objectPlacePosition);
             }
         }
+
+        if (_cornerDetector.GetForeignRoom() != null)
+        {
+            var foreign = _cornerDetector.GetForeignRoom();
+            if (foreign.GetComponent<RoomManager>().originalIntersectionFloor != null)
+            {
+
+            }
+
+            if (_cornerDetector.GetForeignRoom().GetComponent<RoomManager>().typeOfRoom == RoomKind.Intersection)
+            {
+                originalIntersectionFloor = _cornerDetector.GetForeignRoom();
+                if (originalIntersectionFloor.GetComponent<IntersectionSplineExpander>() != null)
+                {
+
+                }
+            }
+        } else if (originalIntersectionFloor != null)
+        {
+
+        }
+    }
+
+    public Transform GetRailPoint(int index)
+    {
+        if (_railPoints == null || index < 0 || index >= _railPoints.Count)
+            return null;
+
+        return _railPoints[index];
+    }
+
+    public IntersectionSplineExpander GetRailOwner()
+    {
+        return _railOwner;
+    }
+
+    public void SetRailOwner(IntersectionSplineExpander railOwner)
+    {
+        _railOwner = railOwner;
+    }
+
+    public void ResolveRailAfterPlacement()
+    {
+        if (_railRegistered || typeOfRoom == RoomKind.Intersection)
+            return;
+
+        GameObject foreignRoomObject = _cornerDetector != null ? _cornerDetector.GetForeignRoom() : null;
+
+        if (foreignRoomObject == null)
+            return;
+
+        RoomManager foreignRoomManager = foreignRoomObject.GetComponent<RoomManager>();
+
+        if (foreignRoomManager == null)
+            return;
+
+        IntersectionSplineExpander owner = foreignRoomManager.GetRailOwner();
+
+        if (owner == null && foreignRoomManager.typeOfRoom == RoomKind.Intersection)
+        {
+            owner = foreignRoomManager.GetComponent<IntersectionSplineExpander>();
+        }
+
+        if (owner == null)
+            return;
+
+        _railOwner = owner;
+
+        if (RailPointCount == 0)
+            return;
+
+        bool reverseOrder = ShouldAppendReversed(owner);
+        owner.AppendRoom(this, reverseOrder);
+        _railRegistered = true;
+    }
+
+    private bool ShouldAppendReversed(IntersectionSplineExpander owner)
+    {
+        if (owner == null || RailPointCount == 0)
+            return false;
+
+        if (!owner.HasAnyKnot() || RailPointCount == 1)
+            return false;
+
+        Vector3 railEndPosition = owner.GetLastWorldPosition();
+        Vector3 firstPointPosition = _railPoints[0].position;
+        Vector3 lastPointPosition = _railPoints[RailPointCount - 1].position;
+
+        float distanceToFirst = Vector3.Distance(railEndPosition, firstPointPosition);
+        float distanceToLast = Vector3.Distance(railEndPosition, lastPointPosition);
+
+        return distanceToLast < distanceToFirst;
     }
 }
