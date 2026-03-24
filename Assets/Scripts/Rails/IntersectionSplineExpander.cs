@@ -9,84 +9,41 @@ public class IntersectionSplineExpander : MonoBehaviour
 
     public SplineContainer SplineContainer => _splineContainer;
 
-    public bool HasValidSpline()
+    public void AppendRoom(RoomManager room, bool skipFirstPoint = true)
     {
-        return _splineContainer != null && _splineContainer.Spline != null;
-    }
-
-    public bool HasAnyKnot()
-    {
-        return HasValidSpline() && _splineContainer.Spline.Count > 0;
-    }
-
-    public Vector3 GetLastWorldPosition()
-    {
-        if (!HasAnyKnot())
-            return transform.position;
-
-        Spline spline = _splineContainer.Spline;
-        float3 localPosition = spline[spline.Count - 1].Position;
-        return _splineContainer.transform.TransformPoint((Vector3)localPosition);
-    }
-
-    public void AppendRoom(RoomManager roomManager, bool reverseOrder)
-    {
-        if (!HasValidSpline() || roomManager == null || roomManager.RailPointCount == 0)
+        if (_splineContainer == null || room == null || !room.HasRailPoints())
             return;
 
         Spline spline = _splineContainer.Spline;
-        bool skipConnectedEndPoint = spline.Count > 0;
+        var railPoints = room.RailPoints;
+        int startIndex = skipFirstPoint ? 1 : 0;
 
-        if (reverseOrder)
+        for (int i = startIndex; i < railPoints.Count; i++)
         {
-            int startIndex = skipConnectedEndPoint ? roomManager.RailPointCount - 2 : roomManager.RailPointCount - 1;
+            Transform point = railPoints[i];
 
-            for (int i = startIndex; i >= 0; i--)
-            {
-                Transform point = roomManager.GetRailPoint(i);
+            if (point == null)
+                continue;
 
-                if (point == null)
-                    continue;
+            float3 localPosition = (float3)_splineContainer.transform.InverseTransformPoint(point.position);
 
-                TryAddPoint(spline, point.position);
-            }
-        }
-        else
-        {
-            int startIndex = skipConnectedEndPoint ? 1 : 0;
+            if (IsDuplicateOfLastKnot(spline, localPosition))
+                continue;
 
-            for (int i = startIndex; i < roomManager.RailPointCount; i++)
-            {
-                Transform point = roomManager.GetRailPoint(i);
-
-                if (point == null)
-                    continue;
-
-                TryAddPoint(spline, point.position);
-            }
+            spline.Add(new BezierKnot(localPosition), TangentMode.Linear);
         }
 
-        spline.SetTangentMode(TangentMode.Linear);
         spline.Closed = false;
+        room.SetRailOwner(this);
     }
 
     [ContextMenu("Clear Spline")]
     public void ClearSpline()
     {
-        if (!HasValidSpline())
+        if (_splineContainer == null)
             return;
 
         _splineContainer.Spline.Clear();
-    }
-
-    private void TryAddPoint(Spline spline, Vector3 worldPosition)
-    {
-        float3 localPosition = (float3)_splineContainer.transform.InverseTransformPoint(worldPosition);
-
-        if (IsDuplicateOfLastKnot(spline, localPosition))
-            return;
-
-        spline.Add(new BezierKnot(localPosition), TangentMode.Linear);
     }
 
     private bool IsDuplicateOfLastKnot(Spline spline, float3 localPosition)

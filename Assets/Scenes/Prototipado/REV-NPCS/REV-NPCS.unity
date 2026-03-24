@@ -119,17 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &71543984 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-  m_PrefabInstance: {fileID: 699479610}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dab5c7d4c32e743048dfca98e2d5914f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Splines::UnityEngine.Splines.SplineContainer
 --- !u!1 &87171820
 GameObject:
   m_ObjectHideFlags: 0
@@ -761,38 +750,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1186603257}
     m_Modifications:
-    - target: {fileID: -2714958276269511650, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: _placed
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_MetaData.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_MetaData.Array.data[0].Mode
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_MetaData.Array.data[0].Tension
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.data[0].TangentIn.z
-      value: -1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.data[0].TangentOut.z
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.data[0].Rotation.value.w
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Name
       value: Floor1
@@ -837,10 +794,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7994997720342746844, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: _splineContainer
-      value: 
-      objectReference: {fileID: 1037321420}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2709,45 +2662,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1186603257}
     m_Modifications:
-    - target: {fileID: -2714958276269511650, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: _placed
+    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_Splines.Array.data[0].m_ObjectData.m_Data.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_MetaData.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_MetaData.Array.data[0].Mode
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_MetaData.Array.data[0].Tension
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.data[0].TangentIn.z
-      value: -1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.data[0].TangentOut.z
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_Splines.Array.data[0].m_Knots.Array.data[0].Rotation.value.w
-      value: 1
+      propertyPath: m_Splines.Array.data[0].m_ObjectData.m_Data.Array.data[0].Key
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 3548510308215117091, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Name
       value: Floor2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4013021137285665468, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -230
       objectReference: {fileID: 0}
     - target: {fileID: 5119897850601132777, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2789,10 +2714,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7994997720342746844, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-      propertyPath: _splineContainer
-      value: 
-      objectReference: {fileID: 71543984}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4043,17 +3964,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1026497802}
   m_CullTransparentMesh: 1
---- !u!114 &1037321420 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-  m_PrefabInstance: {fileID: 271932732}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dab5c7d4c32e743048dfca98e2d5914f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Splines::UnityEngine.Splines.SplineContainer
 --- !u!1 &1038128717
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 495847162291588915}
   - component: {fileID: -2714958276269511650}
   - component: {fileID: 8875153151868775149}
-  - component: {fileID: 7994997720342746844}
+  - component: {fileID: 582857042900793531}
   m_Layer: 7
   m_Name: Intersection
   m_TagString: Untagged
@@ -110,8 +110,12 @@ MonoBehaviour:
   _buildableColor: {r: 0.8191824, g: 1, b: 0.5990566, a: 1}
   _nonBuildableColor: {r: 1, g: 0.50251573, b: 0.43867922, a: 1}
   _staticColor: {r: 1, g: 1, b: 1, a: 1}
-  _placed: 0
+  _placed: 1
   _occupied: 0
+  _railPoints: []
+  _skipFirstRailPointOnAppend: 1
+  _railOwner: {fileID: 0}
+  _registeredToRail: 0
   cornerInteractionType: 0
 --- !u!114 &8875153151868775149
 MonoBehaviour:
@@ -133,7 +137,7 @@ MonoBehaviour:
   _cornersDetected:
     m_keys: 
     m_values: 
---- !u!114 &7994997720342746844
+--- !u!114 &582857042900793531
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -142,11 +146,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 3548510308215117091}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7aad185de25692343acd7162a2e877b1, type: 3}
+  m_Script: {fileID: 11500000, guid: 50a758d165cf95447a55f5b5d7f23380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IntersectionSplineExpander
-  splineContainer: {fileID: 3416335303000587473}
-  duplicatePointDistance: 0.01
+  _splineContainer: {fileID: 3416335303000587473}
+  _duplicatePointDistance: 0.01
 --- !u!1 &5444585497677808811
 GameObject:
   m_ObjectHideFlags: 0
@@ -296,8 +300,28 @@ MonoBehaviour:
       m_Data: []
   m_Splines:
   - m_EditModeType: 1
-    m_Knots: []
-    m_MetaData: []
+    m_Knots:
+    - Position:
+        x: 0
+        y: 0
+        z: 0
+      TangentIn:
+        x: 0
+        y: 0
+        z: -1
+      TangentOut:
+        x: 0
+        y: 0
+        z: 1
+      Rotation:
+        value:
+          x: 0
+          y: 0
+          z: 0
+          w: 1
+    m_MetaData:
+    - Mode: 2
+      Tension: 0.5
     m_Closed: 0
     m_IntData:
       m_Data: []

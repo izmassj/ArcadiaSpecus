@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.UI.GridLayoutGroup;
@@ -104,18 +103,34 @@ public class CornerDetector : MonoBehaviour
             _foreignRoom = null;
             return;
         }
-        else
+
+        _foreignRoom = null;
+
+        for (int i = 0; i < _corners.Length; i++)
         {
-            _foreignRoom = _corners[0].Parent;
+            CornerTrigger corner = _corners[i];
+
+            if (corner == null)
+                continue;
+
+            _cornersDetected[corner.type] = corner.IsTouching;
+
+            if (_foreignRoom != null)
+                continue;
+
+            if (!corner.IsTouching)
+                continue;
+
+            if (corner.DetectedCorner == null)
+                continue;
+
+            GameObject foreignRoom = corner.DetectedCorner.gameObject.transform.parent.gameObject.transform.parent.gameObject;
+
+            if (foreignRoom == gameObject)
+                continue;
+
+            _foreignRoom = foreignRoom;
         }
-
-            for (int i = 0; i < _corners.Length; i++)
-            {
-                if (_corners[i] == null)
-                    continue;
-
-                _cornersDetected[_corners[i].type] = _corners[i].IsTouching;
-            }
     }
 
     public void SnapToDetectedCorner(float distance)
@@ -185,7 +200,7 @@ public class CornerDetector : MonoBehaviour
                 return CornerInteractionType.NonBuildable;
 
             RoomManager ownRoomManager = GetComponent<RoomManager>();
-            RoomManager collidingRoomManager = corner.DetectedCorner.transform.root.GetComponent<RoomManager>();    
+            RoomManager collidingRoomManager = corner.DetectedCorner.transform.root.GetComponent<RoomManager>();
 
             if (ownRoomManager != null && collidingRoomManager != null)
             {
@@ -286,10 +301,6 @@ public class CornerDetector : MonoBehaviour
 
     public GameObject GetForeignRoom()
     {
-        if (_foreignRoom != null)
-        {
-            return _foreignRoom; 
-        }
-        return null;
+        return _foreignRoom;
     }
 }

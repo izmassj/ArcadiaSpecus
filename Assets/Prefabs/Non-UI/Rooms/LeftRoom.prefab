@@ -361,7 +361,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5566114921524797304}
-  - component: {fileID: 2337889822923027422}
+  - component: {fileID: 8820500283663842320}
   m_Layer: 0
   m_Name: RailPoints
   m_TagString: Untagged
@@ -386,7 +386,7 @@ Transform:
   - {fileID: 7978648316031105533}
   m_Father: {fileID: 5905420240282746819}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2337889822923027422
+--- !u!114 &8820500283663842320
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

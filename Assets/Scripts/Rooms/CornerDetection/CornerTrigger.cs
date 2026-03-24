@@ -1,16 +1,15 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
-
 
 public class CornerTrigger : MonoBehaviour
 {
     private string _cornerName;
-    private int _touchCount;
-    private GameObject _parent;
+    private readonly List<CornerTrigger> _touchingCorners = new();
 
     public CornerType type;
-    public GameObject Parent => _parent;
-    public bool IsTouching => _touchCount > 0;
+    public GameObject Parent { get; private set; }
+    public bool IsTouching => _touchingCorners.Count > 0;
     public string CornerName => _cornerName;
 
     public CornerType? DetectedType { get; private set; }
@@ -20,43 +19,53 @@ public class CornerTrigger : MonoBehaviour
     {
         _cornerName = cornerName;
         type = Enum.Parse<CornerType>(cornerName);
-        DetectedCorner = null;  
+
+        Parent = null;
+        DetectedType = null;
+        DetectedCorner = null;
+        _touchingCorners.Clear();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"Trigger Enter {gameObject.name}");
-
         CornerTrigger otherCorner = other.GetComponent<CornerTrigger>();
 
         if (otherCorner == null)
             return;
 
-        _parent = other.gameObject.transform.parent.gameObject;
+        if (otherCorner.transform.root == transform.root)
+            return;
 
-        _touchCount++;
-        DetectedType = otherCorner.type;
-        DetectedCorner = otherCorner;
+        if (!_touchingCorners.Contains(otherCorner))
+            _touchingCorners.Add(otherCorner);
 
-        Debug.Log($"{transform.root.name} -> esquina {_cornerName} tocando con {otherCorner.transform.root.name}:{otherCorner.CornerName}");
-
+        RefreshDetection();
     }
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log($"Trigger Exit {gameObject.name}");
-
         CornerTrigger otherCorner = other.GetComponent<CornerTrigger>();
 
         if (otherCorner == null)
             return;
 
-        _parent = null;
-        DetectedCorner = null;
+        _touchingCorners.Remove(otherCorner);
 
-        _touchCount = Mathf.Max(0, _touchCount - 1);
+        RefreshDetection();
+    }
 
+    private void RefreshDetection()
+    {
+        if (_touchingCorners.Count == 0)
+        {
+            Parent = null;
+            DetectedType = null;
+            DetectedCorner = null;
+            return;
+        }
 
-        Debug.Log($"{transform.root.name} -> esquina {_cornerName} dejó de tocar con {otherCorner.transform.root.name}:{otherCorner.CornerName}");
+        DetectedCorner = _touchingCorners[0];
+        DetectedType = DetectedCorner.type;
+        Parent = DetectedCorner.transform.root.gameObject;
     }
 }
