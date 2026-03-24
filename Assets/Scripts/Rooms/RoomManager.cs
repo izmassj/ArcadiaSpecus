@@ -1,10 +1,9 @@
 using DG.Tweening;
 using LineworkLite.FreeOutline;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class RoomManager : MonoBehaviour 
+public class RoomManager : MonoBehaviour
 {
     [Header("Parameters")]
     [SerializeField] public RoomKind typeOfRoom;
@@ -36,29 +35,21 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private bool _occupied;
 
     [Header("Rail")]
-    [SerializeField] private List<Transform> _railPoints = new();
-    [SerializeField] private bool _skipFirstRailPointOnAppend = true;
+    [SerializeField] private List<Transform> _railPoints;
     [SerializeField] private IntersectionSplineExpander _railOwner;
-    [SerializeField] private bool _registeredToRail;
+    [SerializeField] private GameObject _originalIntersectionFloor;
+    [SerializeField] private int _branchIndex = -1;
+    [SerializeField] private bool _railRegistered;
 
     [HideInInspector] public CornerInteractionType cornerInteractionType;
 
     private bool _focusedRoom;
     private GameObject _currentMachine;
-    public GameObject _currentFloor;
-
-    public IReadOnlyList<Transform> RailPoints => _railPoints;
 
     private void Start()
     {
         _focusedRoom = false;
         _currentMachine = null;
-        _currentFloor = null;
-
-        if (typeOfRoom == RoomKind.Intersection && _railOwner == null)
-        {
-            _railOwner = GetComponent<IntersectionSplineExpander>();
-        }
     }
 
     void Update()
@@ -75,17 +66,6 @@ public class RoomManager : MonoBehaviour
                 case CornerInteractionType.Buildable:
                     cornerInteractionType = CornerInteractionType.Buildable;
                     _modelRenderer.material.DOColor(_buildableColor, 0.5f);
-
-                    if (_cornerDetector.GetForeignRoom() != null)
-                    {
-                        _currentFloor = _cornerDetector.GetForeignRoom();
-
-                        if (_cornerDetector.GetForeignRoom().GetComponent<RoomManager>().typeOfRoom == RoomKind.Intersection)
-                        {
-                            _railOwner = _currentFloor.GetComponent<IntersectionSplineExpander>();
-                        }
-                    }
-
                     break;
                 case CornerInteractionType.NonBuildable:
                     cornerInteractionType = CornerInteractionType.NonBuildable;
@@ -97,8 +77,6 @@ public class RoomManager : MonoBehaviour
                     break;
             }
         }
-
-
     }
 
     public void SetOnRoomBuildMaterial()
@@ -158,7 +136,7 @@ public class RoomManager : MonoBehaviour
 
     public bool IsRoomFocused()
     {
-        return _focusedRoom; 
+        return _focusedRoom;
     }
 
     public bool IsRoomOccupied()
@@ -190,14 +168,9 @@ public class RoomManager : MonoBehaviour
         }
     }
 
-    public bool HasRailPoints()
+    public List<Transform> GetRailPoints()
     {
-        return _railPoints != null && _railPoints.Count > 0;
-    }
-
-    public bool SkipFirstRailPointOnAppend()
-    {
-        return _skipFirstRailPointOnAppend;
+        return _railPoints;
     }
 
     public IntersectionSplineExpander GetRailOwner()
@@ -205,62 +178,58 @@ public class RoomManager : MonoBehaviour
         return _railOwner;
     }
 
-    public void SetRailOwner(IntersectionSplineExpander railOwner)
+    public GameObject GetOriginalIntersectionFloor()
     {
-        _railOwner = railOwner;
+        return _originalIntersectionFloor;
     }
 
-    public void ResolveRailAfterPlacement()
+    public int GetBranchIndex()
     {
-        if (_registeredToRail)
-            return;
-
-        if (typeOfRoom == RoomKind.Intersection)
-        {
-            if (_railOwner == null)
-            {
-                _railOwner = GetComponent<IntersectionSplineExpander>();
-            }
-
-            return;
-        }
-
-        if (_railOwner == null)
-        {
-            _railOwner = FindRailOwnerFromConnectedRoom();
-        }
-
-        if (_railOwner == null || !HasRailPoints())
-            return;
-
-        _railOwner.AppendRoom(this, _skipFirstRailPointOnAppend);
-        _registeredToRail = true;
+        return _branchIndex;
     }
 
-    private IntersectionSplineExpander FindRailOwnerFromConnectedRoom()
+    public void RegisterToRail()
     {
+        if (_railRegistered)
+            return;
+
         if (_cornerDetector == null)
-            return null;
+            return;
 
-        if (!_cornerDetector.TryGetSnapCorners(out CornerTrigger myCorner, out CornerTrigger otherCorner))
-            return null;
+        GameObject foreignRoom = _cornerDetector.GetForeignRoom();
 
-        if (otherCorner == null)
-            return null;
+        if (foreignRoom == null)
+            return;
 
-        RoomManager connectedRoom = otherCorner.transform.root.GetComponent<RoomManager>();
+        RoomManager foreignRoomManager = foreignRoom.GetComponent<RoomManager>();
 
-        if (connectedRoom == null)
-            return null;
+        if (foreignRoomManager == null)
+            return;
 
-        IntersectionSplineExpander connectedRailOwner = connectedRoom.GetRailOwner();
-
-        if (connectedRailOwner == null && connectedRoom.typeOfRoom == RoomKind.Intersection)
+        if (foreignRoomManager.typeOfRoom == RoomKind.Intersection)
         {
-            connectedRailOwner = connectedRoom.GetComponent<IntersectionSplineExpander>();
-            connectedRoom.SetRailOwner(connectedRailOwner);
+            _originalIntersectionFloor = foreignRoom;
+            _railOwner = foreignRoom.GetComponent<IntersectionSplineExpander>();
+
+            if (_railOwner == null)
+                return;
+
+            _branchIndex = _railOwner.GetOrCreateBranchIndex(transform.position);
+        }
+        else
+        {
+            _originalIntersectionFloor = foreignRoomManager.GetOriginalIntersectionFloor();
+            _railOwner = foreignRoomManager.GetRailOwner();
+            _branchIndex = foreignRoomManager.GetBranchIndex();
         }
 
-        return connectedRailOwner;
+        if (_railOwner == null || _branchIndex < 0)
+            return;
+
+        if (_railPoints == null || _railPoints.Count == 0)
+            return;
+
+        _railOwner.AppendRoomToBranch(this, _branchIndex);
+        _railRegistered = true;
     }
 }

@@ -34,6 +34,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4149815540749260169}
+  - {fileID: 7825829651005462103}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &8976645118328633135
@@ -99,7 +100,7 @@ MonoBehaviour:
   typeOfRoom: 4
   outlineSettings: {fileID: 11400000, guid: 08774f15b94f9b34cb4127c38a64a5e6, type: 2}
   _outlineWidth: 6
-  _placed: 0
+  _objectPlacePosition: {fileID: 0}
   _cornerDetector: {fileID: -2320371323929668015}
   _modelRenderer: {fileID: 1537893557989658676}
   _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
@@ -108,6 +109,15 @@ MonoBehaviour:
   _buildableColor: {r: 0.8191824, g: 1, b: 0.5990566, a: 1}
   _nonBuildableColor: {r: 1, g: 0.50251573, b: 0.43867922, a: 1}
   _staticColor: {r: 1, g: 1, b: 1, a: 1}
+  _placed: 0
+  _occupied: 0
+  _railPoints:
+  - {fileID: 2192956986544429327}
+  - {fileID: 434732573594248702}
+  _railOwner: {fileID: 0}
+  _originalIntersectionFloor: {fileID: 0}
+  _branchIndex: -1
+  _railRegistered: 0
   cornerInteractionType: 0
 --- !u!114 &-2320371323929668015
 MonoBehaviour:
@@ -219,3 +229,114 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &5607894248252157568
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 434732573594248702}
+  m_Layer: 0
+  m_Name: RightSplinePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &434732573594248702
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5607894248252157568}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.6842825, y: -74.215, z: -35}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7825829651005462103}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6540384287694887779
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2192956986544429327}
+  m_Layer: 0
+  m_Name: LeftSplinePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2192956986544429327
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6540384287694887779}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.6842825, y: -74.215, z: -35}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7825829651005462103}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9201170811938390939
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7825829651005462103}
+  - component: {fileID: 6189561667194796530}
+  m_Layer: 0
+  m_Name: RoomRails
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7825829651005462103
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9201170811938390939}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.5263567, y: 41.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2192956986544429327}
+  - {fileID: 434732573594248702}
+  m_Father: {fileID: 2862527700036723179}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6189561667194796530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9201170811938390939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fea7b9ccee67532419a68a897495fb44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomRailPoints
+  railPoints:
+  - {fileID: 2192956986544429327}
+  - {fileID: 434732573594248702}
