@@ -67,6 +67,75 @@ public class IntersectionSplineExpander : MonoBehaviour
         }
     }
 
+    public bool HasUsableSpline(int splineIndex)
+    {
+        return IsValidSplineIndex(splineIndex) && _splineContainer[splineIndex].Count >= 2;
+    }
+
+    public int GetFirstUsableSplineIndex()
+    {
+        if (HasUsableSpline(_leftSplineIndex))
+            return _leftSplineIndex;
+
+        if (HasUsableSpline(_rightSplineIndex))
+            return _rightSplineIndex;
+
+        for (int i = 0; i < _splineContainer.Splines.Count; i++)
+        {
+            if (HasUsableSpline(i))
+                return i;
+        }
+
+        return -1;
+    }
+
+    public int GetRandomUsableSplineIndex()
+    {
+        if (_splineContainer == null)
+            return -1;
+
+        List<int> validIndices = new();
+
+        for (int i = 0; i < _splineContainer.Splines.Count; i++)
+        {
+            if (HasUsableSpline(i))
+                validIndices.Add(i);
+        }
+
+        if (validIndices.Count == 0)
+            return -1;
+
+        return validIndices[UnityEngine.Random.Range(0, validIndices.Count)];
+    }
+
+    public float GetSplineLength(int splineIndex)
+    {
+        if (!HasUsableSpline(splineIndex))
+            return 0f;
+
+        return _splineContainer[splineIndex].GetLength();
+    }
+
+    public Vector3 EvaluatePositionWorld(int splineIndex, float normalizedT)
+    {
+        if (!HasUsableSpline(splineIndex))
+            return transform.position;
+
+        float clampedT = Mathf.Clamp01(normalizedT);
+        float3 localPosition = SplineUtility.EvaluatePosition(_splineContainer[splineIndex], clampedT);
+        return _splineContainer.transform.TransformPoint((Vector3)localPosition);
+    }
+
+    public Vector3 EvaluateTangentWorld(int splineIndex, float normalizedT)
+    {
+        if (!HasUsableSpline(splineIndex))
+            return Vector3.right;
+
+        float clampedT = Mathf.Clamp01(normalizedT);
+        float3 localTangent = SplineUtility.EvaluateTangent(_splineContainer[splineIndex], clampedT);
+        return _splineContainer.transform.TransformDirection((Vector3)localTangent);
+    }
+
     private int GetOrCreateLeftBranch()
     {
         if (IsValidSplineIndex(_leftSplineIndex))
