@@ -41,6 +41,9 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private int _branchIndex = -1;
     [SerializeField] private bool _railRegistered;
 
+    [Header("NPC")]
+    [SerializeField] private int _floorIndex;
+
     [HideInInspector] public CornerInteractionType cornerInteractionType;
 
     private bool _focusedRoom;
@@ -158,12 +161,21 @@ public class RoomManager : MonoBehaviour
 
     public void InstatiateMachine(GameObject machine)
     {
+        if (machine == null)
+            return;
+
         if (machine.GetComponent<MachineManager>() != null)
         {
             if (!_occupied)
             {
                 _occupied = true;
-                Instantiate(machine, _objectPlacePosition);
+                GameObject instance = Instantiate(machine, _objectPlacePosition);
+                _currentMachine = instance;
+
+                MachineManager machineManager = instance.GetComponent<MachineManager>();
+
+                if (machineManager != null)
+                    machineManager.AssignOwnerRoom(this);
             }
         }
     }
@@ -171,6 +183,25 @@ public class RoomManager : MonoBehaviour
     public List<Transform> GetRailPoints()
     {
         return _railPoints;
+    }
+
+    public Vector3 GetRailCenterWorldPosition()
+    {
+        if (_railPoints == null || _railPoints.Count == 0)
+            return transform.position;
+
+        int centerIndex = _railPoints.Count / 2;
+        centerIndex = Mathf.Clamp(centerIndex, 0, _railPoints.Count - 1);
+
+        if (_railPoints[centerIndex] == null)
+            return transform.position;
+
+        return _railPoints[centerIndex].position;
+    }
+
+    public Transform GetObjectPlacePosition()
+    {
+        return _objectPlacePosition;
     }
 
     public IntersectionSplineExpander GetRailOwner()
@@ -186,6 +217,16 @@ public class RoomManager : MonoBehaviour
     public int GetBranchIndex()
     {
         return _branchIndex;
+    }
+
+    public int GetFloorIndex()
+    {
+        return _floorIndex;
+    }
+
+    public GameObject GetCurrentMachine()
+    {
+        return _currentMachine;
     }
 
     public void RegisterToRail()

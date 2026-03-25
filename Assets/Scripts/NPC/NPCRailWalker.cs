@@ -4,17 +4,11 @@ public class NPCRailWalker : MonoBehaviour
 {
     [Header("Start")]
     [SerializeField] private RoomManager _startRoom;
-    [SerializeField] private IntersectionSplineExpander _railOwner;
-    [SerializeField] private int _splineIndex = -1;
-    [SerializeField] private bool _pickRandomSplineIfNeeded = true;
-    [SerializeField] private bool _randomizeStartOffset;
-    [SerializeField, Range(0f, 1f)] private float _startOffsetNormalized;
+    [SerializeField] private bool _snapToStartRoomOnStart = true;
 
     [Header("Movement")]
-    [SerializeField] private bool _moveOnStart = true;
-    [SerializeField] private float _moveSpeed = 1.5f;
-    [SerializeField] private bool _loop = true;
-    [SerializeField] private bool _pingPong;
+    [SerializeField] private float _moveSpeed = 50f;
+    [SerializeField] private float _arrivalDistance = 0.05f;
 
     [Header("Visual")]
     [SerializeField] private Transform _visualRoot;
@@ -26,12 +20,16 @@ public class NPCRailWalker : MonoBehaviour
     [SerializeField] private string _idleStateName = "Idle";
 
     [Header("Debug")]
-    [SerializeField] private bool _isMoving;
+    [SerializeField] private IntersectionSplineExpander _railOwner;
+    [SerializeField] private int _splineIndex = -1;
     [SerializeField] private float _currentDistance;
-    [SerializeField] private int _direction = 1;
+    [SerializeField] private float _targetDistance;
+    [SerializeField] private bool _isMovingOnRail;
 
     private float _visualBaseScaleX = 1f;
     private string _currentAnimationState;
+
+    public bool IsMovingOnRail => _isMovingOnRail;
 
     private void Awake()
     {
@@ -49,123 +47,165 @@ public class NPCRailWalker : MonoBehaviour
 
     private void Start()
     {
-        ResolveRail();
-
-        if (_railOwner == null || !_railOwner.HasUsableSpline(_splineIndex))
-        {
-            SetMoving(false);
-            return;
-        }
-
-        if (_randomizeStartOffset)
-            _startOffsetNormalized = Random.value;
-
-        _currentDistance = _railOwner.GetSplineLength(_splineIndex) * Mathf.Clamp01(_startOffsetNormalized);
-        SnapToRail();
-        SetMoving(_moveOnStart);
+        if (_snapToStartRoomOnStart && _startRoom != null)
+            InitializeFromRoom(_startRoom);
     }
 
     private void Update()
     {
+        if (!_isMovingOnRail)
+            return;
+
         if (_railOwner == null || !_railOwner.HasUsableSpline(_splineIndex))
         {
-            SetMoving(false);
+            StopRailMovement();
             return;
         }
 
-        if (!_isMoving)
-            return;
-
-        float splineLength = _railOwner.GetSplineLength(_splineIndex);
-
-        if (splineLength <= 0.001f)
-        {
-            SetMoving(false);
-            return;
-        }
-
-        _currentDistance += _moveSpeed * Time.deltaTime * _direction;
-        HandleBounds(splineLength);
+        float maxStep = _moveSpeed * Time.deltaTime;
+        _currentDistance = Mathf.MoveTowards(_currentDistance, _targetDistance, maxStep);
         SnapToRail();
+
+        if (Mathf.Abs(_targetDistance - _currentDistance) <= _arrivalDistance)
+        {
+            _currentDistance = _targetDistance;
+            SnapToRail();
+            StopRailMovement();
+        }
+    }
+
+    public RoomManager GetStartRoom()
+    {
+        return _startRoom;
     }
 
     public void InitializeFromRoom(RoomManager room)
     {
         _startRoom = room;
-        _railOwner = room != null ? room.GetRailOwner() : null;
-        _splineIndex = room != null ? room.GetBranchIndex() : -1;
-        _currentDistance = 0f;
-        ResolveRail();
-        SnapToRail();
+        SnapToRoom(room);
     }
 
-    public void SetRail(IntersectionSplineExpander railOwner, int splineIndex)
+    public void SnapToRoom(RoomManager room)
     {
-        _startRoom = null;
-        _railOwner = railOwner;
+        if (room == null)
+            return;
+
+        IntersectionSplineExpander owner = room.GetRailOwner();
+        int splineIndex = room.GetBranchIndex();
+
+        if (owner == null || !owner.HasUsableSpline(splineIndex))
+            return;
+
+        float targetNormalized = owner.GetRoomNormalizedT(room);
+        SnapToNormalized(owner, splineIndex, targetNormalized);
+    }
+
+    public void SnapToIntersectionPort(IntersectionSplineExpander intersection, IntersectionRailPort port)
+    {
+        if (intersection == null)
+            return;
+
+        switch (port)
+        {
+            case IntersectionRailPort.LeftRooms:
+                SnapToNormalized(intersection, intersection.GetLeftBranchIndex(), 0f);
+                break;
+
+            case IntersectionRailPort.RightRooms:
+                SnapToNormalized(intersection, intersection.GetRightBranchIndex(), 0f);
+                break;
+
+            case IntersectionRailPort.Elevator:
+                SnapToNormalized(intersection, intersection.GetPreferredElevatorSplineIndex(), 1f);
+                break;
+        }
+    }
+
+    public bool MoveToRoom(RoomManager room)
+    {
+        if (room == null)
+            return false;
+
+        IntersectionSplineExpander owner = room.GetRailOwner();
+        int splineIndex = room.GetBranchIndex();
+
+        if (owner == null || !owner.HasUsableSpline(splineIndex))
+            return false;
+
+        float targetNormalized = owner.GetRoomNormalizedT(room);
+        return MoveToNormalized(owner, splineIndex, targetNormalized);
+    }
+
+    public bool MoveToBranchStart(RoomManager room)
+    {
+        if (room == null)
+            return false;
+
+        IntersectionSplineExpander owner = room.GetRailOwner();
+        int splineIndex = room.GetBranchIndex();
+
+        if (owner == null || !owner.HasUsableSpline(splineIndex))
+            return false;
+
+        return MoveToNormalized(owner, splineIndex, 0f);
+    }
+
+    public bool MovePortToPort(IntersectionSplineExpander intersection, IntersectionRailPort from, IntersectionRailPort to)
+    {
+        if (intersection == null)
+            return false;
+
+        if (!intersection.TryGetTransition(from, to, out int splineIndex, out float targetNormalizedT))
+            return false;
+
+        return MoveToNormalized(intersection, splineIndex, targetNormalizedT);
+    }
+
+    public void SetWalkAnimation(bool value)
+    {
+        PlayAnimation(value ? _walkStateName : _idleStateName);
+    }
+
+    private bool MoveToNormalized(IntersectionSplineExpander owner, int splineIndex, float targetNormalized)
+    {
+        if (owner == null || !owner.HasUsableSpline(splineIndex))
+            return false;
+
+        _railOwner = owner;
         _splineIndex = splineIndex;
-        _currentDistance = 0f;
-        ResolveRail();
+
+        float splineLength = _railOwner.GetSplineLength(_splineIndex);
+
+        if (splineLength <= 0.001f)
+            return false;
+
+        float startNormalized = _railOwner.GetClosestNormalizedT(_splineIndex, transform.position);
+        _currentDistance = startNormalized * splineLength;
+        _targetDistance = Mathf.Clamp01(targetNormalized) * splineLength;
+        _isMovingOnRail = true;
+        SetWalkAnimation(true);
         SnapToRail();
+        return true;
     }
 
-    public void SetMoving(bool value)
+    private void SnapToNormalized(IntersectionSplineExpander owner, int splineIndex, float normalized)
     {
-        _isMoving = value;
-        PlayAnimation(_isMoving ? _walkStateName : _idleStateName);
+        if (owner == null || !owner.HasUsableSpline(splineIndex))
+            return;
+
+        _railOwner = owner;
+        _splineIndex = splineIndex;
+        _currentDistance = owner.GetSplineLength(splineIndex) * Mathf.Clamp01(normalized);
+        _targetDistance = _currentDistance;
+        _isMovingOnRail = false;
+        SnapToRail();
+        SetWalkAnimation(false);
     }
 
-    private void ResolveRail()
+    private void StopRailMovement()
     {
-        if (_startRoom != null)
-        {
-            _railOwner = _startRoom.GetRailOwner();
-            _splineIndex = _startRoom.GetBranchIndex();
-        }
-
-        if (_railOwner == null)
-            return;
-
-        if (_railOwner.HasUsableSpline(_splineIndex))
-            return;
-
-        _splineIndex = _pickRandomSplineIfNeeded
-            ? _railOwner.GetRandomUsableSplineIndex()
-            : _railOwner.GetFirstUsableSplineIndex();
-    }
-
-    private void HandleBounds(float splineLength)
-    {
-        if (_loop)
-        {
-            if (_currentDistance > splineLength)
-                _currentDistance -= splineLength;
-            else if (_currentDistance < 0f)
-                _currentDistance += splineLength;
-
-            return;
-        }
-
-        if (_pingPong)
-        {
-            if (_currentDistance > splineLength)
-            {
-                _currentDistance = splineLength;
-                _direction = -1;
-            }
-            else if (_currentDistance < 0f)
-            {
-                _currentDistance = 0f;
-                _direction = 1;
-            }
-
-            return;
-        }
-
-        _currentDistance = Mathf.Clamp(_currentDistance, 0f, splineLength);
-
-        if (_currentDistance <= 0f || _currentDistance >= splineLength)
-            SetMoving(false);
+        _isMovingOnRail = false;
+        SetWalkAnimation(false);
     }
 
     private void SnapToRail()

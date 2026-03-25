@@ -2000,6 +2000,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5840509590143016265}
+  - component: {fileID: 6475288959705616164}
+  - component: {fileID: 557053620331598654}
   m_Layer: 0
   m_Name: FemaleNPC
   m_TagString: Untagged
@@ -2023,6 +2025,57 @@ Transform:
   - {fileID: 1918338410503654993}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6475288959705616164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9031850750999732505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80bdcd6b31f92424bad6315e3247694a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCBunkerWorker
+  _railWalker: {fileID: 557053620331598654}
+  _animator: {fileID: 8152846198527915951}
+  _currentRoom: {fileID: 0}
+  _currentMachine: {fileID: 0}
+  _targetMachine: {fileID: 0}
+  _offRailMoveSpeed: 2
+  _offRailArrivalDistance: 0.05
+  _walkStateName: Walk
+  _idleStateName: Idle
+  _workStateName: Work
+  _moveToDebugMachineOnStart: 0
+  _isBusy: 0
+  _isWorking: 0
+--- !u!114 &557053620331598654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9031850750999732505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e9406ba34696664fb9b017c818d2ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCRailWalker
+  _startRoom: {fileID: 0}
+  _snapToStartRoomOnStart: 1
+  _moveSpeed: 50
+  _arrivalDistance: 0.05
+  _visualRoot: {fileID: 1918338410503654993}
+  _flipVisualByDirection: 1
+  _animator: {fileID: 8152846198527915951}
+  _walkStateName: Walk
+  _idleStateName: Idle
+  _railOwner: {fileID: 0}
+  _splineIndex: -1
+  _currentDistance: 0
+  _targetDistance: 0
+  _isMovingOnRail: 0
 --- !u!1 &9083751557844562472
 GameObject:
   m_ObjectHideFlags: 0
