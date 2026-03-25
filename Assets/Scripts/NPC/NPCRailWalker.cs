@@ -26,7 +26,9 @@ public class NPCRailWalker : MonoBehaviour
     [SerializeField] private float _targetDistance;
     [SerializeField] private bool _isMovingOnRail;
 
-    private float _visualBaseScaleX = 1f;
+    [SerializeField] private float _visualYawOffset = 0f;
+
+    private Quaternion _visualBaseLocalRotation;
     private string _currentAnimationState;
 
     public bool IsMovingOnRail => _isMovingOnRail;
@@ -39,7 +41,7 @@ public class NPCRailWalker : MonoBehaviour
         if (_visualRoot == null)
             _visualRoot = _animator != null ? _animator.transform : transform;
 
-        _visualBaseScaleX = Mathf.Abs(_visualRoot.localScale.x);
+        _visualBaseLocalRotation = _visualRoot.localRotation;
 
         if (_animator != null)
             _animator.applyRootMotion = false;
@@ -220,7 +222,7 @@ public class NPCRailWalker : MonoBehaviour
 
         float normalizedT = Mathf.Clamp01(_currentDistance / splineLength);
         Vector3 worldPosition = _railOwner.EvaluatePositionWorld(_splineIndex, normalizedT);
-        Vector3 tangent = _railOwner.EvaluateTangentWorld(_splineIndex, normalizedT);
+        Vector3 tangent = _railOwner.EvaluateDirectionWorldFromLine(_splineIndex, normalizedT);
 
         transform.position = worldPosition;
         UpdateVisualDirection(tangent);
@@ -231,12 +233,18 @@ public class NPCRailWalker : MonoBehaviour
         if (!_flipVisualByDirection || _visualRoot == null)
             return;
 
-        if (Mathf.Abs(tangent.x) <= 0.001f)
+        Vector3 flatDirection = Vector3.ProjectOnPlane(tangent, Vector3.up);
+
+        if (flatDirection.sqrMagnitude <= 0.0001f)
             return;
 
-        Vector3 localScale = _visualRoot.localScale;
-        localScale.x = tangent.x >= 0f ? _visualBaseScaleX : -_visualBaseScaleX;
-        _visualRoot.localScale = localScale;
+        Quaternion lookRotation = Quaternion.LookRotation(flatDirection.normalized, Vector3.up);
+        Quaternion finalWorldRotation = lookRotation * Quaternion.Euler(0f, _visualYawOffset, 0f);
+
+        if (_visualRoot.parent != null)
+            _visualRoot.localRotation = Quaternion.Inverse(_visualRoot.parent.rotation) * finalWorldRotation * _visualBaseLocalRotation;
+        else
+            _visualRoot.rotation = finalWorldRotation * _visualBaseLocalRotation;
     }
 
     private void PlayAnimation(string stateName)

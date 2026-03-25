@@ -164,6 +164,34 @@ public class IntersectionSplineExpander : MonoBehaviour
         return _splineContainer.transform.TransformDirection((Vector3)localTangent);
     }
 
+    public Vector3 EvaluateDirectionWorldFromLine(int splineIndex, float normalizedT, float sampleOffset = 0.01f)
+    {
+        if (!HasUsableSpline(splineIndex))
+            return Vector3.forward;
+
+        float clampedT = Mathf.Clamp01(normalizedT);
+
+        float tA = Mathf.Clamp01(clampedT - sampleOffset);
+        float tB = Mathf.Clamp01(clampedT + sampleOffset);
+
+        if (Mathf.Approximately(tA, tB))
+            return Vector3.forward;
+
+        float3 localPosA = SplineUtility.EvaluatePosition(_splineContainer[splineIndex], tA);
+        float3 localPosB = SplineUtility.EvaluatePosition(_splineContainer[splineIndex], tB);
+
+        Vector3 worldPosA = _splineContainer.transform.TransformPoint((Vector3)localPosA);
+        Vector3 worldPosB = _splineContainer.transform.TransformPoint((Vector3)localPosB);
+
+        Vector3 direction = worldPosB - worldPosA;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.0001f)
+            return Vector3.forward;
+
+        return direction.normalized;
+    }
+
     public float GetClosestNormalizedT(int splineIndex, Vector3 worldPosition)
     {
         if (!HasUsableSpline(splineIndex))
