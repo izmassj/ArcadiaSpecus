@@ -31,6 +31,8 @@ public class NPCRailWalker : MonoBehaviour
     private Quaternion _visualBaseLocalRotation;
     private string _currentAnimationState;
 
+    private float _lastMovementSign = 1f;
+
     public bool IsMovingOnRail => _isMovingOnRail;
 
     private void Awake()
@@ -64,8 +66,14 @@ public class NPCRailWalker : MonoBehaviour
             return;
         }
 
+        float previousDistance = _currentDistance;
         float maxStep = _moveSpeed * Time.deltaTime;
         _currentDistance = Mathf.MoveTowards(_currentDistance, _targetDistance, maxStep);
+
+        float delta = _currentDistance - previousDistance;
+        if (Mathf.Abs(delta) > 0.0001f)
+            _lastMovementSign = Mathf.Sign(delta);
+
         SnapToRail();
 
         if (Mathf.Abs(_targetDistance - _currentDistance) <= _arrivalDistance)
@@ -223,6 +231,9 @@ public class NPCRailWalker : MonoBehaviour
         float normalizedT = Mathf.Clamp01(_currentDistance / splineLength);
         Vector3 worldPosition = _railOwner.EvaluatePositionWorld(_splineIndex, normalizedT);
         Vector3 tangent = _railOwner.EvaluateDirectionWorldFromLine(_splineIndex, normalizedT);
+
+        if (_lastMovementSign < 0f)
+            tangent = -tangent; 
 
         transform.position = worldPosition;
         UpdateVisualDirection(tangent);
