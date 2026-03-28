@@ -2387,7 +2387,7 @@ MonoBehaviour:
     - Position:
         x: 0
         y: 0
-        z: 97.7388
+        z: 130
       TangentIn:
         x: 0
         y: 0
@@ -2395,7 +2395,7 @@ MonoBehaviour:
       TangentOut:
         x: 0
         y: 0
-        z: 90
+        z: 135
       Rotation:
         value:
           x: 0
@@ -2439,7 +2439,7 @@ MonoBehaviour:
     - Position:
         x: 0
         y: 0
-        z: 97.7388
+        z: 130
       TangentIn:
         x: 0
         y: 0
@@ -2447,7 +2447,7 @@ MonoBehaviour:
       TangentOut:
         x: 0
         y: 0
-        z: 90
+        z: 135
       Rotation:
         value:
           x: 0
