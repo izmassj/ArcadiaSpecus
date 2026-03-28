@@ -1703,6 +1703,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7328055992393222879, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_Name
+      value: ElevatorMask
+      objectReference: {fileID: 0}
+    - target: {fileID: 9047251684997317689, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_Name
+      value: Elevator
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
