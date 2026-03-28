@@ -277,7 +277,7 @@ GameObject:
   m_Layer: 7
   m_Name: ObjectPlacePosition
   m_TagString: Untagged
-  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_Icon: {fileID: -5397416234189338067, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -290,7 +290,7 @@ Transform:
   m_GameObject: {fileID: 6951719025229854402}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -74.215, z: 16}
+  m_LocalPosition: {x: 0, y: -74.215, z: 28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -413,12 +413,12 @@ MonoBehaviour:
   - {fileID: 6178449626343750493}
   - {fileID: 7502361827787634648}
   - {fileID: 8576386172055203009}
-  _skipFirstRailPointOnAppend: 1
   _railOwner: {fileID: 0}
   _originalIntersectionFloor: {fileID: 0}
+  _branchIndex: -1
   _railRegistered: 0
+  _floorIndex: 0
   cornerInteractionType: 0
-  _currentFloor: {fileID: 0}
 --- !u!114 &8034104835539783522
 MonoBehaviour:
   m_ObjectHideFlags: 0

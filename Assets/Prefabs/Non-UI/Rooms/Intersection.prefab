@@ -65,6 +65,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 1060119103157122172}
   - {fileID: 1347146974882133032}
   - {fileID: 7947799548124553243}
   - {fileID: 9171619009731240503}
@@ -150,6 +151,7 @@ MonoBehaviour:
   _originalIntersectionFloor: {fileID: 0}
   _branchIndex: -1
   _railRegistered: 0
+  _floorIndex: 0
   cornerInteractionType: 0
 --- !u!114 &8875153151868775149
 MonoBehaviour:
@@ -186,9 +188,13 @@ MonoBehaviour:
   _splineContainer: {fileID: 3416335303000587473}
   _leftStartPoint: {fileID: 9171619009731240503}
   _rightStartPoint: {fileID: 5180577748845514488}
+  _horizontalSplineIndex: 0
+  _rightElevatorSplineIndex: 1
+  _leftElevatorSplineIndex: 2
   _leftSplineIndex: -1
   _rightSplineIndex: -1
   _duplicateDistance: 0.01
+  _closestPointSamples: 40
 --- !u!1 &3772207417134026180
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,6 +316,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &5637764323165715316
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1060119103157122172}
+  m_Layer: 0
+  m_Name: ModelElevator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1060119103157122172
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5637764323165715316}
+  serializedVersion: 2
+  m_LocalRotation: {x: 1, y: -0, z: -0, w: 0.0000000754979}
+  m_LocalPosition: {x: 0, y: -21.599976, z: 90}
+  m_LocalScale: {x: 100, y: 100.000015, z: 100.000015}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5119897850601132777}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8681465833116913393
 GameObject:
   m_ObjectHideFlags: 0

@@ -1528,6 +1528,8 @@ MonoBehaviour:
   _currentRoom: {fileID: 0}
   _currentMachine: {fileID: 0}
   _targetMachine: {fileID: 0}
+  _currentWorkSlotIndex: -1
+  _targetWorkSlotIndex: -1
   _offRailMoveSpeed: 50
   _offRailArrivalDistance: 0.05
   _walkStateName: Walk
@@ -1552,8 +1554,10 @@ MonoBehaviour:
   _snapToStartRoomOnStart: 1
   _moveSpeed: 50
   _arrivalDistance: 0.05
-  _visualRoot: {fileID: 7141434411511304254}
+  _visualRoot: {fileID: 6065722175794817286}
   _flipVisualByDirection: 1
+  _rotationRoot: {fileID: 6065722175794817286}
+  _rotationYawOffset: 0
   _animator: {fileID: 4467417641924830430}
   _walkStateName: Walk
   _idleStateName: Idle

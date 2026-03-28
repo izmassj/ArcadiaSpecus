@@ -11,6 +11,7 @@ public class NPCBunkerWorker : MonoBehaviour
     [SerializeField] private RoomManager _currentRoom;
     [SerializeField] private MachineManager _currentMachine;
     [SerializeField] private MachineManager _targetMachine;
+    [SerializeField] private int _currentWorkSlot = -1;
 
     [Header("Off Rail Movement")]
     [SerializeField] private float _offRailMoveSpeed = 2f;
@@ -25,6 +26,8 @@ public class NPCBunkerWorker : MonoBehaviour
     [SerializeField] private bool _moveToDebugMachineOnStart;
     [SerializeField] private bool _isBusy;
     [SerializeField] private bool _isWorking;
+    [SerializeField] private MachineManager _pendingMachine;
+    [SerializeField] private int _pendingWorkSlot = -1;
 
     private Coroutine _currentRoutine;
     private string _currentAnimationState;
@@ -52,11 +55,18 @@ public class NPCBunkerWorker : MonoBehaviour
         if (machine == null)
             return;
 
-        _targetMachine = machine;
+        if (_currentMachine == machine && _isWorking)
+            return;
+
+        ReleasePendingReservation();
 
         if (_currentRoutine != null)
+        {
             StopCoroutine(_currentRoutine);
+            _currentRoutine = null;
+        }
 
+        _targetMachine = machine;
         _currentRoutine = StartCoroutine(MoveToMachineRoutine(machine));
     }
 
@@ -69,14 +79,23 @@ public class NPCBunkerWorker : MonoBehaviour
 
         if (_railWalker == null || _currentRoom == null || targetRoom == null)
         {
-            _isBusy = false;
+            ClearBusyState();
             yield break;
         }
+
+        if (!targetMachine.TryReserveWorkSlot(this, out int reservedWorkSlot, out Vector3 reservedWorkPoint))
+        {
+            ClearBusyState();
+            yield break;
+        }
+
+        _pendingMachine = targetMachine;
+        _pendingWorkSlot = reservedWorkSlot;
 
         if (_currentMachine != null)
         {
             yield return MoveOffRailTo(_currentRoom.GetRailCenterWorldPosition(), true);
-            _currentMachine = null;
+            ReleaseCurrentMachineSlot();
             _railWalker.SnapToRoom(_currentRoom);
         }
         else
@@ -89,7 +108,8 @@ public class NPCBunkerWorker : MonoBehaviour
 
         if (currentIntersection == null || targetIntersection == null)
         {
-            _isBusy = false;
+            ReleasePendingReservation();
+            ClearBusyState();
             yield break;
         }
 
@@ -104,12 +124,16 @@ public class NPCBunkerWorker : MonoBehaviour
             yield return LeaveElevatorToTargetRoom(targetRoom, targetIntersection);
         }
 
-        yield return MoveOffRailTo(targetMachine.GetWorkPointWorldPosition(), true);
-        LookAtTarget(targetMachine.transform.position);
+        reservedWorkPoint = targetMachine.GetWorkPointWorldPosition(reservedWorkSlot);
+        yield return MoveOffRailTo(reservedWorkPoint, true);
+        FaceTowards(targetMachine.transform.position);
         PlayAnimation(_workStateName);
 
         _currentRoom = targetRoom;
         _currentMachine = targetMachine;
+        _currentWorkSlot = reservedWorkSlot;
+        _pendingMachine = null;
+        _pendingWorkSlot = -1;
         _isWorking = true;
         _isBusy = false;
         _currentRoutine = null;
@@ -163,11 +187,12 @@ public class NPCBunkerWorker : MonoBehaviour
         while ((targetPosition - transform.position).sqrMagnitude > _offRailArrivalDistance * _offRailArrivalDistance)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, _offRailMoveSpeed * Time.deltaTime);
-            LookAtTarget(targetPosition);
+            FaceTowards(targetPosition);
             yield return null;
         }
 
         transform.position = targetPosition;
+        FaceTowards(targetPosition);
         PlayAnimation(_idleStateName);
     }
 
@@ -180,8 +205,14 @@ public class NPCBunkerWorker : MonoBehaviour
             yield return null;
     }
 
-    private void LookAtTarget(Vector3 targetPosition)
+    private void FaceTowards(Vector3 targetPosition)
     {
+        if (_railWalker != null)
+        {
+            _railWalker.FaceTowards(targetPosition);
+            return;
+        }
+
         Vector3 direction = targetPosition - transform.position;
         direction.y = 0f;
 
@@ -189,6 +220,33 @@ public class NPCBunkerWorker : MonoBehaviour
             return;
 
         transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+    }
+
+    private void ReleaseCurrentMachineSlot()
+    {
+        if (_currentMachine == null)
+            return;
+
+        _currentMachine.ReleaseWorkSlot(this);
+        _currentMachine = null;
+        _currentWorkSlot = -1;
+    }
+
+    private void ReleasePendingReservation()
+    {
+        if (_pendingMachine == null)
+            return;
+
+        _pendingMachine.ReleaseWorkSlot(this);
+        _pendingMachine = null;
+        _pendingWorkSlot = -1;
+    }
+
+    private void ClearBusyState()
+    {
+        _isBusy = false;
+        _isWorking = false;
+        _currentRoutine = null;
     }
 
     private void PlayAnimation(string stateName)

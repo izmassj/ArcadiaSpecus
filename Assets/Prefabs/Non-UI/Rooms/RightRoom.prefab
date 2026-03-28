@@ -238,6 +238,10 @@ MonoBehaviour:
   - {fileID: 5357046705405879414}
   - {fileID: 1295099182311906501}
   _railOwner: {fileID: 0}
+  _originalIntersectionFloor: {fileID: 0}
+  _branchIndex: -1
+  _railRegistered: 0
+  _floorIndex: 0
   cornerInteractionType: 0
 --- !u!114 &-5798445500930681777
 MonoBehaviour:
@@ -382,7 +386,7 @@ GameObject:
   m_Layer: 7
   m_Name: ObjectPlacePosition
   m_TagString: Untagged
-  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_Icon: {fileID: -5397416234189338067, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -395,7 +399,7 @@ Transform:
   m_GameObject: {fileID: 9002291114039509170}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -74.215, z: 16}
+  m_LocalPosition: {x: 0, y: -74.215, z: 28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

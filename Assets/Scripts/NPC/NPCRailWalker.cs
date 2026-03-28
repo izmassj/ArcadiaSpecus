@@ -30,7 +30,6 @@ public class NPCRailWalker : MonoBehaviour
 
     private Quaternion _visualBaseLocalRotation;
     private string _currentAnimationState;
-
     private float _lastMovementSign = 1f;
 
     public bool IsMovingOnRail => _isMovingOnRail;
@@ -171,6 +170,17 @@ public class NPCRailWalker : MonoBehaviour
         return MoveToNormalized(intersection, splineIndex, targetNormalizedT);
     }
 
+    public void FaceTowards(Vector3 targetWorldPosition)
+    {
+        Vector3 direction = targetWorldPosition - transform.position;
+        FaceDirection(direction);
+    }
+
+    public void FaceDirection(Vector3 worldDirection)
+    {
+        UpdateVisualDirection(worldDirection);
+    }
+
     public void SetWalkAnimation(bool value)
     {
         PlayAnimation(value ? _walkStateName : _idleStateName);
@@ -233,7 +243,7 @@ public class NPCRailWalker : MonoBehaviour
         Vector3 tangent = _railOwner.EvaluateDirectionWorldFromLine(_splineIndex, normalizedT);
 
         if (_lastMovementSign < 0f)
-            tangent = -tangent; 
+            tangent = -tangent;
 
         transform.position = worldPosition;
         UpdateVisualDirection(tangent);
