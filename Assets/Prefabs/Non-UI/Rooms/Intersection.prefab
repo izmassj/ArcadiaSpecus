@@ -831,8 +831,10 @@ MonoBehaviour:
   _staticColor: {r: 1, g: 1, b: 1, a: 1}
   _placed: 1
   _occupied: 0
-  _railPoints: []
-  _railOwner: {fileID: 0}
+  _railPoints:
+  - {fileID: 9171619009731240503}
+  - {fileID: 5180577748845514488}
+  _railOwner: {fileID: 582857042900793531}
   _originalIntersectionFloor: {fileID: 0}
   _branchIndex: -1
   _railRegistered: 0
@@ -871,6 +873,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IntersectionSplineExpander
   _splineContainer: {fileID: 3416335303000587473}
+  _elevator: {fileID: 7605623858886695632}
   _leftStartPoint: {fileID: 9171619009731240503}
   _rightStartPoint: {fileID: 5180577748845514488}
   _horizontalSplineIndex: 0
@@ -880,6 +883,7 @@ MonoBehaviour:
   _rightSplineIndex: -1
   _duplicateDistance: 0.01
   _closestPointSamples: 40
+  _directionSampleOffset: 0.02
 --- !u!1 &3772207417134026180
 GameObject:
   m_ObjectHideFlags: 0
@@ -1101,6 +1105,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1427952246068831665}
   - component: {fileID: 7327486789589809277}
+  - component: {fileID: 7605623858886695632}
   m_Layer: 0
   m_Name: ElevatorModel
   m_TagString: Untagged
@@ -1146,6 +1151,24 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7605623858886695632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4719577761071882441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 358ed134ba479764aa37d1396f7460e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IntersectionElevator
+  _elevatorAnimator: {fileID: 7327486789589809277}
+  _openTriggerName: Open
+  _closeTriggerName: Close
+  _openStateName: OpenElevatorDoor
+  _closeStateName: CloseElevatorDoor
+  _animatorLayer: 0
 --- !u!1 &5287681618420118489
 GameObject:
   m_ObjectHideFlags: 0

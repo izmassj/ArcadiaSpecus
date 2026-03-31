@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Splines;
-using Random = UnityEngine.Random;
 
 public class IntersectionSplineExpander : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private SplineContainer _splineContainer;
+    [SerializeField] private IntersectionElevator _elevator;
 
     [Header("Branch Start Points")]
     [SerializeField] private Transform _leftStartPoint;
@@ -25,10 +25,22 @@ public class IntersectionSplineExpander : MonoBehaviour
     [Header("Parameters")]
     [SerializeField] private float _duplicateDistance = 0.01f;
     [SerializeField] private int _closestPointSamples = 40;
+    [SerializeField] private float _directionSampleOffset = 0.02f;
+
+    private void Awake()
+    {
+        if (_elevator == null)
+            _elevator = GetComponent<IntersectionElevator>();
+    }
 
     public SplineContainer GetSplineContainer()
     {
         return _splineContainer;
+    }
+
+    public IntersectionElevator GetElevator()
+    {
+        return _elevator;
     }
 
     public int GetLeftBranchIndex()
@@ -82,16 +94,12 @@ public class IntersectionSplineExpander : MonoBehaviour
         if (!reverse)
         {
             for (int i = 0; i < railPoints.Count; i++)
-            {
                 TryAddPoint(spline, railPoints[i]);
-            }
         }
         else
         {
             for (int i = railPoints.Count - 1; i >= 0; i--)
-            {
                 TryAddPoint(spline, railPoints[i]);
-            }
         }
     }
 
@@ -133,7 +141,7 @@ public class IntersectionSplineExpander : MonoBehaviour
         if (validIndices.Count == 0)
             return -1;
 
-        return validIndices[Random.Range(0, validIndices.Count)];
+        return validIndices[UnityEngine.Random.Range(0, validIndices.Count)];
     }
 
     public float GetSplineLength(int splineIndex)
@@ -164,32 +172,28 @@ public class IntersectionSplineExpander : MonoBehaviour
         return _splineContainer.transform.TransformDirection((Vector3)localTangent);
     }
 
-    public Vector3 EvaluateDirectionWorldFromLine(int splineIndex, float normalizedT, float sampleOffset = 0.01f)
+    public Vector3 EvaluateDirectionWorldFromLine(int splineIndex, float normalizedT)
     {
         if (!HasUsableSpline(splineIndex))
-            return Vector3.forward;
+            return Vector3.right;
 
         float clampedT = Mathf.Clamp01(normalizedT);
+        float delta = Mathf.Max(0.001f, _directionSampleOffset);
+        float fromT = Mathf.Clamp01(clampedT - delta);
+        float toT = Mathf.Clamp01(clampedT + delta);
 
-        float tA = Mathf.Clamp01(clampedT - sampleOffset);
-        float tB = Mathf.Clamp01(clampedT + sampleOffset);
+        if (Mathf.Approximately(fromT, toT))
+        {
+            if (clampedT <= 0.5f)
+                toT = Mathf.Clamp01(clampedT + delta);
+            else
+                fromT = Mathf.Clamp01(clampedT - delta);
+        }
 
-        if (Mathf.Approximately(tA, tB))
-            return Vector3.forward;
-
-        float3 localPosA = SplineUtility.EvaluatePosition(_splineContainer[splineIndex], tA);
-        float3 localPosB = SplineUtility.EvaluatePosition(_splineContainer[splineIndex], tB);
-
-        Vector3 worldPosA = _splineContainer.transform.TransformPoint((Vector3)localPosA);
-        Vector3 worldPosB = _splineContainer.transform.TransformPoint((Vector3)localPosB);
-
-        Vector3 direction = worldPosB - worldPosA;
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude < 0.0001f)
-            return Vector3.forward;
-
-        return direction.normalized;
+        Vector3 from = EvaluatePositionWorld(splineIndex, fromT);
+        Vector3 to = EvaluatePositionWorld(splineIndex, toT);
+        Vector3 direction = (to - from).normalized;
+        return direction.sqrMagnitude > 0.0001f ? direction : EvaluateTangentWorld(splineIndex, clampedT).normalized;
     }
 
     public float GetClosestNormalizedT(int splineIndex, Vector3 worldPosition)
@@ -358,9 +362,7 @@ public class IntersectionSplineExpander : MonoBehaviour
         float3 localStartPoint = ToLocalPoint(startPoint.position);
 
         if (spline.Count == 0)
-        {
             spline.Add(new BezierKnot(localStartPoint), TangentMode.Linear);
-        }
 
         return splineIndex;
     }

@@ -9,6 +9,8 @@ public class MachineManager : MonoBehaviour
     [SerializeField] private RoomManager _ownerRoom;
     [SerializeField] private Transform _workPointA;
     [SerializeField] private Transform _workPointB;
+    [SerializeField] private Vector3 _workPointOffset = Vector3.zero;
+    [SerializeField] private float _fallbackSlotSeparation = 0.6f;
 
     private NPCBunkerWorker _workerInSlotA;
     private NPCBunkerWorker _workerInSlotB;
@@ -40,14 +42,14 @@ public class MachineManager : MonoBehaviour
         if (_workerInSlotA == worker)
         {
             slotIndex = 0;
-            workPointWorldPosition = GetWorkPointWorldPosition(slotIndex);
+            workPointWorldPosition = GetWorkPointWorldPosition(0);
             return true;
         }
 
         if (_workerInSlotB == worker)
         {
             slotIndex = 1;
-            workPointWorldPosition = GetWorkPointWorldPosition(slotIndex);
+            workPointWorldPosition = GetWorkPointWorldPosition(1);
             return true;
         }
 
@@ -55,7 +57,7 @@ public class MachineManager : MonoBehaviour
         {
             _workerInSlotA = worker;
             slotIndex = 0;
-            workPointWorldPosition = GetWorkPointWorldPosition(slotIndex);
+            workPointWorldPosition = GetWorkPointWorldPosition(0);
             return true;
         }
 
@@ -63,7 +65,7 @@ public class MachineManager : MonoBehaviour
         {
             _workerInSlotB = worker;
             slotIndex = 1;
-            workPointWorldPosition = GetWorkPointWorldPosition(slotIndex);
+            workPointWorldPosition = GetWorkPointWorldPosition(1);
             return true;
         }
 
@@ -82,33 +84,9 @@ public class MachineManager : MonoBehaviour
             _workerInSlotB = null;
     }
 
-    public int GetOccupancyCount()
-    {
-        int count = 0;
-
-        if (_workerInSlotA != null)
-            count++;
-
-        if (_workerInSlotB != null)
-            count++;
-
-        return count;
-    }
-
-    public Vector3 GetWorkPointWorldPosition()
-    {
-        if (_workerInSlotA == null)
-            return GetWorkPointWorldPosition(0);
-
-        if (_workerInSlotB == null)
-            return GetWorkPointWorldPosition(1);
-
-        return GetWorkPointWorldPosition(0);
-    }
-
     public Vector3 GetWorkPointWorldPosition(int slotIndex)
     {
-        if (slotIndex <= 0 && _workPointA != null)
+        if (slotIndex == 0 && _workPointA != null)
             return _workPointA.position;
 
         if (slotIndex == 1 && _workPointB != null)
@@ -116,25 +94,24 @@ public class MachineManager : MonoBehaviour
 
         ResolveOwnerRoom();
 
-        Vector3 machinePosition = transform.position;
-        Vector3 railCenter = _ownerRoom != null ? _ownerRoom.GetRailCenterWorldPosition() : transform.position;
-        Vector3 basePoint = (railCenter + machinePosition) * 0.5f;
+        Vector3 basePosition = transform.position + _workPointOffset;
 
-        Vector3 toMachine = machinePosition - railCenter;
-        toMachine.y = 0f;
+        if (_ownerRoom == null)
+        {
+            float offset = slotIndex == 0 ? _fallbackSlotSeparation * 0.5f : -_fallbackSlotSeparation * 0.5f;
+            return basePosition + transform.right * offset;
+        }
 
-        Vector3 side = Vector3.Cross(Vector3.up, toMachine.normalized);
+        Vector3 railCenter = _ownerRoom.GetRailCenterWorldPosition();
+        Vector3 toRail = (railCenter - basePosition).normalized;
 
-        if (side.sqrMagnitude <= 0.0001f)
-            side = Vector3.ProjectOnPlane(transform.right, Vector3.up);
+        if (toRail.sqrMagnitude <= 0.0001f)
+            toRail = -transform.forward;
 
-        if (side.sqrMagnitude <= 0.0001f)
-            side = Vector3.right;
-
-        side.Normalize();
-
-        float sideSign = slotIndex == 1 ? 0.5f : -0.5f;
-        return basePoint + side * (sideSign);
+        Vector3 side = Vector3.Cross(Vector3.up, toRail).normalized;
+        Vector3 centerPoint = (railCenter + basePosition) * 0.5f;
+        float sideOffset = slotIndex == 0 ? _fallbackSlotSeparation * 0.5f : -_fallbackSlotSeparation * 0.5f;
+        return centerPoint + side * sideOffset;
     }
 
     private void ResolveOwnerRoom()

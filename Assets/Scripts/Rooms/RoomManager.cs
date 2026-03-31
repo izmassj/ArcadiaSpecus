@@ -40,8 +40,6 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private GameObject _originalIntersectionFloor;
     [SerializeField] private int _branchIndex = -1;
     [SerializeField] private bool _railRegistered;
-
-    [Header("NPC")]
     [SerializeField] private int _floorIndex;
 
     [HideInInspector] public CornerInteractionType cornerInteractionType;
@@ -85,9 +83,7 @@ public class RoomManager : MonoBehaviour
     public void SetOnRoomBuildMaterial()
     {
         if (_modelRenderer != null)
-        {
             _modelRenderer.material = _onRoomBuildMat;
-        }
     }
 
     public void SetOriginalMaterial()
@@ -95,9 +91,7 @@ public class RoomManager : MonoBehaviour
         if (_roomMats.Count > 1)
         {
             for (int i = 0; i < _roomMats.Count; i++)
-            {
                 _modelRenderer.materials[i] = _roomMats[i];
-            }
         }
         else
         {
@@ -112,7 +106,7 @@ public class RoomManager : MonoBehaviour
 
     public void SetPlaced()
     {
-        _placed = _placed ? false : true;
+        _placed = !_placed;
     }
 
     public void ActivateOutline(LayerMask layerMask)
@@ -120,9 +114,7 @@ public class RoomManager : MonoBehaviour
         int layer = Mathf.RoundToInt(Mathf.Log(layerMask.value, 2));
 
         if (gameObject.transform.GetChild(0).gameObject.layer != layer)
-        {
             gameObject.transform.GetChild(0).gameObject.layer = layer;
-        }
 
         outlineSettings.Outlines[0].width = _outlineWidth;
     }
@@ -130,9 +122,7 @@ public class RoomManager : MonoBehaviour
     public void DeactivateOutline(LayerMask layer)
     {
         if (gameObject.transform.GetChild(0).gameObject.layer != layer)
-        {
             gameObject.transform.GetChild(0).gameObject.layer = (int)layer;
-        }
 
         outlineSettings.Outlines[0].width = _outlineWidth;
     }
@@ -164,44 +154,25 @@ public class RoomManager : MonoBehaviour
         if (machine == null)
             return;
 
-        if (machine.GetComponent<MachineManager>() != null)
-        {
-            if (!_occupied)
-            {
-                _occupied = true;
-                GameObject instance = Instantiate(machine, _objectPlacePosition);
-                _currentMachine = instance;
+        MachineManager prefabMachine = machine.GetComponent<MachineManager>();
 
-                MachineManager machineManager = instance.GetComponent<MachineManager>();
+        if (prefabMachine == null)
+            return;
 
-                if (machineManager != null)
-                    machineManager.AssignOwnerRoom(this);
-            }
-        }
+        if (_occupied)
+            return;
+
+        _occupied = true;
+        GameObject machineInstance = Instantiate(machine, _objectPlacePosition);
+        MachineManager machineManager = machineInstance.GetComponent<MachineManager>();
+
+        if (machineManager != null)
+            machineManager.AssignOwnerRoom(this);
     }
 
     public List<Transform> GetRailPoints()
     {
         return _railPoints;
-    }
-
-    public Vector3 GetRailCenterWorldPosition()
-    {
-        if (_railPoints == null || _railPoints.Count == 0)
-            return transform.position;
-
-        int centerIndex = _railPoints.Count / 2;
-        centerIndex = Mathf.Clamp(centerIndex, 0, _railPoints.Count - 1);
-
-        if (_railPoints[centerIndex] == null)
-            return transform.position;
-
-        return _railPoints[centerIndex].position;
-    }
-
-    public Transform GetObjectPlacePosition()
-    {
-        return _objectPlacePosition;
     }
 
     public IntersectionSplineExpander GetRailOwner()
@@ -224,9 +195,30 @@ public class RoomManager : MonoBehaviour
         return _floorIndex;
     }
 
-    public GameObject GetCurrentMachine()
+    public Vector3 GetRailCenterWorldPosition()
     {
-        return _currentMachine;
+        if (_railPoints != null && _railPoints.Count > 0)
+        {
+            Vector3 sum = Vector3.zero;
+            int validCount = 0;
+
+            for (int i = 0; i < _railPoints.Count; i++)
+            {
+                if (_railPoints[i] == null)
+                    continue;
+
+                sum += _railPoints[i].position;
+                validCount++;
+            }
+
+            if (validCount > 0)
+                return sum / validCount;
+        }
+
+        if (_objectPlacePosition != null)
+            return _objectPlacePosition.position;
+
+        return transform.position;
     }
 
     public void RegisterToRail()

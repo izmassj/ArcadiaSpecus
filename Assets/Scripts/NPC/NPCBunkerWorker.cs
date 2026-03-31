@@ -119,9 +119,7 @@ public class NPCBunkerWorker : MonoBehaviour
         }
         else
         {
-            yield return GoToElevatorFromCurrentRoom(_currentRoom, currentIntersection);
-            _railWalker.SnapToIntersectionPort(targetIntersection, IntersectionRailPort.Elevator);
-            yield return LeaveElevatorToTargetRoom(targetRoom, targetIntersection);
+            yield return TravelAcrossFloors(_currentRoom, targetRoom, currentIntersection, targetIntersection);
         }
 
         reservedWorkPoint = targetMachine.GetWorkPointWorldPosition(reservedWorkSlot);
@@ -139,6 +137,30 @@ public class NPCBunkerWorker : MonoBehaviour
         _currentRoutine = null;
     }
 
+    private IEnumerator TravelAcrossFloors(RoomManager fromRoom, RoomManager targetRoom, IntersectionSplineExpander currentIntersection, IntersectionSplineExpander targetIntersection)
+    {
+        IntersectionElevator sourceElevator = currentIntersection.gameObject.transform.GetChild(0).transform.GetChild(0).GetComponent<IntersectionElevator>();
+        IntersectionElevator targetElevator = targetIntersection.gameObject.transform.GetChild(0).transform.GetChild(0).GetComponent<IntersectionElevator>();
+        IntersectionRailPort targetPort = targetIntersection.GetRoomPort(targetRoom);
+
+        yield return GoToElevatorFromCurrentRoom(fromRoom, currentIntersection, sourceElevator);
+
+        if (sourceElevator != null)
+        {
+            yield return sourceElevator.WaitForOpenFinished();
+            yield return sourceElevator.PlayCloseAndWait();
+        }
+
+        _railWalker.SnapToIntersectionPort(targetIntersection, IntersectionRailPort.Elevator);
+        FaceTowardsUpcomingElevatorExit(targetIntersection, targetPort);
+
+        if (targetElevator != null)
+            yield return targetElevator.PlayOpenAndWait();
+            
+        FaceTowardsUpcomingElevatorExit(targetIntersection, targetPort);
+        yield return LeaveElevatorToTargetRoom(targetRoom, targetIntersection, targetElevator);
+    }
+
     private IEnumerator TravelInsideSingleIntersection(RoomManager fromRoom, RoomManager toRoom, IntersectionSplineExpander intersection)
     {
         IntersectionRailPort fromPort = intersection.GetRoomPort(fromRoom);
@@ -146,37 +168,57 @@ public class NPCBunkerWorker : MonoBehaviour
 
         if (fromPort != toPort)
         {
-            _railWalker.MoveToBranchStart(fromRoom);
-            yield return WaitForRailWalker();
-
-            _railWalker.MovePortToPort(intersection, fromPort, toPort);
-            yield return WaitForRailWalker();
+            if (_railWalker.MoveToBranchStart(fromRoom))
+            {
+                _railWalker.QueueMovePortToPort(intersection, fromPort, toPort);
+                _railWalker.QueueMoveToRoom(toRoom);
+                yield return WaitForRailWalker();
+                yield break;
+            }
         }
 
         _railWalker.MoveToRoom(toRoom);
         yield return WaitForRailWalker();
     }
 
-    private IEnumerator GoToElevatorFromCurrentRoom(RoomManager room, IntersectionSplineExpander intersection)
+    private IEnumerator GoToElevatorFromCurrentRoom(RoomManager room, IntersectionSplineExpander intersection, IntersectionElevator elevator)
     {
         IntersectionRailPort roomPort = intersection.GetRoomPort(room);
 
-        _railWalker.MoveToBranchStart(room);
-        yield return WaitForRailWalker();
+        if (_railWalker.MoveToBranchStart(room))
+            yield return WaitForRailWalker();
 
-        _railWalker.MovePortToPort(intersection, roomPort, IntersectionRailPort.Elevator);
-        yield return WaitForRailWalker();
+        if (elevator != null)
+            elevator.OpenDoors();
+
+        if (_railWalker.MovePortToPort(intersection, roomPort, IntersectionRailPort.Elevator))
+            yield return WaitForRailWalker();
     }
 
-    private IEnumerator LeaveElevatorToTargetRoom(RoomManager targetRoom, IntersectionSplineExpander intersection)
+    private IEnumerator LeaveElevatorToTargetRoom(RoomManager targetRoom, IntersectionSplineExpander intersection, IntersectionElevator elevator)
     {
         IntersectionRailPort targetPort = intersection.GetRoomPort(targetRoom);
 
-        _railWalker.MovePortToPort(intersection, IntersectionRailPort.Elevator, targetPort);
-        yield return WaitForRailWalker();
+        if (_railWalker.MovePortToPort(intersection, IntersectionRailPort.Elevator, targetPort))
+            yield return WaitForRailWalker();
+
+        if (elevator != null)
+            elevator.CloseDoors();
 
         _railWalker.MoveToRoom(targetRoom);
         yield return WaitForRailWalker();
+    }
+
+    private void FaceTowardsUpcomingElevatorExit(IntersectionSplineExpander intersection, IntersectionRailPort targetPort)
+    {
+        if (intersection == null)
+            return;
+
+        if (!intersection.TryGetTransition(IntersectionRailPort.Elevator, targetPort, out int splineIndex, out _))
+            return;
+
+        Vector3 exitDirection = -intersection.EvaluateDirectionWorldFromLine(splineIndex, 1f);
+        FaceDirection(exitDirection);
     }
 
     private IEnumerator MoveOffRailTo(Vector3 targetPosition, bool playWalk)
@@ -207,13 +249,18 @@ public class NPCBunkerWorker : MonoBehaviour
 
     private void FaceTowards(Vector3 targetPosition)
     {
+        Vector3 direction = targetPosition - transform.position;
+        FaceDirection(direction);
+    }
+
+    private void FaceDirection(Vector3 direction)
+    {
         if (_railWalker != null)
         {
-            _railWalker.FaceTowards(targetPosition);
+            _railWalker.FaceDirection(direction);
             return;
         }
 
-        Vector3 direction = targetPosition - transform.position;
         direction.y = 0f;
 
         if (direction.sqrMagnitude <= 0.0001f)
