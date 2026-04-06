@@ -34,6 +34,11 @@ public class PlayerBunkerManager : MonoBehaviour
     [Header("Navigate State - Smooth")]
     [SerializeField] public float cameraSharpness;
 
+    [Header("Navigate State - Zoom")]
+    [SerializeField] public float cameraMinZ = 0f;
+    [SerializeField] public float cameraMaxZ = 350f;
+    [SerializeField] public float cameraZoomTweenDuration = 0.2f;
+
     [Header("Navigate State - Inertia")]
     [SerializeField] public bool cameraEnableInertia;
     [SerializeField] public float cameraInertiaDecay;
@@ -61,6 +66,7 @@ public class PlayerBunkerManager : MonoBehaviour
     [HideInInspector] public InputAction confirmInputAction;
     [HideInInspector] public InputAction unconfirmInputAction;
     [HideInInspector] public InputAction dragInputAction;
+    [HideInInspector] public InputAction zoomInputAction;
 
     private PlayerBunkerState _currentState;
 
@@ -104,6 +110,7 @@ public class PlayerBunkerManager : MonoBehaviour
         confirmInputAction = _gameplayInputActionMap.FindAction("Confirm", true);
         unconfirmInputAction = _gameplayInputActionMap.FindAction("Unconfirm", true);
         dragInputAction = _gameplayInputActionMap.FindAction("Drag", true);
+        zoomInputAction = _gameplayInputActionMap.FindAction("Zoom", true);
 
         if (!_gameplayInputActionMap.enabled)
             _gameplayInputActionMap.Enable();

@@ -13,6 +13,14 @@ public class NPCBunkerWorker : MonoBehaviour
     [SerializeField] private MachineManager _targetMachine;
     [SerializeField] private int _currentWorkSlot = -1;
 
+    [Header("Needs")]
+    [SerializeField, Range(0f, 100f)] private float _hunger;
+    [SerializeField, Range(0f, 100f)] private float _thirst;
+    [SerializeField, Range(0f, 100f)] private float _fatigue;
+    [SerializeField] private float _hungerPerSecond = 0.75f;
+    [SerializeField] private float _thirstPerSecond = 0.9f;
+    [SerializeField] private float _fatiguePerSecond = 0.65f;
+
     [Header("Off Rail Movement")]
     [SerializeField] private float _offRailMoveSpeed = 2f;
     [SerializeField] private float _offRailArrivalDistance = 0.05f;
@@ -50,12 +58,20 @@ public class NPCBunkerWorker : MonoBehaviour
             AssignMachine(_targetMachine);
     }
 
+    private void Update()
+    {
+        TickNeeds(Time.deltaTime);
+    }
+
     public void AssignMachine(MachineManager machine)
     {
         if (machine == null)
             return;
 
         if (_currentMachine == machine && _isWorking)
+            return;
+
+        if (_targetMachine == machine && (_isBusy || _isWorking))
             return;
 
         ReleasePendingReservation();
@@ -68,6 +84,102 @@ public class NPCBunkerWorker : MonoBehaviour
 
         _targetMachine = machine;
         _currentRoutine = StartCoroutine(MoveToMachineRoutine(machine));
+    }
+
+    public MachineManager GetAssignedOrTargetMachine()
+    {
+        if (_targetMachine != null)
+            return _targetMachine;
+
+        return _currentMachine;
+    }
+
+    public bool IsBusy()
+    {
+        return _isBusy;
+    }
+
+    public bool IsWorking()
+    {
+        return _isWorking;
+    }
+
+    public float GetHunger()
+    {
+        return _hunger;
+    }
+
+    public float GetThirst()
+    {
+        return _thirst;
+    }
+
+    public float GetFatigue()
+    {
+        return _fatigue;
+    }
+
+    public float GetNeedValue(NPCNeedType needType)
+    {
+        switch (needType)
+        {
+            case NPCNeedType.Hunger:
+                return _hunger;
+            case NPCNeedType.Thirst:
+                return _thirst;
+            case NPCNeedType.Fatigue:
+                return _fatigue;
+            default:
+                return 0f;
+        }
+    }
+
+    public NPCNeedType GetMostUrgentNeedType()
+    {
+        float highestValue = _hunger;
+        NPCNeedType highestNeed = NPCNeedType.Hunger;
+
+        if (_thirst > highestValue)
+        {
+            highestValue = _thirst;
+            highestNeed = NPCNeedType.Thirst;
+        }
+
+        if (_fatigue > highestValue)
+            highestNeed = NPCNeedType.Fatigue;
+
+        return highestNeed;
+    }
+
+    public float GetMostUrgentNeedValue()
+    {
+        return Mathf.Max(_hunger, _thirst, _fatigue);
+    }
+
+    public void RecoverNeed(NPCNeedType needType, float amount)
+    {
+        if (amount <= 0f)
+            return;
+
+        switch (needType)
+        {
+            case NPCNeedType.Hunger:
+                _hunger = Mathf.Max(0f, _hunger - amount);
+                break;
+            case NPCNeedType.Thirst:
+                _thirst = Mathf.Max(0f, _thirst - amount);
+                break;
+            case NPCNeedType.Fatigue:
+                _fatigue = Mathf.Max(0f, _fatigue - amount);
+                break;
+        }
+    }
+
+    private void TickNeeds(float deltaTime)
+    {
+        _hunger = Mathf.Clamp(_hunger + _hungerPerSecond * deltaTime, 0f, 100f);
+        _thirst = Mathf.Clamp(_thirst + _thirstPerSecond * deltaTime, 0f, 100f);
+        _fatigue = Mathf.Clamp(_fatigue + _fatiguePerSecond * deltaTime, 0f, 100f);
     }
 
     private IEnumerator MoveToMachineRoutine(MachineManager targetMachine)
@@ -124,11 +236,20 @@ public class NPCBunkerWorker : MonoBehaviour
 
         reservedWorkPoint = targetMachine.GetWorkPointWorldPosition(reservedWorkSlot);
         yield return MoveOffRailTo(reservedWorkPoint, true);
+
+        if (!targetMachine.ConfirmWorkerArrived(this, reservedWorkSlot))
+        {
+            ReleasePendingReservation();
+            ClearBusyState();
+            yield break;
+        }
+
         FaceTowards(targetMachine.transform.position);
         PlayAnimation(_workStateName);
 
         _currentRoom = targetRoom;
         _currentMachine = targetMachine;
+        _targetMachine = targetMachine;
         _currentWorkSlot = reservedWorkSlot;
         _pendingMachine = null;
         _pendingWorkSlot = -1;
@@ -156,7 +277,7 @@ public class NPCBunkerWorker : MonoBehaviour
 
         if (targetElevator != null)
             yield return targetElevator.PlayOpenAndWait();
-            
+
         FaceTowardsUpcomingElevatorExit(targetIntersection, targetPort);
         yield return LeaveElevatorToTargetRoom(targetRoom, targetIntersection, targetElevator);
     }
@@ -294,6 +415,7 @@ public class NPCBunkerWorker : MonoBehaviour
         _isBusy = false;
         _isWorking = false;
         _currentRoutine = null;
+        _targetMachine = null;
     }
 
     private void PlayAnimation(string stateName)

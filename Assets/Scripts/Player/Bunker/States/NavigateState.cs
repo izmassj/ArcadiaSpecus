@@ -1,3 +1,4 @@
+using DG.Tweening;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,6 +7,8 @@ public class NavigateState : PlayerBunkerState
 {
     private Vector3 _desiredPos;
     private Vector3 _inertiaVel;
+    private Tween _zoomTween;
+    private float _lastZoomTargetZ = float.NaN;
 
     public NavigateState(PlayerBunkerManager manager) : base(manager) { }
 
@@ -14,9 +17,16 @@ public class NavigateState : PlayerBunkerState
         if (playerManager.navigationVirtualCamera != null)
         {
             _desiredPos = playerManager.navigationVirtualCamera.transform.position;
+            _lastZoomTargetZ = playerManager.navigationVirtualCamera.transform.position.z;
         }
 
         _inertiaVel = Vector3.zero;
+    }
+
+    public override void Exit()
+    {
+        _zoomTween?.Kill();
+        _zoomTween = null;
     }
 
     public override void HandleInput()
@@ -25,7 +35,57 @@ public class NavigateState : PlayerBunkerState
 
     public override void Update()
     {
+        UpdateZoomInput();
         UpdateCameraMovement();
+    }
+
+
+    private void UpdateZoomInput()
+    {
+        if (playerManager.zoomInputAction == null || playerManager.navigationVirtualCamera == null)
+            return;
+
+        Vector2 scroll = playerManager.zoomInputAction.ReadValue<Vector2>();
+
+        if (scroll.y > 0.01f)
+        {
+            MoveZoomTo(playerManager.cameraMaxZ);
+        }
+        else if (scroll.y < -0.01f)
+        {
+            MoveZoomTo(playerManager.cameraMinZ);
+        }
+    }
+
+    private void MoveZoomTo(float targetZ)
+    {
+        CinemachineCamera virtualCamera = playerManager.navigationVirtualCamera;
+        if (virtualCamera == null)
+            return;
+
+        targetZ = Mathf.Clamp(targetZ, playerManager.cameraMinZ, playerManager.cameraMaxZ);
+
+        if (!float.IsNaN(_lastZoomTargetZ) && Mathf.Approximately(_lastZoomTargetZ, targetZ) && _zoomTween != null && _zoomTween.IsActive())
+            return;
+
+        _lastZoomTargetZ = targetZ;
+
+        _zoomTween?.Kill();
+        _zoomTween = virtualCamera.transform
+            .DOMoveZ(targetZ, playerManager.cameraZoomTweenDuration)
+            .SetEase(Ease.OutQuad)
+            .OnUpdate(() =>
+            {
+                if (virtualCamera != null)
+                {
+                    Vector3 currentPos = virtualCamera.transform.position;
+                    _desiredPos.z = currentPos.z;
+                }
+            })
+            .OnKill(() =>
+            {
+                _zoomTween = null;
+            });
     }
 
     private void UpdateCameraMovement()
