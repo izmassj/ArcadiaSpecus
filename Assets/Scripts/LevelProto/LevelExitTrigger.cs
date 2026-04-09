@@ -1,6 +1,7 @@
 using System.Collections;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LevelExitTrigger : MonoBehaviour
 {
@@ -13,6 +14,16 @@ public class LevelExitTrigger : MonoBehaviour
     [SerializeField] private CinemachineCamera _exitCamera;
     [SerializeField] private int _activePriority = 20;
     [SerializeField] private int _inactivePriority = 10;
+    [SerializeField] private string _bunkerSceneNameOverride;
+
+    [Header("Reward Range")]
+    [SerializeField] private bool _allowJoinedInhabitantsReward = true;
+    [SerializeField, Range(0f, 1f)] private float _joinedInhabitantsChance = 0.2f;
+    [SerializeField] private Vector2Int _joinedInhabitantsRange = new Vector2Int(1, 1);
+    [SerializeField] private Vector2Int _scrapRewardRange = new Vector2Int(5, 15);
+    [SerializeField] private Vector2Int _electricityRewardRange = new Vector2Int(2, 8);
+    [SerializeField] private Vector2Int _waterRewardRange = new Vector2Int(2, 8);
+    [SerializeField] private Vector2Int _foodRewardRange = new Vector2Int(2, 8);
 
     [Header("Transition Range")]
     [SerializeField] private Vector2 _coverStartRange = new Vector2(0f, 0f);
@@ -24,9 +35,12 @@ public class LevelExitTrigger : MonoBehaviour
 
     private void Update()
     {
-        if (_currentCamera != CinemachineBrain.GetActiveBrain(0).ActiveVirtualCamera as CinemachineCamera)
+        CinemachineBrain brain = CinemachineBrain.GetActiveBrain(0);
+        if (brain != null)
         {
-            _currentCamera = CinemachineBrain.GetActiveBrain(0).ActiveVirtualCamera as CinemachineCamera;
+            CinemachineCamera activeCamera = brain.ActiveVirtualCamera as CinemachineCamera;
+            if (activeCamera != null && _currentCamera != activeCamera)
+                _currentCamera = activeCamera;
         }
     }
 
@@ -36,14 +50,15 @@ public class LevelExitTrigger : MonoBehaviour
             return;
 
         _triggered = true;
-
         ResetTransitionValues();
-
         StartCoroutine(ExitRoutine());
     }
 
     private void ResetTransitionValues()
     {
+        if (_transition == null)
+            return;
+
         _transition.coverStartRange = _coverStartRange;
         _transition.coverEndRange = _coverEndRange;
         _transition.revealStartRange = _revealStartRange;
@@ -63,15 +78,42 @@ public class LevelExitTrigger : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        _door.CloseDoor();
+        if (_door != null)
+            _door.CloseDoor();
 
         yield return new WaitForSeconds(1f);
 
         if (_transition != null)
         {
             ResetTransitionValues();
-
             yield return _transition.PlayCoverRoutine();
         }
+
+        QueueRandomRewards();
+
+        string bunkerSceneName = !string.IsNullOrWhiteSpace(_bunkerSceneNameOverride)
+            ? _bunkerSceneNameOverride
+            : BunkerSessionLaunch.CurrentBunkerSceneName;
+
+        if (!string.IsNullOrWhiteSpace(bunkerSceneName))
+            SceneManager.LoadScene(bunkerSceneName);
+    }
+
+    private void QueueRandomRewards()
+    {
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Scrap, GetRandomAmount(_scrapRewardRange));
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Electricity, GetRandomAmount(_electricityRewardRange));
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Water, GetRandomAmount(_waterRewardRange));
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Food, GetRandomAmount(_foodRewardRange));
+
+        if (_allowJoinedInhabitantsReward && Random.value <= _joinedInhabitantsChance)
+            BunkerSessionLaunch.AddPendingJoinedInhabitants(GetRandomAmount(_joinedInhabitantsRange));
+    }
+
+    private int GetRandomAmount(Vector2Int range)
+    {
+        int min = Mathf.Min(range.x, range.y);
+        int max = Mathf.Max(range.x, range.y);
+        return Random.Range(min, max + 1);
     }
 }

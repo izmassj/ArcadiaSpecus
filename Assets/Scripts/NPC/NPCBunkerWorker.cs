@@ -119,6 +119,48 @@ public class NPCBunkerWorker : MonoBehaviour
         return _fatigue;
     }
 
+    public void LoadNeedsValues(float hunger, float thirst, float fatigue)
+    {
+        _hunger = Mathf.Clamp(hunger, 0f, 100f);
+        _thirst = Mathf.Clamp(thirst, 0f, 100f);
+        _fatigue = Mathf.Clamp(fatigue, 0f, 100f);
+    }
+
+    public void PrimeArrivalRoomReference(RoomManager room)
+    {
+        if (room == null)
+            return;
+
+        _currentRoom = room;
+
+        if (_railWalker != null)
+            _railWalker.SetStartRoomReferenceOnly(room);
+    }
+
+    public void InitializeSpawnAtRoom(RoomManager room)
+    {
+        if (room == null)
+            return;
+
+        _currentRoom = room;
+        _currentMachine = null;
+        _targetMachine = null;
+        _currentWorkSlot = -1;
+        _pendingMachine = null;
+        _pendingWorkSlot = -1;
+        _isBusy = false;
+        _isWorking = false;
+
+        if (_currentRoutine != null)
+        {
+            StopCoroutine(_currentRoutine);
+            _currentRoutine = null;
+        }
+
+        if (_railWalker != null)
+            _railWalker.InitializeFromRoom(room);
+    }
+
     public float GetNeedValue(NPCNeedType needType)
     {
         switch (needType)
@@ -206,7 +248,7 @@ public class NPCBunkerWorker : MonoBehaviour
 
         if (_currentMachine != null)
         {
-            yield return MoveOffRailTo(_currentRoom.GetRailCenterWorldPosition(), true);
+            yield return MoveOffRailTo(_currentRoom.GetRailCenterWorldPosition(), true, Vector3.zero);
             ReleaseCurrentMachineSlot();
             _railWalker.SnapToRoom(_currentRoom);
         }
@@ -235,7 +277,8 @@ public class NPCBunkerWorker : MonoBehaviour
         }
 
         reservedWorkPoint = targetMachine.GetWorkPointWorldPosition(reservedWorkSlot);
-        yield return MoveOffRailTo(reservedWorkPoint, true);
+        Vector3 workFacingDirection = GetWorkFacingDirection(targetMachine, reservedWorkSlot, reservedWorkPoint);
+        yield return MoveOffRailTo(reservedWorkPoint, true, workFacingDirection);
 
         if (!targetMachine.ConfirmWorkerArrived(this, reservedWorkSlot))
         {
@@ -244,7 +287,7 @@ public class NPCBunkerWorker : MonoBehaviour
             yield break;
         }
 
-        FaceTowards(targetMachine.transform.position);
+        FaceDirection(workFacingDirection);
         PlayAnimation(_workStateName);
 
         _currentRoom = targetRoom;
@@ -260,8 +303,8 @@ public class NPCBunkerWorker : MonoBehaviour
 
     private IEnumerator TravelAcrossFloors(RoomManager fromRoom, RoomManager targetRoom, IntersectionSplineExpander currentIntersection, IntersectionSplineExpander targetIntersection)
     {
-        IntersectionElevator sourceElevator = currentIntersection.gameObject.transform.GetChild(0).transform.GetChild(0).GetComponent<IntersectionElevator>();
-        IntersectionElevator targetElevator = targetIntersection.gameObject.transform.GetChild(0).transform.GetChild(0).GetComponent<IntersectionElevator>();
+        IntersectionElevator sourceElevator = currentIntersection.GetElevator();
+        IntersectionElevator targetElevator = targetIntersection.GetElevator();
         IntersectionRailPort targetPort = targetIntersection.GetRoomPort(targetRoom);
 
         yield return GoToElevatorFromCurrentRoom(fromRoom, currentIntersection, sourceElevator);
@@ -342,20 +385,40 @@ public class NPCBunkerWorker : MonoBehaviour
         FaceDirection(exitDirection);
     }
 
-    private IEnumerator MoveOffRailTo(Vector3 targetPosition, bool playWalk)
+    private IEnumerator MoveOffRailTo(Vector3 targetPosition, bool playWalk, Vector3 finalFacingDirection)
     {
+        Vector3 initialDirection = targetPosition - transform.position;
+        initialDirection = Vector3.ProjectOnPlane(initialDirection, Vector3.up);
+
         if (playWalk)
             PlayAnimation(_walkStateName);
 
+        if (initialDirection.sqrMagnitude > 0.0001f)
+            FaceDirection(initialDirection);
+
         while ((targetPosition - transform.position).sqrMagnitude > _offRailArrivalDistance * _offRailArrivalDistance)
         {
+            Vector3 previousPosition = transform.position;
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, _offRailMoveSpeed * Time.deltaTime);
-            FaceTowards(targetPosition);
+
+            Vector3 moveDirection = transform.position - previousPosition;
+            moveDirection = Vector3.ProjectOnPlane(moveDirection, Vector3.up);
+
+            if (moveDirection.sqrMagnitude > 0.0001f)
+                FaceDirection(moveDirection);
+            else
+                FaceTowards(targetPosition);
+
             yield return null;
         }
 
         transform.position = targetPosition;
-        FaceTowards(targetPosition);
+
+        if (finalFacingDirection.sqrMagnitude > 0.0001f)
+            FaceDirection(finalFacingDirection);
+        else if (initialDirection.sqrMagnitude > 0.0001f)
+            FaceDirection(initialDirection);
+
         PlayAnimation(_idleStateName);
     }
 
@@ -390,6 +453,24 @@ public class NPCBunkerWorker : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
     }
 
+    private Vector3 GetWorkFacingDirection(MachineManager machine, int slotIndex, Vector3 workPointWorldPosition)
+    {
+        if (machine == null)
+            return Vector3.zero;
+
+        Transform workPoint = machine.GetWorkPointTransform(slotIndex);
+        if (workPoint != null)
+        {
+            Vector3 workForward = Vector3.ProjectOnPlane(workPoint.forward, Vector3.up);
+            if (workForward.sqrMagnitude > 0.0001f)
+                return workForward;
+        }
+
+        Vector3 towardsMachine = machine.transform.position - workPointWorldPosition;
+        towardsMachine = Vector3.ProjectOnPlane(towardsMachine, Vector3.up);
+        return towardsMachine;
+    }
+
     private void ReleaseCurrentMachineSlot()
     {
         if (_currentMachine == null)
@@ -420,13 +501,10 @@ public class NPCBunkerWorker : MonoBehaviour
 
     private void PlayAnimation(string stateName)
     {
-        if (_animator == null || string.IsNullOrWhiteSpace(stateName))
+        if (_animator == null || string.IsNullOrWhiteSpace(stateName) || _currentAnimationState == stateName)
             return;
 
-        if (_currentAnimationState == stateName)
-            return;
-
-        _animator.Play(stateName, 0, 0f);
+        _animator.CrossFadeInFixedTime(stateName, 0.08f);
         _currentAnimationState = stateName;
     }
 }

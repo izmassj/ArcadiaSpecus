@@ -15,7 +15,6 @@ public class CameraBunkerManager : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     [Header("Camera")]

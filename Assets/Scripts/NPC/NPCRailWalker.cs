@@ -31,6 +31,7 @@ public class NPCRailWalker : MonoBehaviour
     private Quaternion _visualBaseLocalRotation;
     private string _currentAnimationState;
     private float _lastMovementSign = 1f;
+    private Vector3 _lastFacingDirection = Vector3.forward;
     private readonly Queue<RailMoveRequest> _queuedMoves = new();
 
     private struct RailMoveRequest
@@ -98,6 +99,11 @@ public class NPCRailWalker : MonoBehaviour
     public RoomManager GetStartRoom()
     {
         return _startRoom;
+    }
+
+    public void SetStartRoomReferenceOnly(RoomManager room)
+    {
+        _startRoom = room;
     }
 
     public void InitializeFromRoom(RoomManager room)
@@ -318,11 +324,11 @@ public class NPCRailWalker : MonoBehaviour
             return;
 
         float splineLength = _railOwner.GetSplineLength(_splineIndex);
-
         if (splineLength <= 0.001f)
             return;
 
         float normalizedT = Mathf.Clamp01(_currentDistance / splineLength);
+        Vector3 previousPosition = transform.position;
         Vector3 worldPosition = _railOwner.EvaluatePositionWorld(_splineIndex, normalizedT);
         Vector3 tangent = _railOwner.EvaluateDirectionWorldFromLine(_splineIndex, normalizedT);
 
@@ -330,20 +336,32 @@ public class NPCRailWalker : MonoBehaviour
             tangent = -tangent;
 
         transform.position = worldPosition;
-        UpdateVisualDirection(tangent);
+
+        Vector3 movementDirection = worldPosition - previousPosition;
+        movementDirection = Vector3.ProjectOnPlane(movementDirection, Vector3.up);
+
+        if (movementDirection.sqrMagnitude > 0.000001f)
+            UpdateVisualDirection(movementDirection);
+        else
+            UpdateVisualDirection(tangent);
     }
 
-    private void UpdateVisualDirection(Vector3 tangent)
+    private void UpdateVisualDirection(Vector3 direction)
     {
         if (!_flipVisualByDirection || _visualRoot == null)
             return;
 
-        Vector3 flatDirection = Vector3.ProjectOnPlane(tangent, Vector3.up);
-
+        Vector3 flatDirection = Vector3.ProjectOnPlane(direction, Vector3.up);
         if (flatDirection.sqrMagnitude <= 0.0001f)
-            return;
+        {
+            flatDirection = _lastFacingDirection;
+            if (flatDirection.sqrMagnitude <= 0.0001f)
+                return;
+        }
 
-        Quaternion lookRotation = Quaternion.LookRotation(flatDirection.normalized, Vector3.up);
+        _lastFacingDirection = flatDirection.normalized;
+
+        Quaternion lookRotation = Quaternion.LookRotation(_lastFacingDirection, Vector3.up);
         Quaternion finalWorldRotation = lookRotation * Quaternion.Euler(0f, _visualYawOffset, 0f);
 
         if (_visualRoot.parent != null)

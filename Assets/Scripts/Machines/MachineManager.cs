@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class MachineManager : MonoBehaviour
@@ -125,6 +126,26 @@ public class MachineManager : MonoBehaviour
         return _stationCycleTime;
     }
 
+    public MachineRuntimeSaveData GetRuntimeSaveData()
+    {
+        return new MachineRuntimeSaveData
+        {
+            currentCycleTimer = _currentCycleTimer,
+            canCollect = _canCollect,
+            pendingResourceAmount = _pendingResourceAmount
+        };
+    }
+
+    public void LoadRuntimeSaveData(MachineRuntimeSaveData data)
+    {
+        if (data == null)
+            return;
+
+        _currentCycleTimer = Mathf.Max(0f, data.currentCycleTimer);
+        _canCollect = data.canCollect;
+        _pendingResourceAmount = Mathf.Max(0, data.pendingResourceAmount);
+    }
+
     public void CollectProducedResources(BunkerResourceManager resourceManager)
     {
         if (!CanCollectProducedResources() || resourceManager == null)
@@ -215,105 +236,87 @@ public class MachineManager : MonoBehaviour
         }
     }
 
+
+    public Transform GetWorkPointTransform(int slotIndex)
+    {
+        if (slotIndex == 0)
+            return _workPointA;
+
+        if (slotIndex == 1)
+            return _workPointB;
+
+        return null;
+    }
     public Vector3 GetWorkPointWorldPosition(int slotIndex)
     {
         if (slotIndex == 0 && _workPointA != null)
-            return _workPointA.position;
+            return _workPointA.position + _workPointOffset;
 
         if (slotIndex == 1 && _workPointB != null)
-            return _workPointB.position;
+            return _workPointB.position + _workPointOffset;
 
-        ResolveOwnerRoom();
-
-        Vector3 basePosition = transform.position + _workPointOffset;
-
-        if (_ownerRoom == null)
-        {
-            float offset = slotIndex == 0 ? _fallbackSlotSeparation * 0.5f : -_fallbackSlotSeparation * 0.5f;
-            return basePosition + transform.right * offset;
-        }
-
-        Vector3 railCenter = _ownerRoom.GetRailCenterWorldPosition();
-        Vector3 toRail = (railCenter - basePosition).normalized;
-
-        if (toRail.sqrMagnitude <= 0.0001f)
-            toRail = -transform.forward;
-
-        Vector3 side = Vector3.Cross(Vector3.up, toRail).normalized;
-        Vector3 centerPoint = (railCenter + basePosition) * 0.5f;
-        float sideOffset = slotIndex == 0 ? _fallbackSlotSeparation * 0.5f : -_fallbackSlotSeparation * 0.5f;
-        return centerPoint + side * sideOffset;
+        Vector3 right = transform.right * _fallbackSlotSeparation * (slotIndex == 0 ? -1f : 1f);
+        return transform.position + right + _workPointOffset;
     }
 
     private void SimulateMachine(float deltaTime)
     {
-        int workerCount = GetActiveWorkerCount();
-        if (workerCount <= 0)
-        {
-            _currentCycleTimer = 0f;
-            return;
-        }
-
         if (_usageType == MachineUsageType.Production)
         {
-            SimulateProduction(deltaTime, workerCount);
+            SimulateProduction(deltaTime);
             return;
         }
 
         SimulateStation(deltaTime);
     }
 
-    private void SimulateProduction(float deltaTime, int workerCount)
+    private void SimulateProduction(float deltaTime)
     {
         if (_canCollect)
             return;
 
-        float cycleDuration = GetCurrentProductionCycleDuration(workerCount);
-        if (cycleDuration <= 0f)
-            cycleDuration = 0.1f;
+        int activeWorkers = GetActiveWorkerCount();
+        if (activeWorkers <= 0)
+        {
+            _currentCycleTimer = 0f;
+            return;
+        }
 
+        float targetCycleDuration = _productionTimeWithOneWorker;
+        if (activeWorkers >= 2)
+            targetCycleDuration *= _secondWorkerTimeMultiplier;
+
+        targetCycleDuration = Mathf.Max(0.01f, targetCycleDuration);
         _currentCycleTimer += deltaTime;
 
-        if (_currentCycleTimer < cycleDuration)
+        if (_currentCycleTimer < targetCycleDuration)
             return;
 
-        _currentCycleTimer = 0f;
+        _currentCycleTimer = targetCycleDuration;
         _pendingResourceAmount += _resourceAmountPerCycle;
         _canCollect = true;
     }
 
     private void SimulateStation(float deltaTime)
     {
-        if (_recoveredNeedType == NPCNeedType.None)
+        int activeWorkers = GetActiveWorkerCount();
+        if (activeWorkers <= 0)
+        {
+            _currentCycleTimer = 0f;
             return;
+        }
 
         _currentCycleTimer += deltaTime;
-
         if (_currentCycleTimer < _stationCycleTime)
             return;
 
         _currentCycleTimer = 0f;
-        if (_workerInSlotAReady)
-            ApplyStationRecovery(_workerInSlotA);
 
-        if (_workerInSlotBReady)
-            ApplyStationRecovery(_workerInSlotB);
-    }
+        if (_workerInSlotA != null && _workerInSlotAReady)
+            _workerInSlotA.RecoverNeed(_recoveredNeedType, _stationRecoveryPerCycle);
 
-    private void ApplyStationRecovery(NPCBunkerWorker worker)
-    {
-        if (worker == null)
-            return;
-
-        worker.RecoverNeed(_recoveredNeedType, _stationRecoveryPerCycle);
-    }
-
-    private float GetCurrentProductionCycleDuration(int workerCount)
-    {
-        if (workerCount <= 1)
-            return _productionTimeWithOneWorker;
-
-        return _productionTimeWithOneWorker * _secondWorkerTimeMultiplier;
+        if (_workerInSlotB != null && _workerInSlotBReady)
+            _workerInSlotB.RecoverNeed(_recoveredNeedType, _stationRecoveryPerCycle);
     }
 
     private void ResolveOwnerRoom()
@@ -358,4 +361,12 @@ public class MachineManager : MonoBehaviour
                 break;
         }
     }
+}
+
+[Serializable]
+public class MachineRuntimeSaveData
+{
+    public float currentCycleTimer;
+    public bool canCollect;
+    public int pendingResourceAmount;
 }

@@ -24663,6 +24663,7 @@ GameObject:
   - component: {fileID: 988617867}
   - component: {fileID: 988617866}
   - component: {fileID: 988617868}
+  - component: {fileID: 988617869}
   m_Layer: 0
   m_Name: Level
   m_TagString: Untagged
@@ -24725,9 +24726,9 @@ MonoBehaviour:
   _lookOffset: {x: 0, y: 3, z: 0}
   _startingLives: 3
   _lifeIcons:
-  - {fileID: 1745847611}
-  - {fileID: 1229683358}
   - {fileID: 1317119852}
+  - {fileID: 1229683358}
+  - {fileID: 1745847611}
   _resettableObjects:
   - {fileID: 593991530550658361}
   - {fileID: 2542903260088322494}
@@ -24735,6 +24736,20 @@ MonoBehaviour:
   - {fileID: 611317124}
   _currentLives: 0
   _isRespawning: 0
+--- !u!114 &988617869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988617865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62abee43d78321f4abd7decc4f55e893, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExplorationSceneEntryTransition
+  _transition: {fileID: 1303649306}
+  _requireSessionRequest: 1
 --- !u!4 &989279378 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3557226382463581187, guid: 184793469ea7bd64a9c9503dfec06d70, type: 3}
@@ -48380,6 +48395,11 @@ MonoBehaviour:
   _exitCamera: {fileID: 1535587600}
   _activePriority: 20
   _inactivePriority: 10
+  _bunkerSceneNameOverride: REV-BUNKERSYS
+  _scrapRewardRange: {x: 5, y: 15}
+  _electricityRewardRange: {x: 2, y: 8}
+  _waterRewardRange: {x: 2, y: 8}
+  _foodRewardRange: {x: 2, y: 8}
   _coverStartRange: {x: 0, y: 0}
   _coverEndRange: {x: 0.9, y: 1.1}
   _revealStartRange: {x: 0, y: 1}

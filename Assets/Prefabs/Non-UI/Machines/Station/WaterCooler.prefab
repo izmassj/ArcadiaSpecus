@@ -237,6 +237,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MachineManager
   typeOfMachine: 6
+  _usageType: 1
+  _producedResourceType: 0
+  _resourceAmountPerCycle: 5
+  _productionTimeWithOneWorker: 10
+  _secondWorkerTimeMultiplier: 0.65
+  _recoveredNeedType: 2
+  _stationCycleTime: 6
+  _stationRecoveryPerCycle: 20
+  _ownerRoom: {fileID: 0}
+  _workPointA: {fileID: 0}
+  _workPointB: {fileID: 0}
+  _workPointOffset: {x: 0, y: 0, z: 0}
+  _fallbackSlotSeparation: 0.6
+  _currentCycleTimer: 0
+  _canCollect: 0
+  _pendingResourceAmount: 0
 --- !u!1 &9191154458654203826
 GameObject:
   m_ObjectHideFlags: 0

@@ -51,7 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MachineManager
   typeOfMachine: 1
   _usageType: 0
-  _producedResourceType: 0
+  _producedResourceType: 3
   _resourceAmountPerCycle: 5
   _productionTimeWithOneWorker: 10
   _secondWorkerTimeMultiplier: 0.65
@@ -59,8 +59,8 @@ MonoBehaviour:
   _stationCycleTime: 6
   _stationRecoveryPerCycle: 20
   _ownerRoom: {fileID: 0}
-  _workPointA: {fileID: 0}
-  _workPointB: {fileID: 0}
+  _workPointA: {fileID: 5704423915339425710}
+  _workPointB: {fileID: 7123154537861115245}
   _workPointOffset: {x: 0, y: 0, z: 0}
   _fallbackSlotSeparation: 0.6
   _currentCycleTimer: 0
@@ -85,6 +85,7 @@ MonoBehaviour:
   _slider: {fileID: 5113981560737461069}
   _readyText: Collect
   _waitingText: Waiting
+  _noNPCText: No Worker
 --- !u!1 &519628454347697977
 GameObject:
   m_ObjectHideFlags: 0

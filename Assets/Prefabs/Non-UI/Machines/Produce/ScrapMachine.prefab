@@ -59,8 +59,8 @@ MonoBehaviour:
   _stationCycleTime: 6
   _stationRecoveryPerCycle: 20
   _ownerRoom: {fileID: 0}
-  _workPointA: {fileID: 0}
-  _workPointB: {fileID: 0}
+  _workPointA: {fileID: 5153098590268527841}
+  _workPointB: {fileID: 1521434887671157798}
   _workPointOffset: {x: 0, y: 0, z: 0}
   _fallbackSlotSeparation: 0.6
   _currentCycleTimer: 0

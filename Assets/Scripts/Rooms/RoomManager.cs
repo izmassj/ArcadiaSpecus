@@ -45,15 +45,15 @@ public class RoomManager : MonoBehaviour
     [HideInInspector] public CornerInteractionType cornerInteractionType;
 
     private bool _focusedRoom;
-    private GameObject _currentMachine;
+    private MachineManager _currentMachine;
 
     private void Start()
     {
         _focusedRoom = false;
-        _currentMachine = null;
+        _currentMachine = GetComponentInChildren<MachineManager>();
     }
 
-    void Update()
+    private void Update()
     {
         OnRoomBuild();
     }
@@ -134,7 +134,21 @@ public class RoomManager : MonoBehaviour
 
     public bool IsRoomOccupied()
     {
+        if (_currentMachine == null)
+            _occupied = false;
+
         return _occupied;
+    }
+
+    public MachineManager GetCurrentMachine()
+    {
+        if (_currentMachine == null)
+            _currentMachine = GetComponentInChildren<MachineManager>();
+
+        if (_currentMachine == null)
+            _occupied = false;
+
+        return _currentMachine;
     }
 
     public void FocusRoom()
@@ -151,23 +165,43 @@ public class RoomManager : MonoBehaviour
 
     public void InstatiateMachine(GameObject machine)
     {
+        InstantiateMachineAndGet(machine);
+    }
+
+    public MachineManager InstantiateMachineAndGet(GameObject machine)
+    {
         if (machine == null)
-            return;
+            return null;
 
         MachineManager prefabMachine = machine.GetComponent<MachineManager>();
 
         if (prefabMachine == null)
-            return;
+            return null;
 
-        if (_occupied)
-            return;
+        if (IsRoomOccupied())
+            return null;
 
         _occupied = true;
         GameObject machineInstance = Instantiate(machine, _objectPlacePosition);
         MachineManager machineManager = machineInstance.GetComponent<MachineManager>();
 
         if (machineManager != null)
+        {
             machineManager.AssignOwnerRoom(this);
+            _currentMachine = machineManager;
+        }
+
+        return machineManager;
+    }
+
+    public void ClearMachineInstant()
+    {
+        MachineManager machine = GetCurrentMachine();
+        if (machine != null)
+            Destroy(machine.gameObject);
+
+        _currentMachine = null;
+        _occupied = false;
     }
 
     public List<Transform> GetRailPoints()

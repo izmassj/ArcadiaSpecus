@@ -138,3 +138,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MachineManager
   typeOfMachine: 4
+  _usageType: 1
+  _producedResourceType: 0
+  _resourceAmountPerCycle: 5
+  _productionTimeWithOneWorker: 10
+  _secondWorkerTimeMultiplier: 0.65
+  _recoveredNeedType: 3
+  _stationCycleTime: 6
+  _stationRecoveryPerCycle: 20
+  _ownerRoom: {fileID: 0}
+  _workPointA: {fileID: 0}
+  _workPointB: {fileID: 0}
+  _workPointOffset: {x: 0, y: 0, z: 0}
+  _fallbackSlotSeparation: 0.6
+  _currentCycleTimer: 0
+  _canCollect: 0
+  _pendingResourceAmount: 0
