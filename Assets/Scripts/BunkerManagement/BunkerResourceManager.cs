@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class BunkerResourceManager : MonoBehaviour
@@ -7,6 +8,8 @@ public class BunkerResourceManager : MonoBehaviour
     [SerializeField] private int _electricity;
     [SerializeField] private int _water;
     [SerializeField] private int _food;
+
+    public event Action<BunkerResourceType, int> ResourcesAdded;
 
     public int Scrap => _scrap;
     public int Electricity => _electricity;
@@ -50,6 +53,8 @@ public class BunkerResourceManager : MonoBehaviour
                 _food += amount;
                 break;
         }
+
+        ResourcesAdded?.Invoke(resourceType, amount);
     }
 
     public bool TrySpend(BunkerResourceType resourceType, int amount)

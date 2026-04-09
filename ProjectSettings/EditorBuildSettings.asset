@@ -8,6 +8,36 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-BUNKERSYS/REV-BUNKERSYS.unity
+    guid: 79f2568cd7456084096504c0e3df46c2
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/ROBOT_LEVELS/LEVEL1/LEVEL1.unity
+    guid: b1702816425cd7744927e1f85fbdebba
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-CAMERA/REV-CAMERA.unity
+    guid: df5199a810ded3242b5b30d348b1409b
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-MENU/REV-MENU.unity
+    guid: 724adaa826049ef43b532d707fd035a7
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-NPCS/REV-NPCS.unity
+    guid: c10ab7ffa5c1a824abb5d56ccecf0108
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-OUTLINES/REV-OUTLINES.unity
+    guid: 2dbc45a5f908b0e40b619388c9c291f5
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-PLAYER/REV-PLAYER.unity
+    guid: 2e80ef93b474ba9498da3f07fe47fd70
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-ROBOT/REV-ROBOT.unity
+    guid: d51a9867c3340384681581edb23b6e82
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-ROOMS1/REV-ROOMS.unity
+    guid: 0a206dde43b2fc24eb0bd25394a06211
+  - enabled: 1
+    path: Assets/Scenes/Prototipado/REV-ROOMS2-MACHINES/REV-ROOMS2-MACHINES.unity
+    guid: d10198530e2481e4f8a54975a5ab484f
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

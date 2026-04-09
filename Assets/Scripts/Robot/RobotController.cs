@@ -5,13 +5,11 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class RobotController : MonoBehaviour
 {
-    [Header("External Lock")]
-    [SerializeField] private bool _movementLocked;
-
     [Header("References")]
     [SerializeField] private CharacterController _characterController;
     [SerializeField] private Transform _firstPersonPitchPivot;
     [SerializeField] private Transform _firstPersonCameraTarget;
+    [SerializeField] private CharacterControllerPlatformMotor _platformMotor;
 
     [Header("Cinemachine")]
     [SerializeField] private CinemachineCamera _thirdPersonCamera;
@@ -50,6 +48,10 @@ public class RobotController : MonoBehaviour
     [Header("Mode")]
     [SerializeField] private bool _isFirstPerson = false;
 
+    [Header("External Lock")]
+    [SerializeField] private bool _inputLocked;
+    [SerializeField] private bool _hardMovementLocked;
+
     [Header("Debug")]
     [SerializeField] private bool _isGrounded;
     [SerializeField] private Vector3 _worldVelocity;
@@ -71,17 +73,23 @@ public class RobotController : MonoBehaviour
     private float _pitch;
 
     public bool IsGrounded => _isGrounded;
+    public bool IsFirstPerson => _isFirstPerson;
     public Vector3 WorldVelocity => _worldVelocity;
     public Vector3 LocalPlanarVelocity => _localPlanarVelocity;
     public float MaxMoveSpeed => _moveSpeed;
     public float Speed01 => Mathf.Clamp01(Mathf.Abs(_forwardSpeed) / Mathf.Max(0.01f, _moveSpeed));
     public float JumpImpulse01 { get; private set; }
     public float LandingImpulse01 { get; private set; }
+    public CinemachineCamera ThirdPersonCamera => _thirdPersonCamera;
+    public CinemachineCamera FirstPersonCamera => _firstPersonCamera;
 
     private void Awake()
     {
         if (_characterController == null)
             _characterController = GetComponent<CharacterController>();
+
+        if (_platformMotor == null)
+            _platformMotor = GetComponent<CharacterControllerPlatformMotor>();
     }
 
     private void OnEnable()
@@ -113,7 +121,7 @@ public class RobotController : MonoBehaviour
 
     private void Update()
     {
-        if (_movementLocked)
+        if (_hardMovementLocked)
         {
             _moveInput = Vector2.zero;
             _lookInput = Vector2.zero;
@@ -124,13 +132,22 @@ public class RobotController : MonoBehaviour
         }
 
         ReadInput();
-        HandlePerspectiveToggle();
-        HandleLook();
+
+        if (_inputLocked)
+        {
+            _moveInput = Vector2.zero;
+            _lookInput = Vector2.zero;
+        }
+        else
+        {
+            HandlePerspectiveToggle();
+            HandleLook();
+        }
+
         HandleMovement();
         UpdateRuntimeState();
         FadeImpulses();
     }
-
 
     private void StartInputActions()
     {
@@ -195,23 +212,11 @@ public class RobotController : MonoBehaviour
             _firstPersonPitchPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
     }
 
-    public void SetMovementLocked(bool locked, bool snapVelocity)
-    {
-        _movementLocked = locked;
-
-        if (!snapVelocity)
-            return;
-
-        _moveInput = Vector2.zero;
-        _lookInput = Vector2.zero;
-        _forwardSpeed = 0f;
-        _verticalVelocity = _characterController != null && _characterController.isGrounded ? _groundedVerticalVelocity : 0f;
-        _worldVelocity = Vector3.zero;
-        _localPlanarVelocity = Vector3.zero;
-    }
-
     private void HandleMovement()
     {
+        if (_platformMotor != null)
+            _platformMotor.PreCharacterMove();
+
         bool groundedBeforeMove = _characterController.isGrounded;
 
         if (groundedBeforeMove && _verticalVelocity < 0f)
@@ -221,6 +226,9 @@ public class RobotController : MonoBehaviour
         {
             _verticalVelocity = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
             JumpImpulse01 = 1f;
+
+            if (_platformMotor != null)
+                _platformMotor.ClearPlatform();
         }
 
         float forwardSign = _invertForwardInput ? -1f : 1f;
@@ -243,7 +251,15 @@ public class RobotController : MonoBehaviour
         Vector3 motion = transform.forward * _forwardSpeed;
         motion.y = _verticalVelocity;
 
-        _characterController.Move(motion * Time.deltaTime);
+        Vector3 frameDisplacement = motion * Time.deltaTime;
+
+        if (_platformMotor != null)
+            frameDisplacement += _platformMotor.FrameDisplacement;
+
+        _characterController.Move(frameDisplacement);
+
+        if (_platformMotor != null)
+            _platformMotor.PostCharacterMove();
 
         _isGrounded = _characterController.isGrounded;
 
@@ -282,5 +298,41 @@ public class RobotController : MonoBehaviour
             angle -= 360f;
 
         return angle;
+    }
+
+    public void SetInputLocked(bool locked, bool clearMotion)
+    {
+        _inputLocked = locked;
+
+        if (!clearMotion)
+            return;
+
+        _moveInput = Vector2.zero;
+        _lookInput = Vector2.zero;
+        _forwardSpeed = 0f;
+    }
+
+    public void SetMovementLocked(bool locked, bool snapVelocity)
+    {
+        _hardMovementLocked = locked;
+
+        if (!snapVelocity)
+            return;
+
+        _moveInput = Vector2.zero;
+        _lookInput = Vector2.zero;
+        _forwardSpeed = 0f;
+        _verticalVelocity = _characterController != null && _characterController.isGrounded ? _groundedVerticalVelocity : 0f;
+        _worldVelocity = Vector3.zero;
+        _localPlanarVelocity = Vector3.zero;
+    }
+
+    public void ForceThirdPerson(bool instant)
+    {
+        if (!_isFirstPerson)
+            return;
+
+        _isFirstPerson = false;
+        ApplyPerspectiveState(instant);
     }
 }
