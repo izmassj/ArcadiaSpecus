@@ -36,7 +36,6 @@ public class BunkerColonyManager : MonoBehaviour
     private void Update()
     {
         _refreshTimer += Time.deltaTime;
-
         if (_refreshTimer < _refreshInterval)
             return;
 
@@ -45,10 +44,7 @@ public class BunkerColonyManager : MonoBehaviour
         EvaluateAssignments();
     }
 
-    public BunkerManagementMode GetCurrentMode()
-    {
-        return _currentMode;
-    }
+    public BunkerManagementMode GetCurrentMode() => _currentMode;
 
     public void LoadMode(BunkerManagementMode mode, bool evaluateNow)
     {
@@ -84,10 +80,16 @@ public class BunkerColonyManager : MonoBehaviour
         if (worker == null)
             return;
 
+        if (worker.IsBusy())
+            return;
+
         RefreshWorldLists();
 
         MachineManager desiredMachine = GetBestMachineForWorker(worker);
         if (desiredMachine == null)
+            return;
+
+        if (worker.GetAssignedOrTargetMachine() == desiredMachine)
             return;
 
         worker.AssignMachine(desiredMachine);
@@ -124,6 +126,9 @@ public class BunkerColonyManager : MonoBehaviour
             if (worker == null)
                 continue;
 
+            if (worker.IsBusy())
+                continue;
+
             MachineManager desiredMachine = GetBestMachineForWorker(worker);
             if (desiredMachine == null)
                 continue;
@@ -141,7 +146,6 @@ public class BunkerColonyManager : MonoBehaviour
             return null;
 
         bool shouldRecover = ShouldSendWorkerToStation(worker, out NPCNeedType desiredNeed);
-
         if (shouldRecover)
         {
             MachineManager stationMachine = FindBestStation(worker, desiredNeed);
@@ -161,10 +165,8 @@ public class BunkerColonyManager : MonoBehaviour
         {
             case BunkerManagementMode.ProductionFocus:
                 return needValue >= _productionNeedThreshold;
-
             case BunkerManagementMode.RecoveryFocus:
                 return needValue >= _recoveryNeedThreshold;
-
             default:
                 return needValue >= _stableNeedThreshold;
         }

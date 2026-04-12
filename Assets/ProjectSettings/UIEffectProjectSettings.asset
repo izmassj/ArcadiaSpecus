@@ -36,6 +36,8 @@ ShaderVariantCollection:
       variants:
       - keywords: DETAIL_MASKING
         passType: 0
+      - keywords: DETAIL_MASKING TRANSITION_PATTERN
+        passType: 0
       - keywords: EDGE_PLAIN
         passType: 0
       - keywords: EDGE_SHINY
@@ -45,6 +47,8 @@ ShaderVariantCollection:
       - keywords: GRADATION_GRADIENT
         passType: 0
       - keywords: TRANSITION_BLAZE
+        passType: 0
+      - keywords: TRANSITION_MASK
         passType: 0
       - keywords: TRANSITION_PATTERN
         passType: 0

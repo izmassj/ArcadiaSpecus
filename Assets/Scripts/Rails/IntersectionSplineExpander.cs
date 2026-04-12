@@ -33,25 +33,10 @@ public class IntersectionSplineExpander : MonoBehaviour
             _elevator = GetComponent<IntersectionElevator>();
     }
 
-    public SplineContainer GetSplineContainer()
-    {
-        return _splineContainer;
-    }
-
-    public IntersectionElevator GetElevator()
-    {
-        return _elevator;
-    }
-
-    public int GetLeftBranchIndex()
-    {
-        return _leftSplineIndex;
-    }
-
-    public int GetRightBranchIndex()
-    {
-        return _rightSplineIndex;
-    }
+    public SplineContainer GetSplineContainer() => _splineContainer;
+    public IntersectionElevator GetElevator() => _elevator;
+    public int GetLeftBranchIndex() => _leftSplineIndex;
+    public int GetRightBranchIndex() => _rightSplineIndex;
 
     public int GetPreferredElevatorSplineIndex()
     {
@@ -62,6 +47,24 @@ public class IntersectionSplineExpander : MonoBehaviour
             return _leftElevatorSplineIndex;
 
         return -1;
+    }
+
+    public int GetElevatorSplineIndexForPort(IntersectionRailPort targetPort)
+    {
+        switch (targetPort)
+        {
+            case IntersectionRailPort.LeftRooms:
+                if (HasUsableSpline(_leftElevatorSplineIndex))
+                    return _leftElevatorSplineIndex;
+                break;
+
+            case IntersectionRailPort.RightRooms:
+                if (HasUsableSpline(_rightElevatorSplineIndex))
+                    return _rightElevatorSplineIndex;
+                break;
+        }
+
+        return GetPreferredElevatorSplineIndex();
     }
 
     public int GetOrCreateBranchIndex(Vector3 roomWorldPosition)
@@ -84,7 +87,6 @@ public class IntersectionSplineExpander : MonoBehaviour
             return;
 
         List<Transform> railPoints = room.GetRailPoints();
-
         if (railPoints == null || railPoints.Count == 0)
             return;
 
@@ -131,7 +133,6 @@ public class IntersectionSplineExpander : MonoBehaviour
             return -1;
 
         List<int> validIndices = new();
-
         for (int i = 0; i < _splineContainer.Splines.Count; i++)
         {
             if (HasUsableSpline(i))
@@ -226,7 +227,6 @@ public class IntersectionSplineExpander : MonoBehaviour
             return 0f;
 
         int branchIndex = room.GetBranchIndex();
-
         if (!HasUsableSpline(branchIndex))
             return 0f;
 
@@ -259,10 +259,37 @@ public class IntersectionSplineExpander : MonoBehaviour
         return transform.position;
     }
 
+    public Vector3 GetElevatorWorldPositionForPort(IntersectionRailPort targetPort)
+    {
+        int splineIndex = GetElevatorSplineIndexForPort(targetPort);
+        if (HasUsableSpline(splineIndex))
+            return EvaluatePositionWorld(splineIndex, 1f);
+
+        return GetElevatorWorldPosition();
+    }
+
     public bool TryGetTransition(IntersectionRailPort from, IntersectionRailPort to, out int splineIndex, out float targetNormalizedT)
     {
         splineIndex = -1;
         targetNormalizedT = 0f;
+
+        if (!TryGetTransitionSegment(from, to, out splineIndex, out _, out float endT))
+            return false;
+
+        targetNormalizedT = endT;
+        return true;
+    }
+
+    public bool TryGetTransitionSegment(
+        IntersectionRailPort from,
+        IntersectionRailPort to,
+        out int splineIndex,
+        out float startNormalized,
+        out float endNormalized)
+    {
+        splineIndex = -1;
+        startNormalized = 0f;
+        endNormalized = 0f;
 
         if (from == to || from == IntersectionRailPort.None || to == IntersectionRailPort.None)
             return false;
@@ -273,14 +300,16 @@ public class IntersectionSplineExpander : MonoBehaviour
                 if (to == IntersectionRailPort.LeftRooms)
                 {
                     splineIndex = _horizontalSplineIndex;
-                    targetNormalizedT = 1f;
+                    startNormalized = 0f;
+                    endNormalized = 1f;
                     return HasUsableSpline(splineIndex);
                 }
 
                 if (to == IntersectionRailPort.Elevator)
                 {
                     splineIndex = _rightElevatorSplineIndex;
-                    targetNormalizedT = 1f;
+                    startNormalized = 0f;
+                    endNormalized = 1f;
                     return HasUsableSpline(splineIndex);
                 }
                 break;
@@ -289,14 +318,16 @@ public class IntersectionSplineExpander : MonoBehaviour
                 if (to == IntersectionRailPort.RightRooms)
                 {
                     splineIndex = _horizontalSplineIndex;
-                    targetNormalizedT = 0f;
+                    startNormalized = 1f;
+                    endNormalized = 0f;
                     return HasUsableSpline(splineIndex);
                 }
 
                 if (to == IntersectionRailPort.Elevator)
                 {
                     splineIndex = _leftElevatorSplineIndex;
-                    targetNormalizedT = 1f;
+                    startNormalized = 0f;
+                    endNormalized = 1f;
                     return HasUsableSpline(splineIndex);
                 }
                 break;
@@ -305,14 +336,16 @@ public class IntersectionSplineExpander : MonoBehaviour
                 if (to == IntersectionRailPort.RightRooms)
                 {
                     splineIndex = _rightElevatorSplineIndex;
-                    targetNormalizedT = 0f;
+                    startNormalized = 1f;
+                    endNormalized = 0f;
                     return HasUsableSpline(splineIndex);
                 }
 
                 if (to == IntersectionRailPort.LeftRooms)
                 {
                     splineIndex = _leftElevatorSplineIndex;
-                    targetNormalizedT = 0f;
+                    startNormalized = 1f;
+                    endNormalized = 0f;
                     return HasUsableSpline(splineIndex);
                 }
                 break;
@@ -360,7 +393,6 @@ public class IntersectionSplineExpander : MonoBehaviour
         }
 
         float3 localStartPoint = ToLocalPoint(startPoint.position);
-
         if (spline.Count == 0)
             spline.Add(new BezierKnot(localStartPoint), TangentMode.Linear);
 
@@ -405,7 +437,6 @@ public class IntersectionSplineExpander : MonoBehaviour
             return;
 
         float3 localPoint = ToLocalPoint(point.position);
-
         if (IsDuplicateOfLastKnot(spline, localPoint))
             return;
 

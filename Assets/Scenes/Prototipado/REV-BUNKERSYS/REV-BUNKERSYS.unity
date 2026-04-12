@@ -2086,6 +2086,14 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_Splines.Array.data[1].m_Knots.Array.data[0].Position.x
+      value: 40.87491
+      objectReference: {fileID: 0}
+    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
+      propertyPath: m_Splines.Array.data[2].m_Knots.Array.data[0].Position.x
+      value: -40.87491
+      objectReference: {fileID: 0}
+    - target: {fileID: 3416335303000587473, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: m_Splines.Array.data[3].m_Knots.Array.data[0].Position.x
       value: 40.87491
       objectReference: {fileID: 0}
@@ -10880,7 +10888,9 @@ MonoBehaviour:
   _entryElevator: {fileID: 271932733}
   _spawnPointInsideElevator: {fileID: 271932734}
   _railHandoffPoint: {fileID: 271932734}
-  _handoffRoom: {fileID: 1897268631}
+  _handoffRoom: {fileID: 0}
+  _leftHandoffRoom: {fileID: 444995709}
+  _rightHandoffRoom: {fileID: 1897268631}
   _roomRegistry: {fileID: 1297085717}
   _colonyManager: {fileID: 1034711829}
   _npcPrefabs:

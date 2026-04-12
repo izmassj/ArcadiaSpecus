@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class NPCBunkerWorker : MonoBehaviour
@@ -40,6 +41,11 @@ public class NPCBunkerWorker : MonoBehaviour
     private Coroutine _currentRoutine;
     private string _currentAnimationState;
 
+    private static readonly Dictionary<int, NPCBunkerWorker> _elevatorReservations = new();
+
+    private IntersectionElevator _reservedSourceElevator;
+    private IntersectionElevator _reservedTargetElevator;
+
     private void Awake()
     {
         if (_railWalker == null)
@@ -78,6 +84,7 @@ public class NPCBunkerWorker : MonoBehaviour
 
         if (_currentRoutine != null)
         {
+            ReleaseHeldElevatorReservations();
             StopCoroutine(_currentRoutine);
             _currentRoutine = null;
         }
@@ -153,6 +160,7 @@ public class NPCBunkerWorker : MonoBehaviour
 
         if (_currentRoutine != null)
         {
+            ReleaseHeldElevatorReservations();
             StopCoroutine(_currentRoutine);
             _currentRoutine = null;
         }
@@ -174,6 +182,78 @@ public class NPCBunkerWorker : MonoBehaviour
             default:
                 return 0f;
         }
+    }
+
+    private IEnumerator AcquireExclusiveElevatorRoute(IntersectionElevator sourceElevator, IntersectionElevator targetElevator)
+    {
+        while (!TryAcquireExclusiveElevatorRoute(sourceElevator, targetElevator))
+            yield return null;
+    }
+
+    private bool TryAcquireExclusiveElevatorRoute(IntersectionElevator sourceElevator, IntersectionElevator targetElevator)
+    {
+        int sourceId = sourceElevator != null ? sourceElevator.GetInstanceID() : 0;
+        int targetId = targetElevator != null ? targetElevator.GetInstanceID() : 0;
+
+        if (sourceId != 0 &&
+            _elevatorReservations.TryGetValue(sourceId, out NPCBunkerWorker sourceOwner) &&
+            sourceOwner != null &&
+            sourceOwner != this)
+        {
+            return false;
+        }
+
+        if (targetId != 0 &&
+            _elevatorReservations.TryGetValue(targetId, out NPCBunkerWorker targetOwner) &&
+            targetOwner != null &&
+            targetOwner != this)
+        {
+            return false;
+        }
+
+        if (sourceId != 0)
+            _elevatorReservations[sourceId] = this;
+
+        if (targetId != 0)
+            _elevatorReservations[targetId] = this;
+
+        _reservedSourceElevator = sourceElevator;
+        _reservedTargetElevator = targetElevator;
+        return true;
+    }
+
+    private void OnDisable()
+    {
+        ReleaseHeldElevatorReservations();
+    }
+
+    private void OnDestroy()
+    {
+        ReleaseHeldElevatorReservations();
+    }
+
+    private void ReleaseHeldElevatorReservations()
+    {
+        int sourceId = _reservedSourceElevator != null ? _reservedSourceElevator.GetInstanceID() : 0;
+        int targetId = _reservedTargetElevator != null ? _reservedTargetElevator.GetInstanceID() : 0;
+
+        if (sourceId != 0 &&
+            _elevatorReservations.TryGetValue(sourceId, out NPCBunkerWorker sourceOwner) &&
+            sourceOwner == this)
+        {
+            _elevatorReservations.Remove(sourceId);
+        }
+
+        if (targetId != 0 &&
+            targetId != sourceId &&
+            _elevatorReservations.TryGetValue(targetId, out NPCBunkerWorker targetOwner) &&
+            targetOwner == this)
+        {
+            _elevatorReservations.Remove(targetId);
+        }
+
+        _reservedSourceElevator = null;
+        _reservedTargetElevator = null;
     }
 
     public NPCNeedType GetMostUrgentNeedType()
@@ -278,7 +358,7 @@ public class NPCBunkerWorker : MonoBehaviour
 
         reservedWorkPoint = targetMachine.GetWorkPointWorldPosition(reservedWorkSlot);
         Vector3 workFacingDirection = GetWorkFacingDirection(targetMachine, reservedWorkSlot, reservedWorkPoint);
-        yield return MoveOffRailTo(reservedWorkPoint, true, workFacingDirection);
+        yield return MoveOffRailTo(reservedWorkPoint, true, workFacingDirection, false);
 
         if (!targetMachine.ConfirmWorkerArrived(this, reservedWorkSlot))
         {
@@ -307,22 +387,31 @@ public class NPCBunkerWorker : MonoBehaviour
         IntersectionElevator targetElevator = targetIntersection.GetElevator();
         IntersectionRailPort targetPort = targetIntersection.GetRoomPort(targetRoom);
 
-        yield return GoToElevatorFromCurrentRoom(fromRoom, currentIntersection, sourceElevator);
+        yield return AcquireExclusiveElevatorRoute(sourceElevator, targetElevator);
 
-        if (sourceElevator != null)
+        try
         {
-            yield return sourceElevator.WaitForOpenFinished();
-            yield return sourceElevator.PlayCloseAndWait();
+            yield return GoToElevatorFromCurrentRoom(fromRoom, currentIntersection, sourceElevator);
+
+            if (sourceElevator != null)
+                yield return sourceElevator.PlayCloseAndWait();
+
+            _railWalker.SnapToIntersectionPort(targetIntersection, IntersectionRailPort.Elevator, targetPort);
+            FaceTowardsUpcomingElevatorExit(targetIntersection, targetPort);
+
+            if (targetElevator != null)
+                yield return targetElevator.PlayOpenAndWait();
+
+            FaceTowardsUpcomingElevatorExit(targetIntersection, targetPort);
+            yield return LeaveElevatorToTargetRoom(targetRoom, targetIntersection, targetElevator);
+
+            if (targetElevator != null)
+                yield return targetElevator.PlayCloseAndWait();
         }
-
-        _railWalker.SnapToIntersectionPort(targetIntersection, IntersectionRailPort.Elevator);
-        FaceTowardsUpcomingElevatorExit(targetIntersection, targetPort);
-
-        if (targetElevator != null)
-            yield return targetElevator.PlayOpenAndWait();
-
-        FaceTowardsUpcomingElevatorExit(targetIntersection, targetPort);
-        yield return LeaveElevatorToTargetRoom(targetRoom, targetIntersection, targetElevator);
+        finally
+        {
+            ReleaseHeldElevatorReservations();
+        }
     }
 
     private IEnumerator TravelInsideSingleIntersection(RoomManager fromRoom, RoomManager toRoom, IntersectionSplineExpander intersection)
@@ -335,12 +424,14 @@ public class NPCBunkerWorker : MonoBehaviour
             if (_railWalker.MoveToBranchStart(fromRoom))
             {
                 _railWalker.QueueMovePortToPort(intersection, fromPort, toPort);
+                _railWalker.KeepWalkAnimationOnNextRailStop();
                 _railWalker.QueueMoveToRoom(toRoom);
                 yield return WaitForRailWalker();
                 yield break;
             }
         }
 
+        _railWalker.KeepWalkAnimationOnNextRailStop();
         _railWalker.MoveToRoom(toRoom);
         yield return WaitForRailWalker();
     }
@@ -349,11 +440,11 @@ public class NPCBunkerWorker : MonoBehaviour
     {
         IntersectionRailPort roomPort = intersection.GetRoomPort(room);
 
+        if (elevator != null)
+            yield return elevator.PlayOpenAndWait();
+
         if (_railWalker.MoveToBranchStart(room))
             yield return WaitForRailWalker();
-
-        if (elevator != null)
-            elevator.OpenDoors();
 
         if (_railWalker.MovePortToPort(intersection, roomPort, IntersectionRailPort.Elevator))
             yield return WaitForRailWalker();
@@ -366,9 +457,7 @@ public class NPCBunkerWorker : MonoBehaviour
         if (_railWalker.MovePortToPort(intersection, IntersectionRailPort.Elevator, targetPort))
             yield return WaitForRailWalker();
 
-        if (elevator != null)
-            elevator.CloseDoors();
-
+        _railWalker.KeepWalkAnimationOnNextRailStop();
         _railWalker.MoveToRoom(targetRoom);
         yield return WaitForRailWalker();
     }
@@ -385,7 +474,7 @@ public class NPCBunkerWorker : MonoBehaviour
         FaceDirection(exitDirection);
     }
 
-    private IEnumerator MoveOffRailTo(Vector3 targetPosition, bool playWalk, Vector3 finalFacingDirection)
+    private IEnumerator MoveOffRailTo(Vector3 targetPosition, bool playWalk, Vector3 finalFacingDirection, bool playIdleAtEnd = true)
     {
         Vector3 initialDirection = targetPosition - transform.position;
         initialDirection = Vector3.ProjectOnPlane(initialDirection, Vector3.up);
@@ -419,7 +508,8 @@ public class NPCBunkerWorker : MonoBehaviour
         else if (initialDirection.sqrMagnitude > 0.0001f)
             FaceDirection(initialDirection);
 
-        PlayAnimation(_idleStateName);
+        if (playIdleAtEnd)
+            PlayAnimation(_idleStateName);
     }
 
     private IEnumerator WaitForRailWalker()
@@ -493,6 +583,7 @@ public class NPCBunkerWorker : MonoBehaviour
 
     private void ClearBusyState()
     {
+        ReleaseHeldElevatorReservations();
         _isBusy = false;
         _isWorking = false;
         _currentRoutine = null;

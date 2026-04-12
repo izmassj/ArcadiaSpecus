@@ -33,12 +33,14 @@ public class NPCRailWalker : MonoBehaviour
     private float _lastMovementSign = 1f;
     private Vector3 _lastFacingDirection = Vector3.forward;
     private readonly Queue<RailMoveRequest> _queuedMoves = new();
+    private bool _keepWalkAnimationOnNextRailStop;
 
     private struct RailMoveRequest
     {
         public IntersectionSplineExpander Owner;
         public int SplineIndex;
-        public float TargetNormalized;
+        public float StartNormalized;
+        public float EndNormalized;
     }
 
     public bool IsMovingOnRail => _isMovingOnRail;
@@ -96,10 +98,7 @@ public class NPCRailWalker : MonoBehaviour
         }
     }
 
-    public RoomManager GetStartRoom()
-    {
-        return _startRoom;
-    }
+    public RoomManager GetStartRoom() => _startRoom;
 
     public void SetStartRoomReferenceOnly(RoomManager room)
     {
@@ -119,7 +118,6 @@ public class NPCRailWalker : MonoBehaviour
 
         IntersectionSplineExpander owner = room.GetRailOwner();
         int splineIndex = room.GetBranchIndex();
-
         if (owner == null || !owner.HasUsableSpline(splineIndex))
             return;
 
@@ -129,6 +127,11 @@ public class NPCRailWalker : MonoBehaviour
     }
 
     public void SnapToIntersectionPort(IntersectionSplineExpander intersection, IntersectionRailPort port)
+    {
+        SnapToIntersectionPort(intersection, port, IntersectionRailPort.None);
+    }
+
+    public void SnapToIntersectionPort(IntersectionSplineExpander intersection, IntersectionRailPort port, IntersectionRailPort elevatorSideHint)
     {
         if (intersection == null)
             return;
@@ -146,7 +149,7 @@ public class NPCRailWalker : MonoBehaviour
                 break;
 
             case IntersectionRailPort.Elevator:
-                SnapToNormalized(intersection, intersection.GetPreferredElevatorSplineIndex(), 1f);
+                SnapToNormalized(intersection, intersection.GetElevatorSplineIndexForPort(elevatorSideHint), 1f);
                 break;
         }
     }
@@ -157,10 +160,27 @@ public class NPCRailWalker : MonoBehaviour
         return QueueMoveToRoom(room, true);
     }
 
+    public void KeepWalkAnimationOnNextRailStop()
+    {
+        _keepWalkAnimationOnNextRailStop = true;
+    }
+
+    public bool MoveBetweenRoomsOnSameBranch(RoomManager fromRoom, RoomManager toRoom)
+    {
+        _queuedMoves.Clear();
+        return QueueMoveBetweenRoomsOnSameBranch(fromRoom, toRoom, true);
+    }
+
     public bool MoveToBranchStart(RoomManager room)
     {
         _queuedMoves.Clear();
         return QueueMoveToBranchStart(room, true);
+    }
+
+    public bool MoveToRoomFromBranchStart(RoomManager room)
+    {
+        _queuedMoves.Clear();
+        return QueueMoveToRoomFromBranchStart(room, true);
     }
 
     public bool MovePortToPort(IntersectionSplineExpander intersection, IntersectionRailPort from, IntersectionRailPort to)
@@ -169,20 +189,14 @@ public class NPCRailWalker : MonoBehaviour
         return QueueMovePortToPort(intersection, from, to, true);
     }
 
-    public bool QueueMoveToRoom(RoomManager room)
+    public bool QueueMoveToRoom(RoomManager room) => QueueMoveToRoom(room, false);
+    public bool QueueMoveBetweenRoomsOnSameBranch(RoomManager fromRoom, RoomManager toRoom) => QueueMoveBetweenRoomsOnSameBranch(fromRoom, toRoom, false);
+    public bool QueueMoveToBranchStart(RoomManager room) => QueueMoveToBranchStart(room, false);
+    public bool QueueMoveToRoomFromBranchStart(RoomManager room)
     {
-        return QueueMoveToRoom(room, false);
+        return QueueMoveToRoomFromBranchStart(room, false);
     }
-
-    public bool QueueMoveToBranchStart(RoomManager room)
-    {
-        return QueueMoveToBranchStart(room, false);
-    }
-
-    public bool QueueMovePortToPort(IntersectionSplineExpander intersection, IntersectionRailPort from, IntersectionRailPort to)
-    {
-        return QueueMovePortToPort(intersection, from, to, false);
-    }
+    public bool QueueMovePortToPort(IntersectionSplineExpander intersection, IntersectionRailPort from, IntersectionRailPort to) => QueueMovePortToPort(intersection, from, to, false);
 
     public void FaceTowards(Vector3 targetWorldPosition)
     {
@@ -207,15 +221,60 @@ public class NPCRailWalker : MonoBehaviour
 
         IntersectionSplineExpander owner = room.GetRailOwner();
         int splineIndex = room.GetBranchIndex();
-
         if (owner == null || !owner.HasUsableSpline(splineIndex))
             return false;
 
-        float targetNormalized = owner.GetRoomNormalizedT(room);
-        return QueueOrStartMove(owner, splineIndex, targetNormalized, startImmediately);
+        float roomT = owner.GetRoomNormalizedT(room);
+        float startT = roomT;
+
+        if (_railOwner == owner && _splineIndex == splineIndex)
+        {
+            float splineLength = owner.GetSplineLength(splineIndex);
+            if (splineLength > 0.001f)
+                startT = Mathf.Clamp01(_currentDistance / splineLength);
+        }
+        else
+        {
+            startT = owner.GetClosestNormalizedT(splineIndex, transform.position);
+        }
+
+        return QueueOrStartMove(owner, splineIndex, startT, roomT, startImmediately);
+    }
+
+    private bool QueueMoveBetweenRoomsOnSameBranch(RoomManager fromRoom, RoomManager toRoom, bool startImmediately)
+    {
+        if (fromRoom == null || toRoom == null)
+            return false;
+
+        IntersectionSplineExpander owner = fromRoom.GetRailOwner();
+        int splineIndex = fromRoom.GetBranchIndex();
+
+        if (owner == null || owner != toRoom.GetRailOwner() || splineIndex != toRoom.GetBranchIndex())
+            return false;
+
+        if (!owner.HasUsableSpline(splineIndex))
+            return false;
+
+        float fromT = owner.GetRoomNormalizedT(fromRoom);
+        float toT = owner.GetRoomNormalizedT(toRoom);
+        return QueueOrStartMove(owner, splineIndex, fromT, toT, startImmediately);
     }
 
     private bool QueueMoveToBranchStart(RoomManager room, bool startImmediately)
+    {
+        if (room == null)
+            return false;
+
+        IntersectionSplineExpander owner = room.GetRailOwner();
+        int splineIndex = room.GetBranchIndex();
+        if (owner == null || !owner.HasUsableSpline(splineIndex))
+            return false;
+
+        float roomT = owner.GetRoomNormalizedT(room);
+        return QueueOrStartMove(owner, splineIndex, roomT, 0f, startImmediately);
+    }
+
+    private bool QueueMoveToRoomFromBranchStart(RoomManager room, bool startImmediately)
     {
         if (room == null)
             return false;
@@ -226,7 +285,8 @@ public class NPCRailWalker : MonoBehaviour
         if (owner == null || !owner.HasUsableSpline(splineIndex))
             return false;
 
-        return QueueOrStartMove(owner, splineIndex, 0f, startImmediately);
+        float roomT = owner.GetRoomNormalizedT(room);
+        return QueueOrStartMove(owner, splineIndex, 0f, roomT, startImmediately);
     }
 
     private bool QueueMovePortToPort(IntersectionSplineExpander intersection, IntersectionRailPort from, IntersectionRailPort to, bool startImmediately)
@@ -234,13 +294,13 @@ public class NPCRailWalker : MonoBehaviour
         if (intersection == null)
             return false;
 
-        if (!intersection.TryGetTransition(from, to, out int splineIndex, out float targetNormalizedT))
+        if (!intersection.TryGetTransitionSegment(from, to, out int splineIndex, out float startT, out float endT))
             return false;
 
-        return QueueOrStartMove(intersection, splineIndex, targetNormalizedT, startImmediately);
+        return QueueOrStartMove(intersection, splineIndex, startT, endT, startImmediately);
     }
 
-    private bool QueueOrStartMove(IntersectionSplineExpander owner, int splineIndex, float targetNormalized, bool startImmediately)
+    private bool QueueOrStartMove(IntersectionSplineExpander owner, int splineIndex, float startNormalized, float endNormalized, bool startImmediately)
     {
         if (owner == null || !owner.HasUsableSpline(splineIndex))
             return false;
@@ -249,7 +309,8 @@ public class NPCRailWalker : MonoBehaviour
         {
             Owner = owner,
             SplineIndex = splineIndex,
-            TargetNormalized = Mathf.Clamp01(targetNormalized)
+            StartNormalized = Mathf.Clamp01(startNormalized),
+            EndNormalized = Mathf.Clamp01(endNormalized)
         };
 
         if (!_isMovingOnRail || startImmediately)
@@ -276,9 +337,13 @@ public class NPCRailWalker : MonoBehaviour
         if (splineLength <= 0.001f)
             return false;
 
-        float startNormalized = _railOwner.GetClosestNormalizedT(_splineIndex, transform.position);
-        _currentDistance = startNormalized * splineLength;
-        _targetDistance = request.TargetNormalized * splineLength;
+        _currentDistance = Mathf.Clamp01(request.StartNormalized) * splineLength;
+        _targetDistance = Mathf.Clamp01(request.EndNormalized) * splineLength;
+
+        float distanceDelta = _targetDistance - _currentDistance;
+        if (Mathf.Abs(distanceDelta) > 0.0001f)
+            _lastMovementSign = Mathf.Sign(distanceDelta);
+
         _isMovingOnRail = true;
         SetWalkAnimation(true);
         SnapToRail();
@@ -290,7 +355,6 @@ public class NPCRailWalker : MonoBehaviour
         while (_queuedMoves.Count > 0)
         {
             RailMoveRequest nextRequest = _queuedMoves.Dequeue();
-
             if (BeginMove(nextRequest))
                 return true;
         }
@@ -303,10 +367,12 @@ public class NPCRailWalker : MonoBehaviour
         if (owner == null || !owner.HasUsableSpline(splineIndex))
             return;
 
+        _keepWalkAnimationOnNextRailStop = false;
         _railOwner = owner;
         _splineIndex = splineIndex;
         _currentDistance = owner.GetSplineLength(splineIndex) * Mathf.Clamp01(normalized);
         _targetDistance = _currentDistance;
+        _lastMovementSign = 1f;
         _isMovingOnRail = false;
         SnapToRail();
         SetWalkAnimation(false);
@@ -315,6 +381,13 @@ public class NPCRailWalker : MonoBehaviour
     private void StopRailMovement()
     {
         _isMovingOnRail = false;
+
+        if (_keepWalkAnimationOnNextRailStop)
+        {
+            _keepWalkAnimationOnNextRailStop = false;
+            return;
+        }
+
         SetWalkAnimation(false);
     }
 

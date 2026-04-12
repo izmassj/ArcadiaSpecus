@@ -9,6 +9,8 @@ public class BunkerNpcArrivalManager : MonoBehaviour
     [SerializeField] private Transform _spawnPointInsideElevator;
     [SerializeField] private Transform _railHandoffPoint;
     [SerializeField] private RoomManager _handoffRoom;
+    [SerializeField] private RoomManager _leftHandoffRoom;
+    [SerializeField] private RoomManager _rightHandoffRoom;
     [SerializeField] private BunkerSceneRoomRegistry _roomRegistry;
     [SerializeField] private BunkerColonyManager _colonyManager;
 
@@ -42,9 +44,8 @@ public class BunkerNpcArrivalManager : MonoBehaviour
 
     private IEnumerator SpawnSingleNpcRoutine(BunkerSavedNpcData npcData)
     {
-        RoomManager startRoom = _handoffRoom;
-
-        if (startRoom == null)
+        RoomManager startRoom = ResolveArrivalRoom(npcData, out IntersectionRailPort arrivalPort);
+        if (!IsValidArrivalRoom(startRoom))
             yield break;
 
         if (_npcPrefabs == null || _npcPrefabs.Length == 0)
@@ -62,7 +63,10 @@ public class BunkerNpcArrivalManager : MonoBehaviour
         if (_entryElevator != null)
             yield return _entryElevator.PlayOpenAndWait();
 
-        Vector3 spawnPosition = startIntersection.GetElevatorWorldPosition();
+        if (arrivalPort == IntersectionRailPort.None)
+            arrivalPort = startIntersection.GetRoomPort(startRoom);
+
+        Vector3 spawnPosition = startIntersection.GetElevatorWorldPositionForPort(arrivalPort);
         if (_spawnPointInsideElevator != null)
             spawnPosition = _spawnPointInsideElevator.position;
 
@@ -79,27 +83,36 @@ public class BunkerNpcArrivalManager : MonoBehaviour
         if (railWalker == null || bunkerWorker == null)
             yield break;
 
-        bunkerWorker.PrimeArrivalRoomReference(startRoom);
         bunkerWorker.LoadNeedsValues(npcData.hunger, npcData.thirst, npcData.fatigue);
 
-        railWalker.SetStartRoomReferenceOnly(startRoom);
-        railWalker.SnapToIntersectionPort(startIntersection, IntersectionRailPort.Elevator);
+        railWalker.SnapToIntersectionPort(startIntersection, IntersectionRailPort.Elevator, arrivalPort);
 
-        IntersectionRailPort startPort = startIntersection.GetRoomPort(startRoom);
-        bool leftElevatorOnRailCorrectly = false;
+        IntersectionRailPort startPort = arrivalPort != IntersectionRailPort.None
+            ? arrivalPort
+            : startIntersection.GetRoomPort(startRoom);
+
+        bool reachedValidStartRoom = false;
 
         if (startPort != IntersectionRailPort.None)
         {
-            if (railWalker.MovePortToPort(startIntersection, IntersectionRailPort.Elevator, startPort))
-            {
-                railWalker.QueueMoveToRoom(startRoom);
-                leftElevatorOnRailCorrectly = true;
+            bool movedToPort = railWalker.MovePortToPort(startIntersection, IntersectionRailPort.Elevator, startPort);
+
+            if (movedToPort)
                 yield return WaitForRailWalker(railWalker);
-            }
+
+            bool movedToRoom = railWalker.MoveToRoomFromBranchStart(startRoom);
+
+            if (movedToRoom)
+                yield return WaitForRailWalker(railWalker);
+
+            reachedValidStartRoom = movedToPort && movedToRoom;
         }
 
-        if (!leftElevatorOnRailCorrectly)
+        if (!reachedValidStartRoom)
             railWalker.InitializeFromRoom(startRoom);
+
+        bunkerWorker.PrimeArrivalRoomReference(startRoom);
+        railWalker.SetStartRoomReferenceOnly(startRoom);
 
         if (_entryElevator != null)
             yield return _entryElevator.PlayCloseAndWait();
@@ -107,7 +120,9 @@ public class BunkerNpcArrivalManager : MonoBehaviour
         if (_delayAfterArrivalOnRail > 0f)
             yield return new WaitForSeconds(_delayAfterArrivalOnRail);
 
-        if (_roomRegistry != null && !string.IsNullOrWhiteSpace(npcData.targetRoomId) && _roomRegistry.TryGetMachineByRoomId(npcData.targetRoomId, out MachineManager targetMachine))
+        if (_roomRegistry != null &&
+            !string.IsNullOrWhiteSpace(npcData.targetRoomId) &&
+            _roomRegistry.TryGetMachineByRoomId(npcData.targetRoomId, out MachineManager targetMachine))
         {
             bunkerWorker.AssignMachine(targetMachine);
         }
@@ -116,6 +131,69 @@ public class BunkerNpcArrivalManager : MonoBehaviour
             _colonyManager.RefreshWorldLists();
             _colonyManager.AssignBestMachineNow(bunkerWorker);
         }
+    }
+
+    private RoomManager ResolveArrivalRoom(BunkerSavedNpcData npcData, out IntersectionRailPort arrivalPort)
+    {
+        arrivalPort = ResolveArrivalPortFromTarget(npcData);
+
+        if (arrivalPort == IntersectionRailPort.LeftRooms && IsValidArrivalRoom(_leftHandoffRoom))
+            return _leftHandoffRoom;
+
+        if (arrivalPort == IntersectionRailPort.RightRooms && IsValidArrivalRoom(_rightHandoffRoom))
+            return _rightHandoffRoom;
+
+        if (IsValidArrivalRoom(_handoffRoom))
+        {
+            IntersectionSplineExpander handoffIntersection = _handoffRoom.GetRailOwner();
+            if (handoffIntersection != null)
+                arrivalPort = handoffIntersection.GetRoomPort(_handoffRoom);
+
+            return _handoffRoom;
+        }
+
+        if (IsValidArrivalRoom(_rightHandoffRoom))
+        {
+            arrivalPort = _rightHandoffRoom.GetRailOwner().GetRoomPort(_rightHandoffRoom);
+            return _rightHandoffRoom;
+        }
+
+        if (IsValidArrivalRoom(_leftHandoffRoom))
+        {
+            arrivalPort = _leftHandoffRoom.GetRailOwner().GetRoomPort(_leftHandoffRoom);
+            return _leftHandoffRoom;
+        }
+
+        return null;
+    }
+
+    private bool IsValidArrivalRoom(RoomManager room)
+    {
+        if (room == null)
+            return false;
+
+        if (room.GetRailOwner() == null)
+            return false;
+
+        if (room.GetBranchIndex() < 0)
+            return false;
+
+        return true;
+    }
+
+    private IntersectionRailPort ResolveArrivalPortFromTarget(BunkerSavedNpcData npcData)
+    {
+        if (npcData == null || _roomRegistry == null || string.IsNullOrWhiteSpace(npcData.targetRoomId))
+            return IntersectionRailPort.None;
+
+        if (!_roomRegistry.TryGetRoomById(npcData.targetRoomId, out RoomManager targetRoom) || targetRoom == null)
+            return IntersectionRailPort.None;
+
+        IntersectionSplineExpander targetIntersection = targetRoom.GetRailOwner();
+        if (targetIntersection == null)
+            return IntersectionRailPort.None;
+
+        return targetIntersection.GetRoomPort(targetRoom);
     }
 
     private IEnumerator WaitForRailWalker(NPCRailWalker railWalker)

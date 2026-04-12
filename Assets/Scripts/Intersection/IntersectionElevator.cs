@@ -13,9 +13,37 @@ public class IntersectionElevator : MonoBehaviour
     [SerializeField] private string _closeStateName;
     [SerializeField] private int _animatorLayer;
 
+    private int _openHoldCount;
+
     private void Awake()
     {
         ResolveAnimator();
+    }
+
+    public void AcquireOpenHold()
+    {
+        _openHoldCount++;
+        OpenDoors();
+    }
+
+    public IEnumerator AcquireOpenHoldAndWait()
+    {
+        AcquireOpenHold();
+        yield return WaitForStateFinished(_openStateName);
+    }
+
+    public void ReleaseOpenHold()
+    {
+        if (_openHoldCount > 0)
+            _openHoldCount--;
+
+        if (_openHoldCount == 0)
+            CloseDoors();
+    }
+
+    public int GetOpenHoldCount()
+    {
+        return _openHoldCount;
     }
 
     public void OpenDoors()
