@@ -13184,7 +13184,7 @@ GameObject:
   - component: {fileID: 547012356}
   - component: {fileID: 547012355}
   m_Layer: 0
-  m_Name: Grid
+  m_Name: LevelLayout
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -48396,6 +48396,9 @@ MonoBehaviour:
   _activePriority: 20
   _inactivePriority: 10
   _bunkerSceneNameOverride: REV-BUNKERSYS
+  _allowJoinedInhabitantsReward: 1
+  _joinedInhabitantsChance: 0.2
+  _joinedInhabitantsRange: {x: 1, y: 1}
   _scrapRewardRange: {x: 5, y: 15}
   _electricityRewardRange: {x: 2, y: 8}
   _waterRewardRange: {x: 2, y: 8}
