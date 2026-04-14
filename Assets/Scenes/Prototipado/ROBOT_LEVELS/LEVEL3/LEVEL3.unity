@@ -5694,6 +5694,53 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3557226382463581187, guid: 184793469ea7bd64a9c9503dfec06d70, type: 3}
   m_PrefabInstance: {fileID: 233712210}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &236485023 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6526975585221733922, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+  m_PrefabInstance: {fileID: 663476066}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &236485024 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 649731279256743539, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+  m_PrefabInstance: {fileID: 663476066}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &236485025 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 953646721289058023, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+  m_PrefabInstance: {fileID: 663476066}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 236485023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dab5c7d4c32e743048dfca98e2d5914f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Splines::UnityEngine.Splines.SplineContainer
+--- !u!114 &236485026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 236485023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcec740c1fdd93a4b80e1ac194abcb6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TankWheelSplineRepeater
+  splineContainer: {fileID: 236485025}
+  splineIndex: 0
+  piecePrefab: {fileID: 3825892573055787178, guid: 3e50b9c2a3194fe449b22f1c99a3d7d7, type: 3}
+  piecesRoot: {fileID: 236485024}
+  wheelCenter: {fileID: 236485024}
+  spacing: 0.17
+  maxPieces: 12
+  normalizedOffset: 0
+  speed: 1
+  reverseDirection: 0
+  localEulerOffset: {x: 90, y: 90, z: 0}
+  faceTowardCenter: 1
+  minSampleCount: 64
+  samplesPerPiece: 3
 --- !u!1001 &238933751
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11228,8 +11275,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 581160730}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.9861557, z: -0.16582216, w: 0}
-  m_LocalPosition: {x: -8.76625, y: 6.079346, z: -1.6447449}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: -9, y: 2.4672213, z: -7.144745}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12899,6 +12946,10 @@ PrefabInstance:
       propertyPath: m_SkinWidth
       value: 0.0001
       objectReference: {fileID: 0}
+    - target: {fileID: 7622423493831486185, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8026119134641378143, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.87
@@ -12935,8 +12986,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    - target: {fileID: 9223299094163104306, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 9223299094163104306, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+    - {fileID: 8255044115819941880, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+    - {fileID: 8075295927325729755, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+    - {fileID: 733629882974021604, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+    m_RemovedGameObjects:
+    - {fileID: 1619072763522123126, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2102910236951551093, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
       insertIndex: -1
@@ -12951,6 +13011,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5766358866198379006, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
       insertIndex: 3
       addedObject: {fileID: 1512361324}
+    - targetCorrespondingSourceObject: {fileID: 6526975585221733922, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 236485026}
+    - targetCorrespondingSourceObject: {fileID: 7622423493831486185, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 663476071}
   m_SourcePrefab: {fileID: 100100000, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
 --- !u!114 &663476067 stripped
 MonoBehaviour:
@@ -12963,6 +13029,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 915d06bd0fa4da349b4554cc863fa444, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotController
+--- !u!4 &663476068 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 302724597338495495, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+  m_PrefabInstance: {fileID: 663476066}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &663476069 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7622423493831486185, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+  m_PrefabInstance: {fileID: 663476066}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &663476070 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4085348251099678199, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+  m_PrefabInstance: {fileID: 663476066}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663476069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dab5c7d4c32e743048dfca98e2d5914f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Splines::UnityEngine.Splines.SplineContainer
+--- !u!114 &663476071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663476069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcec740c1fdd93a4b80e1ac194abcb6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TankWheelSplineRepeater
+  splineContainer: {fileID: 663476070}
+  splineIndex: 0
+  piecePrefab: {fileID: 3825892573055787178, guid: 3e50b9c2a3194fe449b22f1c99a3d7d7, type: 3}
+  piecesRoot: {fileID: 663476068}
+  wheelCenter: {fileID: 663476068}
+  spacing: 0.17
+  maxPieces: 12
+  normalizedOffset: 0
+  speed: 1
+  reverseDirection: 0
+  localEulerOffset: {x: 90, y: 90, z: 0}
+  faceTowardCenter: 1
+  minSampleCount: 64
+  samplesPerPiece: 3
 --- !u!1001 &665673561
 PrefabInstance:
   m_ObjectHideFlags: 0
