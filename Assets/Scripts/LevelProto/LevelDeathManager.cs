@@ -1,6 +1,7 @@
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LevelDeathManager : MonoBehaviour
 {
@@ -26,6 +27,9 @@ public class LevelDeathManager : MonoBehaviour
     [SerializeField] private int _startingLives = 3;
     [SerializeField] private RectTransform[] _lifeIcons;
 
+    [Header("Game Over")]
+    [SerializeField] private string _fallbackBunkerSceneName = "REV-BUNKERSYS";
+
     [Header("Level Reset")]
     [SerializeField] private MonoBehaviour[] _resettableObjects;
 
@@ -37,6 +41,9 @@ public class LevelDeathManager : MonoBehaviour
     private Transform _thirdPersonOriginalParent;
     private Vector3 _thirdPersonOriginalLocalPosition;
     private Quaternion _thirdPersonOriginalLocalRotation;
+
+    private bool _wasFirstPersonBeforeDeath;
+    private bool _detachedThirdPersonCameraThisDeath;
 
     private void Awake()
     {
@@ -69,24 +76,28 @@ public class LevelDeathManager : MonoBehaviour
     private IEnumerator DeathSequence()
     {
         _isRespawning = true;
+        _wasFirstPersonBeforeDeath = _player.IsFirstPerson;
+        _detachedThirdPersonCameraThisDeath = false;
 
         _player.SetInputLocked(true, true);
 
-        if (_player.IsFirstPerson)
+        if (!_wasFirstPersonBeforeDeath)
         {
-            _player.ForceThirdPerson(true);
-            yield return null;
+            DetachThirdPersonCamera();
+            _detachedThirdPersonCameraThisDeath = true;
+
+            float elapsed = 0f;
+
+            while (elapsed < _deathCameraDuration)
+            {
+                elapsed += Time.deltaTime;
+                UpdateDetachedCameraLook();
+                yield return null;
+            }
         }
-
-        DetachThirdPersonCamera();
-
-        float elapsed = 0f;
-
-        while (elapsed < _deathCameraDuration)
+        else
         {
-            elapsed += Time.deltaTime;
-            UpdateDetachedCameraLook();
-            yield return null;
+            yield return new WaitForSeconds(_deathCameraDuration);
         }
 
         if (_respawnMaskRect != null)
@@ -98,7 +109,13 @@ public class LevelDeathManager : MonoBehaviour
                 .WaitForCompletion();
         }
 
-        ConsumeLife();
+        bool gameOver = ConsumeLife();
+
+        if (gameOver)
+        {
+            yield return LoadBunkerAfterGameOver();
+            yield break;
+        }
 
         _player.SetMovementLocked(true, true);
         ResetLevelState();
@@ -116,6 +133,26 @@ public class LevelDeathManager : MonoBehaviour
         _player.SetInputLocked(false, true);
 
         _isRespawning = false;
+    }
+
+    private IEnumerator LoadBunkerAfterGameOver()
+    {
+        Time.timeScale = 1f;
+
+        string bunkerSceneName = !string.IsNullOrWhiteSpace(BunkerSessionLaunch.CurrentBunkerSceneName)
+            ? BunkerSessionLaunch.CurrentBunkerSceneName
+            : _fallbackBunkerSceneName;
+
+        if (string.IsNullOrWhiteSpace(bunkerSceneName))
+        {
+            Debug.LogError("LevelDeathManager: no hay nombre de escena de bunker para volver.");
+            _player.SetMovementLocked(false, true);
+            _player.SetInputLocked(false, true);
+            _isRespawning = false;
+            yield break;
+        }
+
+        SceneManager.LoadScene(bunkerSceneName);
     }
 
     private void DetachThirdPersonCamera()
@@ -160,9 +197,6 @@ public class LevelDeathManager : MonoBehaviour
                 resettable.ResetLevelState();
         }
 
-        if (_player != null)
-            _player.ForceThirdPerson(true);
-
         if (_playerCharacterController != null)
             _playerCharacterController.enabled = false;
 
@@ -171,13 +205,20 @@ public class LevelDeathManager : MonoBehaviour
         if (_playerCharacterController != null)
             _playerCharacterController.enabled = true;
 
-        ReattachThirdPersonCamera();
+        if (_detachedThirdPersonCameraThisDeath)
+        {
+            ReattachThirdPersonCamera();
+            _detachedThirdPersonCameraThisDeath = false;
+        }
+
+        if (_player != null)
+            _player.ForcePerspective(_wasFirstPersonBeforeDeath, true);
     }
 
-    private void ConsumeLife()
+    private bool ConsumeLife()
     {
         if (_currentLives <= 0)
-            return;
+            return true;
 
         _currentLives--;
 
@@ -187,10 +228,7 @@ public class LevelDeathManager : MonoBehaviour
             _lifeIcons[_currentLives].DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
         }
 
-        if (_currentLives <= 0)
-        {
-            Debug.Log("Sin vidas. Aquí luego metes tu Game Over.");
-        }
+        return _currentLives <= 0;
     }
 
     private void RefreshLivesImmediate()

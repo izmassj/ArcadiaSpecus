@@ -335,4 +335,10 @@ public class RobotController : MonoBehaviour
         _isFirstPerson = false;
         ApplyPerspectiveState(instant);
     }
+
+    public void ForcePerspective(bool firstPerson, bool instant)
+    {
+        _isFirstPerson = firstPerson;
+        ApplyPerspectiveState(instant);
+    }
 }
