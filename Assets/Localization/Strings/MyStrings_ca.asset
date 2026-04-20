@@ -17,7 +17,63 @@ MonoBehaviour:
   m_SharedData: {fileID: 11400000, guid: f2e73b20ce47506468382d1551ccb613, type: 2}
   m_Metadata:
     m_Items: []
-  m_TableData: []
+  m_TableData:
+  - m_Id: 1837772506177536
+    m_Localized: "A\xEFgua"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1837794517884928
+    m_Localized: Menjar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838018929926144
+    m_Localized: Ferralla
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838218977255424
+    m_Localized: Electricitat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838337155964928
+    m_Localized: Fam
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838406647193600
+    m_Localized: Set
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838963248111616
+    m_Localized: Energia
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1839084077621248
+    m_Localized: Jugar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1839939715637248
+    m_Localized: Opcions
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1840050323628032
+    m_Localized: Sortir
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1840163448201216
+    m_Localized: "Cr\xE8dits"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1840587865628672
+    m_Localized: Sobre
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1841953044471808
+    m_Localized: "Men\xFA Principal"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1842148020887552
+    m_Localized: Continuar
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

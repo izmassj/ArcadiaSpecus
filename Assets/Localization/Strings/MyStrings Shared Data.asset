@@ -13,8 +13,64 @@ MonoBehaviour:
   m_Name: MyStrings Shared Data
   m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
   m_TableCollectionName: MyStrings
-  m_TableCollectionNameGuidString: 00000000000000000000000000000000
-  m_Entries: []
+  m_TableCollectionNameGuidString: f2e73b20ce47506468382d1551ccb613
+  m_Entries:
+  - m_Id: 1837772506177536
+    m_Key: ID_Water
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1837794517884928
+    m_Key: ID_Food
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838018929926144
+    m_Key: ID_Scrap
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838218977255424
+    m_Key: ID_Electricity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838337155964928
+    m_Key: ID_Hunger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838406647193600
+    m_Key: ID_Thirst
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1838963248111616
+    m_Key: ID_Energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1839084077621248
+    m_Key: ID_PlayMenu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1839939715637248
+    m_Key: ID_SettingsMenu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1840050323628032
+    m_Key: ID_ExitMenu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1840163448201216
+    m_Key: ID_CreditsMenu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1840587865628672
+    m_Key: ID_AboutMenu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1841953044471808
+    m_Key: ID_MainMenuPause
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1842148020887552
+    m_Key: ID_ContinuePause
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
