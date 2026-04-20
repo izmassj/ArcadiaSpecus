@@ -5143,6 +5143,8 @@ MonoBehaviour:
   _firstPersonPitchPivot: {fileID: 1554750760417403983}
   _firstPersonCameraTarget: {fileID: 7253543286456830302}
   _platformMotor: {fileID: 6522772579054659857}
+  _animator: {fileID: 0}
+  _groundCheckOrigin: {fileID: 0}
   _thirdPersonCamera: {fileID: 2277695700944455804}
   _firstPersonCamera: {fileID: 8714356230483063276}
   _activeCameraPriority: 20
@@ -5167,12 +5169,34 @@ MonoBehaviour:
   _jumpHeight: 3
   _gravity: -25
   _groundedVerticalVelocity: -2
+  _useAnimatedJumpFlow: 1
+  _nearGroundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _nearGroundDistance: 0.9
+  _groundCheckOffset: 0.05
+  _stateCrossFade: 0.05
+  _jumpStartFallbackLength: 0.625
+  _jumpMiddleFallbackLength: 0.5833333
+  _jumpFallReturnDelay: 1.083
+  _idleStateName: Idle
+  _jumpStartStateName: JumpStart
+  _jumpMiddleStateName: JumpMiddle
+  _jumpAirStateName: JumpAir
+  _jumpFallStateName: JumpFall
+  _startJumpTriggerName: StartJump
+  _middleJumpTriggerName: MiddleJump
+  _airJumpTriggerName: AirJump
+  _fallJumpTriggerName: FallJump
+  _jumpingBoolName: Jumping
   _isFirstPerson: 1
   _inputLocked: 0
   _hardMovementLocked: 0
   _isGrounded: 0
+  _isNearGround: 0
   _worldVelocity: {x: 0, y: 0, z: 0}
   _localPlanarVelocity: {x: 0, y: 0, z: 0}
+  _currentJumpPhase: 
 --- !u!114 &6735567318389509630
 MonoBehaviour:
   m_ObjectHideFlags: 0

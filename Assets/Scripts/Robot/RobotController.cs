@@ -5,11 +5,22 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class RobotController : MonoBehaviour
 {
+    private enum JumpAnimationPhase
+    {
+        None,
+        Start,
+        Middle,
+        Air,
+        Fall
+    }
+
     [Header("References")]
     [SerializeField] private CharacterController _characterController;
     [SerializeField] private Transform _firstPersonPitchPivot;
     [SerializeField] private Transform _firstPersonCameraTarget;
     [SerializeField] private CharacterControllerPlatformMotor _platformMotor;
+    [SerializeField] private Animator _animator;
+    [SerializeField] private Transform _groundCheckOrigin;
 
     [Header("Cinemachine")]
     [SerializeField] private CinemachineCamera _thirdPersonCamera;
@@ -45,6 +56,26 @@ public class RobotController : MonoBehaviour
     [SerializeField] private float _gravity = -25f;
     [SerializeField] private float _groundedVerticalVelocity = -2f;
 
+    [Header("Jump Animation")]
+    [SerializeField] private bool _useAnimatedJumpFlow = true;
+    [SerializeField] private LayerMask _nearGroundMask = ~0;
+    [SerializeField] private float _nearGroundDistance = 0.9f;
+    [SerializeField] private float _groundCheckOffset = 0.05f;
+    [SerializeField] private float _stateCrossFade = 0.05f;
+    [SerializeField] private float _jumpStartFallbackLength = 0.625f;
+    [SerializeField] private float _jumpMiddleFallbackLength = 0.5833333f;
+    [SerializeField] private float _jumpFallReturnDelay = 0.12f;
+    [SerializeField] private string _idleStateName = "Idle";
+    [SerializeField] private string _jumpStartStateName = "JumpStart";
+    [SerializeField] private string _jumpMiddleStateName = "JumpMiddle";
+    [SerializeField] private string _jumpAirStateName = "JumpAir";
+    [SerializeField] private string _jumpFallStateName = "JumpFall";
+    [SerializeField] private string _startJumpTriggerName = "StartJump";
+    [SerializeField] private string _middleJumpTriggerName = "MiddleJump";
+    [SerializeField] private string _airJumpTriggerName = "AirJump";
+    [SerializeField] private string _fallJumpTriggerName = "FallJump";
+    [SerializeField] private string _jumpingBoolName = "Jumping";
+
     [Header("Mode")]
     [SerializeField] private bool _isFirstPerson = false;
 
@@ -54,8 +85,10 @@ public class RobotController : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool _isGrounded;
+    [SerializeField] private bool _isNearGround;
     [SerializeField] private Vector3 _worldVelocity;
     [SerializeField] private Vector3 _localPlanarVelocity;
+    [SerializeField] private string _currentJumpPhase;
 
     private InputActionMap _gameplayMap;
     private InputAction _navigateAction;
@@ -71,6 +104,16 @@ public class RobotController : MonoBehaviour
     private float _mostNegativeFallVelocity;
     private Vector3 _previousPosition;
     private float _pitch;
+
+    private JumpAnimationPhase _jumpAnimationPhase;
+    private float _jumpPhaseTimer;
+    private float _jumpStartLength;
+    private float _jumpMiddleLength;
+    private bool _hasJumpingBool;
+    private bool _hasStartJumpTrigger;
+    private bool _hasMiddleJumpTrigger;
+    private bool _hasAirJumpTrigger;
+    private bool _hasFallJumpTrigger;
 
     public bool IsGrounded => _isGrounded;
     public bool IsFirstPerson => _isFirstPerson;
@@ -90,6 +133,11 @@ public class RobotController : MonoBehaviour
 
         if (_platformMotor == null)
             _platformMotor = GetComponent<CharacterControllerPlatformMotor>();
+
+        if (_animator == null)
+            _animator = GetComponentInChildren<Animator>(true);
+
+        CacheAnimatorData();
     }
 
     private void OnEnable()
@@ -105,12 +153,16 @@ public class RobotController : MonoBehaviour
             _pitch = NormalizePitch(_firstPersonPitchPivot.localEulerAngles.x);
 
         ApplyPerspectiveState(true);
+        SyncAnimatorToIdle();
     }
 
     private void OnDisable()
     {
         if (_gameplayMap != null && _gameplayMap.enabled)
             _gameplayMap.Disable();
+
+        if (_animator != null && _hasJumpingBool)
+            _animator.SetBool(_jumpingBoolName, false);
 
         if (!_lockCursorInFirstPerson)
             return;
@@ -147,6 +199,7 @@ public class RobotController : MonoBehaviour
         HandleMovement();
         UpdateRuntimeState();
         FadeImpulses();
+        _currentJumpPhase = _jumpAnimationPhase.ToString();
     }
 
     private void StartInputActions()
@@ -222,14 +275,10 @@ public class RobotController : MonoBehaviour
         if (groundedBeforeMove && _verticalVelocity < 0f)
             _verticalVelocity = _groundedVerticalVelocity;
 
-        if (_jumpAction != null && _jumpAction.WasPressedThisFrame() && groundedBeforeMove)
-        {
-            _verticalVelocity = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
-            JumpImpulse01 = 1f;
-
-            if (_platformMotor != null)
-                _platformMotor.ClearPlatform();
-        }
+        if (_useAnimatedJumpFlow)
+            UpdateJumpAnimationBeforeMove(groundedBeforeMove);
+        else
+            HandleImmediateJump(groundedBeforeMove);
 
         float forwardSign = _invertForwardInput ? -1f : 1f;
         float targetForwardSpeed = _moveInput.y * forwardSign * _moveSpeed;
@@ -262,6 +311,7 @@ public class RobotController : MonoBehaviour
             _platformMotor.PostCharacterMove();
 
         _isGrounded = _characterController.isGrounded;
+        _isNearGround = CheckNearGround();
 
         if (_isGrounded && !_wasGrounded)
         {
@@ -273,7 +323,268 @@ public class RobotController : MonoBehaviour
         if (!_isGrounded && _wasGrounded)
             _mostNegativeFallVelocity = 0f;
 
+        if (_useAnimatedJumpFlow)
+            UpdateJumpAnimationAfterMove();
+
         _wasGrounded = _isGrounded;
+    }
+
+    private void HandleImmediateJump(bool groundedBeforeMove)
+    {
+        if (_jumpAction == null || !_jumpAction.WasPressedThisFrame() || !groundedBeforeMove)
+            return;
+
+        DoTakeoff();
+    }
+
+    private void UpdateJumpAnimationBeforeMove(bool groundedBeforeMove)
+    {
+        if (_jumpAnimationPhase != JumpAnimationPhase.None)
+            _jumpPhaseTimer += Time.deltaTime;
+
+        if (_jumpAction != null && _jumpAction.WasPressedThisFrame() && groundedBeforeMove && _jumpAnimationPhase == JumpAnimationPhase.None)
+        {
+            EnterJumpPhase(JumpAnimationPhase.Start);
+            return;
+        }
+
+        if (_jumpAnimationPhase != JumpAnimationPhase.Start)
+            return;
+
+        if (!HasStateFinished(_jumpStartStateName, _jumpStartFallbackLength))
+            return;
+
+        DoTakeoff();
+        EnterJumpPhase(JumpAnimationPhase.Middle);
+    }
+
+    private void UpdateJumpAnimationAfterMove()
+    {
+        switch (_jumpAnimationPhase)
+        {
+            case JumpAnimationPhase.Middle:
+                if (HasStateFinished(_jumpMiddleStateName, _jumpMiddleFallbackLength))
+                    EnterJumpPhase(JumpAnimationPhase.Air);
+                break;
+
+            case JumpAnimationPhase.Air:
+                if (!_isGrounded && _verticalVelocity <= 0f && _isNearGround)
+                    EnterJumpPhase(JumpAnimationPhase.Fall);
+                else if (_isGrounded)
+                    FinishJumpAnimation();
+                break;
+
+            case JumpAnimationPhase.Fall:
+                if (_isGrounded && _jumpPhaseTimer >= _jumpFallReturnDelay)
+                    FinishJumpAnimation();
+                break;
+        }
+    }
+
+    private void EnterJumpPhase(JumpAnimationPhase phase)
+    {
+        _jumpAnimationPhase = phase;
+        _jumpPhaseTimer = 0f;
+
+        switch (phase)
+        {
+            case JumpAnimationPhase.Start:
+                SetJumpingAnimator(true);
+                PlayAnimatorJumpState(_jumpStartStateName, _startJumpTriggerName);
+                break;
+
+            case JumpAnimationPhase.Middle:
+                SetJumpingAnimator(true);
+                PlayAnimatorJumpState(_jumpMiddleStateName, _middleJumpTriggerName);
+                break;
+
+            case JumpAnimationPhase.Air:
+                SetJumpingAnimator(true);
+                PlayAnimatorJumpState(_jumpAirStateName, _airJumpTriggerName);
+                break;
+
+            case JumpAnimationPhase.Fall:
+                SetJumpingAnimator(true);
+                PlayAnimatorJumpState(_jumpFallStateName, _fallJumpTriggerName);
+                break;
+        }
+    }
+
+    private bool HasStateFinished(string stateName, float fallbackLength)
+    {
+        if (_animator == null || string.IsNullOrEmpty(stateName))
+            return _jumpPhaseTimer >= fallbackLength;
+
+        if (_animator.IsInTransition(0))
+            return false;
+
+        AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        int stateHash = Animator.StringToHash(stateName);
+
+        if (stateInfo.shortNameHash != stateHash && stateInfo.fullPathHash != stateHash)
+            return _jumpPhaseTimer >= fallbackLength;
+
+        return stateInfo.normalizedTime >= 1f;
+    }
+
+    private void FinishJumpAnimation()
+    {
+        _jumpAnimationPhase = JumpAnimationPhase.None;
+        _jumpPhaseTimer = 0f;
+        SetJumpingAnimator(false);
+        ResetJumpTriggers();
+
+        if (_animator != null && !string.IsNullOrEmpty(_idleStateName))
+        {
+            int idleHash = Animator.StringToHash(_idleStateName);
+            if (_animator.HasState(0, idleHash))
+                _animator.CrossFadeInFixedTime(idleHash, _stateCrossFade);
+        }
+    }
+
+    private void DoTakeoff()
+    {
+        _verticalVelocity = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+        JumpImpulse01 = 1f;
+
+        if (_platformMotor != null)
+            _platformMotor.ClearPlatform();
+    }
+
+    private void CacheAnimatorData()
+    {
+        if (_animator == null)
+            return;
+
+        _hasJumpingBool = HasAnimatorParameter(_jumpingBoolName, AnimatorControllerParameterType.Bool);
+        _hasStartJumpTrigger = HasAnimatorParameter(_startJumpTriggerName, AnimatorControllerParameterType.Trigger);
+        _hasMiddleJumpTrigger = HasAnimatorParameter(_middleJumpTriggerName, AnimatorControllerParameterType.Trigger);
+        _hasAirJumpTrigger = HasAnimatorParameter(_airJumpTriggerName, AnimatorControllerParameterType.Trigger);
+        _hasFallJumpTrigger = HasAnimatorParameter(_fallJumpTriggerName, AnimatorControllerParameterType.Trigger);
+
+        _jumpStartLength = GetClipLength(_jumpStartStateName, _jumpStartFallbackLength);
+        _jumpMiddleLength = GetClipLength(_jumpMiddleStateName, _jumpMiddleFallbackLength);
+    }
+
+    private void SyncAnimatorToIdle()
+    {
+        _jumpAnimationPhase = JumpAnimationPhase.None;
+        _jumpPhaseTimer = 0f;
+        SetJumpingAnimator(false);
+        ResetJumpTriggers();
+
+        if (_animator == null || string.IsNullOrEmpty(_idleStateName))
+            return;
+
+        int idleHash = Animator.StringToHash(_idleStateName);
+        if (_animator.HasState(0, idleHash))
+            _animator.Play(idleHash, 0, 0f);
+    }
+
+    private void PlayAnimatorJumpState(string stateName, string triggerName)
+    {
+        if (_animator == null)
+            return;
+
+        ResetJumpTriggers();
+
+        if (!string.IsNullOrEmpty(triggerName))
+        {
+            if (triggerName == _startJumpTriggerName && _hasStartJumpTrigger)
+                _animator.SetTrigger(triggerName);
+            else if (triggerName == _middleJumpTriggerName && _hasMiddleJumpTrigger)
+                _animator.SetTrigger(triggerName);
+            else if (triggerName == _airJumpTriggerName && _hasAirJumpTrigger)
+                _animator.SetTrigger(triggerName);
+            else if (triggerName == _fallJumpTriggerName && _hasFallJumpTrigger)
+                _animator.SetTrigger(triggerName);
+        }
+
+        if (string.IsNullOrEmpty(stateName))
+            return;
+
+        int stateHash = Animator.StringToHash(stateName);
+        if (_animator.HasState(0, stateHash))
+            _animator.CrossFadeInFixedTime(stateHash, _stateCrossFade);
+    }
+
+    private void ResetJumpTriggers()
+    {
+        if (_animator == null)
+            return;
+
+        if (_hasStartJumpTrigger)
+            _animator.ResetTrigger(_startJumpTriggerName);
+        if (_hasMiddleJumpTrigger)
+            _animator.ResetTrigger(_middleJumpTriggerName);
+        if (_hasAirJumpTrigger)
+            _animator.ResetTrigger(_airJumpTriggerName);
+        if (_hasFallJumpTrigger)
+            _animator.ResetTrigger(_fallJumpTriggerName);
+    }
+
+    private void SetJumpingAnimator(bool value)
+    {
+        if (_animator != null && _hasJumpingBool)
+            _animator.SetBool(_jumpingBoolName, value);
+    }
+
+    private bool HasAnimatorParameter(string parameterName, AnimatorControllerParameterType expectedType)
+    {
+        if (_animator == null || string.IsNullOrEmpty(parameterName))
+            return false;
+
+        var parameters = _animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].name == parameterName && parameters[i].type == expectedType)
+                return true;
+        }
+
+        return false;
+    }
+
+    private float GetClipLength(string clipName, float fallback)
+    {
+        if (_animator == null || _animator.runtimeAnimatorController == null || string.IsNullOrEmpty(clipName))
+            return fallback;
+
+        var clips = _animator.runtimeAnimatorController.animationClips;
+        for (int i = 0; i < clips.Length; i++)
+        {
+            AnimationClip clip = clips[i];
+            if (clip != null && clip.name == clipName)
+                return Mathf.Max(0.01f, clip.length);
+        }
+
+        return fallback;
+    }
+
+    private bool CheckNearGround()
+    {
+        Vector3 origin;
+
+        if (_groundCheckOrigin != null)
+        {
+            origin = _groundCheckOrigin.position;
+        }
+        else if (_characterController != null)
+        {
+            Bounds bounds = _characterController.bounds;
+            origin = new Vector3(bounds.center.x, bounds.min.y + _groundCheckOffset, bounds.center.z);
+        }
+        else
+        {
+            origin = transform.position + Vector3.up * _groundCheckOffset;
+        }
+
+        return Physics.Raycast(
+            origin,
+            Vector3.down,
+            _nearGroundDistance,
+            _nearGroundMask,
+            QueryTriggerInteraction.Ignore
+        );
     }
 
     private void UpdateRuntimeState()

@@ -16,6 +16,7 @@ MonoBehaviour:
   showInSceneView: 1
   outlines:
   - {fileID: 3805858708483734045}
+  - {fileID: 5338090909110600170}
 --- !u!114 &3805858708483734045
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50,5 +51,41 @@ MonoBehaviour:
   scaleWithResolution: 0
   referenceResolution: 3
   customResolution: 1080
+  materialType: 0
+  customMaterial: {fileID: 0}
+--- !u!114 &5338090909110600170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca2cb9e9790a941d3b51ae2615e6e1bd, type: 3}
+  m_Name: Outline
+  m_EditorClassIdentifier: LineworkLite::LineworkLite.FreeOutline.Outline
+  material: {fileID: 0}
+  isActive: 1
+  RenderingLayer:
+    serializedVersion: 0
+    m_Bits: 1
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  renderQueue: 0
+  occlusion: 0
+  maskingStrategy: 0
+  color: {r: 0, g: 0, b: 0, a: 0.8666667}
+  enableOcclusion: 0
+  occludedColor: {r: 1, g: 0, b: 0, a: 1}
+  blendMode: 0
+  extrusionMethod: 4
+  scaling: 0
+  width: 5.1
+  minWidth: 0
+  scaleWithResolution: 0
+  referenceResolution: 2
+  customResolution: 0
   materialType: 0
   customMaterial: {fileID: 0}
