@@ -6,10 +6,10 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // ========== CONFIGURACIÓN DE CÁMARA ==========
-    public float sensibilidadMouse = 2f;       // Sensibilidad del ratón para rotación
-    private float rotacionVertical = 0f;        // Rotación vertical acumulada de la cámara
-    [SerializeField] private Transform transformCamara; // Referencia al transform de la cámara
+    // ========== CONFIGURACIï¿½N DE Cï¿½MARA ==========
+    public float sensibilidadMouse = 2f;       // Sensibilidad del ratï¿½n para rotaciï¿½n
+    private float rotacionVertical = 0f;        // Rotaciï¿½n vertical acumulada de la cï¿½mara
+    [SerializeField] private Transform transformCamara; // Referencia al transform de la cï¿½mara
     [SerializeField] private string tagSuelo = "Ground"; // Tag para identificar el suelo
 
     // ========== MOVIMIENTO TERRESTRE ==========
@@ -20,11 +20,11 @@ public class PlayerMovement : MonoBehaviour
     private float movimientoHorizontal;         // Input horizontal (A/D o flechas)
     private float movimientoAdelante;           // Input vertical (W/S o flechas)
 
-    // ========== CONFIGURACIÓN DE SALTO ==========
+    // ========== CONFIGURACIï¿½N DE SALTO ==========
     public float fuerzaSalto = 10f;             // Fuerza inicial del salto
     public float multiplicadorCaida = 2.5f;     // Multiplica la gravedad al caer
     public float multiplicadorAscenso = 2f;     // Multiplica la gravedad al ascender
-    private bool enSuelo = true;                // Indica si el jugador está en el suelo
+    private bool enSuelo = true;                // Indica si el jugador estï¿½ en el suelo
     public LayerMask capaSuelo;                 // Capas consideradas como suelo
     private float temporizadorChequeoSuelo = 0f; // Temporizador para chequeo de suelo
     private float retrasoChequeoSuelo = 0.3f;   // Retraso entre chequeos de suelo
@@ -33,27 +33,27 @@ public class PlayerMovement : MonoBehaviour
 
     // ========== MOVIMIENTO EN PLATAFORMAS ==========
     private Transform plataformaActual;         // Referencia a la plataforma actual
-    private Vector3 ultimaPosicionPlataforma;   // Última posición de la plataforma
+    private Vector3 ultimaPosicionPlataforma;   // ï¿½ltima posiciï¿½n de la plataforma
     private Vector3 velocidadPlataforma;        // Velocidad calculada de la plataforma
-    private bool enPlataforma = false;          // Indica si está sobre una plataforma móvil
+    private bool enPlataforma = false;          // Indica si estï¿½ sobre una plataforma mï¿½vil
 
-    private float rotacionHorizontal; // Rotación horizontal acumulada del jugador
+    private float rotacionHorizontal; // Rotaciï¿½n horizontal acumulada del jugador
 
     void Start()
     {
-        // Inicialización del Rigidbody
+        // Inicializaciï¿½n del Rigidbody
         rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true; // Congelar rotación para evitar caídas indeseadas
+        rb.freezeRotation = true; // Congelar rotaciï¿½n para evitar caï¿½das indeseadas
 
-        // Obtener referencia a la cámara principal si no está asignada
+        // Obtener referencia a la cï¿½mara principal si no estï¿½ asignada
         if (transformCamara == null)
             transformCamara = Camera.main.transform;
 
-        // Configuración del raycast para detección de suelo
+        // Configuraciï¿½n del raycast para detecciï¿½n de suelo
         alturaJugador = GetComponent<CapsuleCollider>().height * transform.localScale.y;
         distanciaRaycast = (alturaJugador / 2) + 0.2f; // Ligeramente por debajo de los pies
 
-        // Configuración inicial de velocidad
+        // Configuraciï¿½n inicial de velocidad
         velocidadActual = velocidadBase;
 
         // Configurar cursor para modo juego
@@ -88,13 +88,13 @@ public class PlayerMovement : MonoBehaviour
         rotacionVertical += (mouseY + stickY) * sensibilidadMouse;
         rotacionVertical = Mathf.Clamp(rotacionVertical, -90f, 90f);
 
-        // Detectar salto cuando se presiona espacio y está en el suelo
+        // Detectar salto cuando se presiona espacio y estï¿½ en el suelo
         if (Input.GetButtonDown("Jump") && enSuelo)
         {
             Saltar();
         }
 
-        // Chequeo periódico de contacto con el suelo
+        // Chequeo periï¿½dico de contacto con el suelo
         if (!enSuelo && temporizadorChequeoSuelo <= 0f)
         {
             Vector3 origenRay = transform.position + Vector3.up * 0.1f;
@@ -108,7 +108,7 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Calcular velocidad de plataforma móvil (si está sobre una)
+        // Calcular velocidad de plataforma mï¿½vil (si estï¿½ sobre una)
         if (enPlataforma && plataformaActual != null)
         {
             velocidadPlataforma = (plataformaActual.position - ultimaPosicionPlataforma) / Time.fixedDeltaTime;
@@ -119,31 +119,31 @@ public class PlayerMovement : MonoBehaviour
             velocidadPlataforma = Vector3.zero; // Sin plataforma, sin velocidad adicional
         }
 
-        // Rotación horizontal del jugador usando Rigidbody
+        // Rotaciï¿½n horizontal del jugador usando Rigidbody
         Quaternion nuevaRotacion = Quaternion.Euler(0, rotacionHorizontal, 0);
         rb.MoveRotation(nuevaRotacion);
 
-        // Aplicar movimiento y físicas de salto
+        // Aplicar movimiento y fï¿½sicas de salto
         MoverJugador();
         AplicarFisicasSalto();
     }
 
     private void LateUpdate()
     {
-        // Rotación vertical de la cámara (solo eje X)
+        // Rotaciï¿½n vertical de la cï¿½mara (solo eje X)
         transformCamara.localRotation = Quaternion.Euler(rotacionVertical, 0, 0);
     }
 
     void MoverJugador()
     {
-        // Calcular dirección de movimiento basada en la rotación del jugador
+        // Calcular direcciï¿½n de movimiento basada en la rotaciï¿½n del jugador
         Vector3 direccion = (transform.right * movimientoHorizontal + transform.forward * movimientoAdelante).normalized;
         Vector3 velocidadObjetivo = direccion * velocidadActual;
 
         // Obtener velocidad actual del Rigidbody
-        Vector3 velocidad = rb.velocity;
+        Vector3 velocidad = rb.linearVelocity;
 
-        // Aplicar movimiento horizontal según si está en plataforma o no
+        // Aplicar movimiento horizontal segï¿½n si estï¿½ en plataforma o no
         if (!enPlataforma)
         {
             // Movimiento normal: aplicar velocidad del jugador
@@ -157,20 +157,20 @@ public class PlayerMovement : MonoBehaviour
             velocidad.z = velocidadObjetivo.z + velocidadPlataforma.z;
         }
 
-        rb.velocity = velocidad; // Aplicar velocidad calculada
+        rb.linearVelocity = velocidad; // Aplicar velocidad calculada
 
-        // Detener deslizamiento cuando no hay input y está en el suelo
+        // Detener deslizamiento cuando no hay input y estï¿½ en el suelo
         if (enSuelo && movimientoHorizontal == 0 && movimientoAdelante == 0)
         {
             if (enPlataforma)
             {
                 // Mantener velocidad de plataforma pero no del jugador
-                rb.velocity = new Vector3(velocidadPlataforma.x, rb.velocity.y, velocidadPlataforma.z);
+                rb.linearVelocity = new Vector3(velocidadPlataforma.x, rb.linearVelocity.y, velocidadPlataforma.z);
             }
             else
             {
                 // Detener completamente el movimiento horizontal
-                rb.velocity = new Vector3(0, rb.velocity.y, 0);
+                rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
             }
         }
     }
@@ -185,11 +185,11 @@ public class PlayerMovement : MonoBehaviour
         float stickX = Input.GetAxisRaw("RHorizontal");
         float stickY = Input.GetAxisRaw("RVertical");
 
-        // Rotación horizontal (cuerpo del jugador)
+        // Rotaciï¿½n horizontal (cuerpo del jugador)
         float rotacionHorizontal = (mouseX + stickX) * sensibilidadMouse;
         transform.Rotate(0, rotacionHorizontal, 0);
 
-        // Rotación vertical (sólo cámara, con límites)
+        // Rotaciï¿½n vertical (sï¿½lo cï¿½mara, con lï¿½mites)
         rotacionVertical -= (mouseY + stickY) * sensibilidadMouse;
         rotacionVertical = Mathf.Clamp(rotacionVertical, -90f, 90f);
 
@@ -199,30 +199,30 @@ public class PlayerMovement : MonoBehaviour
 
     void Saltar()
     {
-        enSuelo = false; // Ya no está en el suelo
+        enSuelo = false; // Ya no estï¿½ en el suelo
         temporizadorChequeoSuelo = retrasoChequeoSuelo; // Iniciar temporizador de chequeo
 
         // Crear vector de salto manteniendo velocidad horizontal
-        Vector3 velocidadSalto = new Vector3(rb.velocity.x, fuerzaSalto, rb.velocity.z);
-        rb.velocity = velocidadSalto;
+        Vector3 velocidadSalto = new Vector3(rb.linearVelocity.x, fuerzaSalto, rb.linearVelocity.z);
+        rb.linearVelocity = velocidadSalto;
 
-        // Dejar de considerar que está en plataforma al saltar
+        // Dejar de considerar que estï¿½ en plataforma al saltar
         enPlataforma = false;
         plataformaActual = null;
     }
 
     void AplicarFisicasSalto()
     {
-        // Aplicar gravedad modificada según fase del salto
-        if (rb.velocity.y < 0)
+        // Aplicar gravedad modificada segï¿½n fase del salto
+        if (rb.linearVelocity.y < 0)
         {
-            // Fase de caída: aplicar multiplicador para caer más rápido
-            rb.velocity += Vector3.up * Physics.gravity.y * multiplicadorCaida * Time.fixedDeltaTime;
+            // Fase de caï¿½da: aplicar multiplicador para caer mï¿½s rï¿½pido
+            rb.linearVelocity += Vector3.up * Physics.gravity.y * multiplicadorCaida * Time.fixedDeltaTime;
         }
-        else if (rb.velocity.y > 0 && !Input.GetButton("Jump"))
+        else if (rb.linearVelocity.y > 0 && !Input.GetButton("Jump"))
         {
-            // Fase de ascenso (sin mantener botón): aplicar multiplicador para ascenso más corto
-            rb.velocity += Vector3.up * Physics.gravity.y * multiplicadorAscenso * Time.fixedDeltaTime;
+            // Fase de ascenso (sin mantener botï¿½n): aplicar multiplicador para ascenso mï¿½s corto
+            rb.linearVelocity += Vector3.up * Physics.gravity.y * multiplicadorAscenso * Time.fixedDeltaTime;
         }
     }
 
@@ -233,11 +233,11 @@ public class PlayerMovement : MonoBehaviour
             enSuelo = true; // Contacto con el suelo
             temporizadorChequeoSuelo = 0; // Reiniciar temporizador
 
-            // Verificar si es una plataforma móvil
+            // Verificar si es una plataforma mï¿½vil
             PlataformaMovimiento plataforma = colision.gameObject.GetComponent<PlataformaMovimiento>();
             if (plataforma != null)
             {
-                // Verificar que se está aterrizando en la parte superior
+                // Verificar que se estï¿½ aterrizando en la parte superior
                 float productoPunto = Vector3.Dot(colision.contacts[0].normal, Vector3.up);
                 if (productoPunto > 0.7f) // Normal apuntando hacia arriba
                 {
@@ -251,7 +251,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionStay(Collision colision)
     {
-        // Mantener estado "en suelo" mientras está en contacto
+        // Mantener estado "en suelo" mientras estï¿½ en contacto
         if (colision.gameObject.CompareTag(tagSuelo))
         {
             enSuelo = true;
@@ -262,13 +262,13 @@ public class PlayerMovement : MonoBehaviour
     {
         if (colision.gameObject.CompareTag(tagSuelo))
         {
-            // Verificar si está abandonando una plataforma específica
+            // Verificar si estï¿½ abandonando una plataforma especï¿½fica
             if (colision.transform == plataformaActual)
             {
                 enPlataforma = false;
                 plataformaActual = null;
             }
-            enSuelo = false; // Ya no está en contacto con el suelo
+            enSuelo = false; // Ya no estï¿½ en contacto con el suelo
         }
     }
 }

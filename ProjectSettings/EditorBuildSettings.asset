@@ -20,4 +20,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Proto/MiniGameDesign3.unity
     guid: eda00ee2161984a469a43daac7909343
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 83bcb921c45d49f4db6dcf3157d9ec1a, type: 2}
+  m_UseUCBPForAssetBundles: 0
