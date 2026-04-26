@@ -24,11 +24,21 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     [SerializeField] private SpriteRenderer _alertSprite;
 
     [Header("VFX")]
+    [SerializeField] private GameObject _plasmaChargePrefab;
     [SerializeField] private GameObject _plasmaBurstPrefab;
     [SerializeField] private GameObject _plasmaShotPrefab;
     [SerializeField] private GameObject _explosionPrefab;
-    [SerializeField] private float _burstLifetime = 2f;
-    [SerializeField] private float _burstToShotDelay = 0.08f;
+    [SerializeField] private bool _spawnChargeVfxDuringFocus = true;
+    [SerializeField] private bool _followFirePointWhileCharging = true;
+    [SerializeField] private bool _spawnFinalBurstOnShot = true;
+    [SerializeField] private bool _useBurstPrefabAsSingleChargeSequence = false;
+    [SerializeField] private bool _detachBurstSequenceWhenProjectileSpawns = false;
+    [SerializeField] private Vector3 _chargeRotationOffsetEuler;
+    [SerializeField] private Vector3 _burstRotationOffsetEuler;
+    [SerializeField] private Vector3 _shotRotationOffsetEuler;
+    [SerializeField] private float _fallbackChargeLifetime = 4f;
+    [SerializeField] private float _fallbackBurstLifetime = 2f;
+    [SerializeField] private float _burstLeadTimeBeforeProjectile = 0.05f;
 
     [Header("Detection")]
     [SerializeField] private float _detectionRange = 16f;
@@ -47,6 +57,9 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     [SerializeField] private float _focusPitchSpeed = 180f;
     [SerializeField] private float _minPitch = -35f;
     [SerializeField] private float _maxPitch = 35f;
+
+    [Header("Yaw Rig")]
+    [SerializeField] private float _focusYawVisualOffset = 180f;
 
     [Header("Pitch Rig")]
     [SerializeField] private Vector3 _pitchAxisLocal = Vector3.right;
@@ -96,7 +109,10 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
 
     private Tween _alertTween;
     private Coroutine _fireRoutine;
+    private Coroutine _burstCleanupRoutine;
+    private Coroutine _chargeCleanupRoutine;
     private GameObject _activeBurstInstance;
+    private GameObject _activeChargeInstance;
 
     private bool _fireQueued;
 
@@ -186,6 +202,7 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     {
         UpdateAimTowardsPlayer();
         UpdateLineOfSight();
+        UpdateChargeFollow();
 
         _focusTimer += Time.deltaTime;
 
@@ -214,6 +231,18 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     {
         UpdateAimTowardsPlayer();
         UpdateLineOfSight();
+        UpdateChargeFollow();
+
+        if (_hasLineOfSight)
+        {
+            _noSightTimer = 0f;
+        }
+        else
+        {
+            _noSightTimer += Time.deltaTime;
+            if (_noSightTimer >= _loseFocusAfterNoSightSeconds)
+                CancelPendingShotAndReturnToVigilant();
+        }
     }
 
     private void BeginAlert()
@@ -278,27 +307,110 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
         _noSightTimer = 0f;
         _lineOfSightTimer = _lineOfSightInterval;
         _hasLineOfSight = CheckLineOfSight();
+
+        if (_spawnChargeVfxDuringFocus)
+            StartChargeVfx();
     }
 
     private IEnumerator FireRoutine()
     {
         _state = TurretState.Firing;
+
+        StopChargeVfx();
+
         PlayState(_fireStateName, _fireCrossFade);
 
-        if (_plasmaBurstPrefab != null && _firePoint != null)
-        {
-            _activeBurstInstance = Instantiate(_plasmaBurstPrefab, _firePoint.position, _firePoint.rotation);
-            Destroy(_activeBurstInstance, _burstLifetime);
-        }
+        if (_spawnFinalBurstOnShot)
+            SpawnBurst();
 
-        if (_burstToShotDelay > 0f)
-            yield return new WaitForSeconds(_burstToShotDelay);
+        if (_burstLeadTimeBeforeProjectile > 0f)
+            yield return new WaitForSeconds(_burstLeadTimeBeforeProjectile);
+        else
+            yield return null;
 
         FireProjectile();
 
-        _activeBurstInstance = null;
         _state = TurretState.Focus;
         _fireRoutine = null;
+    }
+
+    private void StartChargeVfx()
+    {
+        StopChargeVfx();
+
+        GameObject chargePrefab = GetChargeSequencePrefab();
+        if (chargePrefab == null || _firePoint == null)
+            return;
+
+        _activeChargeInstance = Instantiate(chargePrefab, _firePoint.position, GetChargeRotation());
+        AdjustNonLoopParticleLifetimes(_activeChargeInstance, Mathf.Max(0.05f, _chargeToFireSeconds));
+        PlayParticles(_activeChargeInstance);
+
+        if (_chargeCleanupRoutine != null)
+        {
+            StopCoroutine(_chargeCleanupRoutine);
+            _chargeCleanupRoutine = null;
+        }
+
+        float fallbackLifetime = Mathf.Max(_fallbackChargeLifetime, _chargeToFireSeconds + 0.25f);
+        _chargeCleanupRoutine = StartCoroutine(DestroyAfterParticlesOrFallback(_activeChargeInstance, fallbackLifetime, isCharge: true));
+    }
+
+    private GameObject GetChargeSequencePrefab()
+    {
+        if (_plasmaChargePrefab != null)
+            return _plasmaChargePrefab;
+
+        if (_useBurstPrefabAsSingleChargeSequence && _plasmaBurstPrefab != null)
+            return _plasmaBurstPrefab;
+
+        return _plasmaBurstPrefab;
+    }
+
+    private void StopChargeVfx()
+    {
+        if (_chargeCleanupRoutine != null)
+        {
+            StopCoroutine(_chargeCleanupRoutine);
+            _chargeCleanupRoutine = null;
+        }
+
+        if (_activeChargeInstance != null)
+            Destroy(_activeChargeInstance);
+
+        _activeChargeInstance = null;
+    }
+
+    private void SpawnBurst()
+    {
+        ReleaseBurstInstance();
+
+        if (_plasmaBurstPrefab == null || _firePoint == null)
+            return;
+
+        _activeBurstInstance = Instantiate(_plasmaBurstPrefab, _firePoint.position, GetBurstRotation());
+        PlayParticles(_activeBurstInstance);
+
+        if (_burstCleanupRoutine != null)
+        {
+            StopCoroutine(_burstCleanupRoutine);
+            _burstCleanupRoutine = null;
+        }
+
+        _burstCleanupRoutine = StartCoroutine(DestroyAfterParticlesOrFallback(_activeBurstInstance, _fallbackBurstLifetime, isCharge: false));
+    }
+
+    private void UpdateChargeFollow()
+    {
+        if (!_followFirePointWhileCharging || _activeChargeInstance == null || _firePoint == null)
+            return;
+
+        _activeChargeInstance.transform.SetPositionAndRotation(_firePoint.position, GetChargeRotation());
+    }
+
+    private void ReleaseBurstInstance()
+    {
+        _activeBurstInstance = null;
     }
 
     private void FireProjectile()
@@ -312,7 +424,8 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
         if (direction.sqrMagnitude < 0.0001f)
             direction = _firePoint.forward;
 
-        GameObject shot = Instantiate(_plasmaShotPrefab, _firePoint.position, Quaternion.LookRotation(direction, Vector3.up));
+        Quaternion shotRotation = Quaternion.LookRotation(direction, Vector3.up) * Quaternion.Euler(_shotRotationOffsetEuler);
+        GameObject shot = Instantiate(_plasmaShotPrefab, _firePoint.position, shotRotation);
 
         TurretPlasmaProjectile projectile = shot.GetComponent<TurretPlasmaProjectile>();
         if (projectile == null)
@@ -343,11 +456,24 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
         _currentPitch = 0f;
         _scanDirection = Mathf.Approximately(_scanDirection, 0f) ? 1f : _scanDirection;
 
+        StopChargeVfx();
+
         if (_pitchPivot != null)
             _pitchPivot.localRotation = _basePitchLocalRotation;
 
         if (playCloseAnimation)
             PlayState(_closeStateName, _closeCrossFade);
+    }
+
+    private void CancelPendingShotAndReturnToVigilant()
+    {
+        if (_fireRoutine != null)
+        {
+            StopCoroutine(_fireRoutine);
+            _fireRoutine = null;
+        }
+
+        ReturnToVigilant(true);
     }
 
     private void UpdateScanRotation()
@@ -380,11 +506,16 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
 
         if (flatDirection.sqrMagnitude > 0.0001f)
         {
-            Quaternion desiredYaw = Quaternion.LookRotation(flatDirection.normalized, Vector3.up);
+            Quaternion desiredYaw = GetDesiredFocusYaw(flatDirection.normalized);
             _yawRoot.rotation = Quaternion.RotateTowards(_yawRoot.rotation, desiredYaw, _focusYawSpeed * Time.deltaTime);
         }
 
         UpdatePitchTowards(targetPosition);
+    }
+
+    private Quaternion GetDesiredFocusYaw(Vector3 flatDirectionNormalized)
+    {
+        return Quaternion.LookRotation(flatDirectionNormalized, Vector3.up) * Quaternion.Euler(0f, _focusYawVisualOffset, 0f);
     }
 
     private void UpdatePitchTowards(Vector3 targetPosition)
@@ -502,12 +633,104 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
         return _player.transform.position + _targetOffset;
     }
 
+    private Quaternion GetChargeRotation()
+    {
+        if (_firePoint == null)
+            return Quaternion.Euler(_chargeRotationOffsetEuler);
+
+        return _firePoint.rotation * Quaternion.Euler(_chargeRotationOffsetEuler);
+    }
+
+    private Quaternion GetBurstRotation()
+    {
+        if (_firePoint == null)
+            return Quaternion.Euler(_burstRotationOffsetEuler);
+
+        return _firePoint.rotation * Quaternion.Euler(_burstRotationOffsetEuler);
+    }
+
     private void PlayState(string stateName, float crossFadeDuration)
     {
         if (_bodyAnimator == null || string.IsNullOrWhiteSpace(stateName))
             return;
 
         _bodyAnimator.CrossFadeInFixedTime(stateName, crossFadeDuration);
+    }
+
+    private void PlayParticles(GameObject obj)
+    {
+        if (obj == null)
+            return;
+
+        ParticleSystem[] particleSystems = obj.GetComponentsInChildren<ParticleSystem>(true);
+        for (int i = 0; i < particleSystems.Length; i++)
+            particleSystems[i].Play(true);
+    }
+
+    private void AdjustNonLoopParticleLifetimes(GameObject obj, float lifetime)
+    {
+        if (obj == null)
+            return;
+
+        ParticleSystem[] particleSystems = obj.GetComponentsInChildren<ParticleSystem>(true);
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            ParticleSystem ps = particleSystems[i];
+            if (ps == null)
+                continue;
+
+            var main = ps.main;
+            if (!main.loop)
+                main.startLifetime = lifetime;
+        }
+    }
+
+    private IEnumerator DestroyAfterParticlesOrFallback(GameObject obj, float fallbackSeconds, bool isCharge)
+    {
+        if (obj == null)
+            yield break;
+
+        ParticleSystem[] particleSystems = obj.GetComponentsInChildren<ParticleSystem>(true);
+        float elapsed = 0f;
+
+        while (obj != null)
+        {
+            bool anyAlive = false;
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                ParticleSystem ps = particleSystems[i];
+                if (ps != null && ps.IsAlive(true))
+                {
+                    anyAlive = true;
+                    break;
+                }
+            }
+
+            if (!anyAlive && elapsed > 0.05f)
+                break;
+
+            elapsed += Time.deltaTime;
+            if (fallbackSeconds > 0f && elapsed >= fallbackSeconds)
+                break;
+
+            yield return null;
+        }
+
+        if (obj != null)
+            Destroy(obj);
+
+        if (isCharge)
+        {
+            if (_activeChargeInstance == obj)
+                _activeChargeInstance = null;
+            _chargeCleanupRoutine = null;
+        }
+        else
+        {
+            if (_activeBurstInstance == obj)
+                _activeBurstInstance = null;
+            _burstCleanupRoutine = null;
+        }
     }
 
     private void AutoResolveReferences()
@@ -548,12 +771,29 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
             _fireRoutine = null;
         }
 
+        if (_burstCleanupRoutine != null)
+        {
+            StopCoroutine(_burstCleanupRoutine);
+            _burstCleanupRoutine = null;
+        }
+
+        if (_chargeCleanupRoutine != null)
+        {
+            StopCoroutine(_chargeCleanupRoutine);
+            _chargeCleanupRoutine = null;
+        }
+
         if (_alertTween != null && _alertTween.IsActive())
             _alertTween.Kill();
 
         if (_activeBurstInstance != null)
             Destroy(_activeBurstInstance);
 
+        if (_activeChargeInstance != null)
+            Destroy(_activeChargeInstance);
+
+        _activeBurstInstance = null;
+        _activeChargeInstance = null;
         _state = TurretState.Vigilant;
         _focusTimer = 0f;
         _noSightTimer = 0f;
@@ -588,7 +828,7 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 0.75f, 0.1f, 0.65f);
-        Vector3 origin = Application.isPlaying ? transform.position : transform.position;
+        Vector3 origin = transform.position;
 
         Quaternion left = Quaternion.Euler(0f, (Application.isPlaying ? _baseYawWorld : transform.eulerAngles.y) + _scanMinYaw, 0f);
         Quaternion right = Quaternion.Euler(0f, (Application.isPlaying ? _baseYawWorld : transform.eulerAngles.y) + _scanMaxYaw, 0f);
