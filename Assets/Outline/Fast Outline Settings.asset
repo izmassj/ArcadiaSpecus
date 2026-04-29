@@ -83,7 +83,7 @@ MonoBehaviour:
   gpuInstancing: 0
   extrusionMethod: 6
   scaling: 0
-  width: 4
+  width: 2.25
   minWidth: 0
   materialType: 0
   customMaterial: {fileID: 0}
