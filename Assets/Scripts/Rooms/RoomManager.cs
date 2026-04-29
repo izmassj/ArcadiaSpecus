@@ -1,5 +1,5 @@
 using DG.Tweening;
-using LineworkLite.FreeOutline;
+using Linework.FastOutline;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,8 +8,8 @@ public class RoomManager : MonoBehaviour
     [Header("Parameters")]
     [SerializeField] public RoomKind typeOfRoom;
 
-    [Header("Post-Processing - Outline")]
-    [SerializeField] public FreeOutlineSettings outlineSettings;
+    [Header("Post-Processing - Fast Outline")]
+    [SerializeField] public FastOutlineSettings outlineSettings;
     [SerializeField] private int _outlineWidth;
 
     [Header("Positioning")]
@@ -111,18 +111,48 @@ public class RoomManager : MonoBehaviour
 
     public void ActivateOutline(LayerMask layerMask)
     {
-        int layer = Mathf.RoundToInt(Mathf.Log(layerMask.value, 2));
-
-        if (gameObject.transform.GetChild(0).gameObject.layer != layer)
-            gameObject.transform.GetChild(0).gameObject.layer = layer;
-
-        outlineSettings.Outlines[0].width = _outlineWidth;
+        SetOutlineChildLayer(layerMask);
+        SetOutlineWidth();
     }
 
-    public void DeactivateOutline(LayerMask layer)
+    public void DeactivateOutline(LayerMask layerMask)
     {
-        if (gameObject.transform.GetChild(0).gameObject.layer != layer)
-            gameObject.transform.GetChild(0).gameObject.layer = (int)layer;
+        SetOutlineChildLayer(layerMask);
+        SetOutlineWidth();
+    }
+
+    private void SetOutlineChildLayer(LayerMask layerMask)
+    {
+        if (transform.childCount == 0)
+            return;
+
+        int layer = GetLayerFromMask(layerMask);
+        GameObject outlineObject = transform.GetChild(0).gameObject;
+
+        if (outlineObject.layer != layer)
+            outlineObject.layer = layer;
+    }
+
+    private int GetLayerFromMask(LayerMask layerMask)
+    {
+        int mask = layerMask.value;
+
+        if (mask == 0)
+            return gameObject.layer;
+
+        for (int i = 0; i < 32; i++)
+        {
+            if ((mask & (1 << i)) != 0)
+                return i;
+        }
+
+        return gameObject.layer;
+    }
+
+    private void SetOutlineWidth()
+    {
+        if (outlineSettings == null || outlineSettings.Outlines == null || outlineSettings.Outlines.Count == 0)
+            return;
 
         outlineSettings.Outlines[0].width = _outlineWidth;
     }

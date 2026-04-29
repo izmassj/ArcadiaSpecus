@@ -1,7 +1,9 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Linework.csproj" />
   <Project Path="LineworkLite.csproj" />
   <Project Path="Coffee.SoftMaskForUGUI.Demo.csproj" />
+  <Project Path="Linework.Editor.csproj" />
   <Project Path="CFXRRuntime.csproj" />
   <Project Path="FMODUnityResonanceEditor.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
