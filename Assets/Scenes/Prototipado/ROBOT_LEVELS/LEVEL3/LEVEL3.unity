@@ -16371,7 +16371,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &670977619
 Transform:
   m_ObjectHideFlags: 0
@@ -48128,14 +48128,11 @@ MonoBehaviour:
   _spawnChargeVfxDuringFocus: 1
   _followFirePointWhileCharging: 1
   _spawnFinalBurstOnShot: 1
-  _useBurstPrefabAsSingleChargeSequence: 0
-  _detachBurstSequenceWhenProjectileSpawns: 0
   _chargeRotationOffsetEuler: {x: 0, y: 0, z: 0}
   _burstRotationOffsetEuler: {x: 0, y: 0, z: 0}
   _shotRotationOffsetEuler: {x: 0, y: 0, z: 0}
   _fallbackChargeLifetime: 4
   _fallbackBurstLifetime: 1
-  _burstLeadTimeBeforeProjectile: 0.05
   _detectionRange: 5.47
   _scanMinYaw: -55
   _scanMaxYaw: 55
@@ -48147,6 +48144,9 @@ MonoBehaviour:
   _lineOfSightMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  _useUpperHemisphereDetection: 1
+  _lookZoneRange: 16
+  _lookZoneHalfAngle: 16
   _scanYawSpeed: 70
   _focusYawSpeed: 223
   _focusPitchSpeed: 163.2
@@ -48207,7 +48207,7 @@ MonoBehaviour:
     floatValue: 0
     intValue: 0
     vectorValue: {x: 0, y: 0, z: 0, w: 0}
-    colorValue: {r: 0.22823855, g: 0.2776279, b: 0.19119653, a: 1}
+    colorValue: {r: 0.28134266, g: 0.36927217, b: 0.2204684, a: 1}
   applyOnEnable: 1
   clearWhenDisabled: 1
 --- !u!4 &925196620678658648
@@ -54752,7 +54752,6 @@ GameObject:
   - component: {fileID: 3699745879379419253}
   - component: {fileID: 4006484189392634248}
   - component: {fileID: 6424044417852928533}
-  - component: {fileID: 6762555187301247767}
   m_Layer: 11
   m_Name: Cuerpo.002
   m_TagString: Untagged
@@ -54760,19 +54759,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &6762555187301247767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6762555187301247766}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a1887cacd567043328b8dbc6f474cd7d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Linework::Linework.Common.OutlineOverride
-  overrides: []
 --- !u!1 &6779962259711459559
 GameObject:
   m_ObjectHideFlags: 0

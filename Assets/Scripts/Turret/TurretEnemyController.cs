@@ -31,14 +31,11 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     [SerializeField] private bool _spawnChargeVfxDuringFocus = true;
     [SerializeField] private bool _followFirePointWhileCharging = true;
     [SerializeField] private bool _spawnFinalBurstOnShot = true;
-    [SerializeField] private bool _useBurstPrefabAsSingleChargeSequence = false;
-    [SerializeField] private bool _detachBurstSequenceWhenProjectileSpawns = false;
     [SerializeField] private Vector3 _chargeRotationOffsetEuler;
     [SerializeField] private Vector3 _burstRotationOffsetEuler;
     [SerializeField] private Vector3 _shotRotationOffsetEuler;
     [SerializeField] private float _fallbackChargeLifetime = 4f;
     [SerializeField] private float _fallbackBurstLifetime = 2f;
-    [SerializeField] private float _burstLeadTimeBeforeProjectile = 0.05f;
 
     [Header("Detection")]
     [SerializeField] private float _detectionRange = 16f;
@@ -50,6 +47,9 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     [SerializeField] private float _chargeToFireSeconds = 3f;
     [SerializeField] private Vector3 _targetOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask _lineOfSightMask = ~0;
+    [SerializeField] private bool _useUpperHemisphereDetection = true;
+    [SerializeField] private float _lookZoneRange = 16f;
+    [SerializeField] [Range(1f, 89f)] private float _lookZoneHalfAngle = 16f;
 
     [Header("Rotation")]
     [SerializeField] private float _scanYawSpeed = 70f;
@@ -318,16 +318,11 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
 
         StopChargeVfx();
 
-        PlayState(_fireStateName, _fireCrossFade);
-
         if (_spawnFinalBurstOnShot)
             SpawnBurst();
 
-        if (_burstLeadTimeBeforeProjectile > 0f)
-            yield return new WaitForSeconds(_burstLeadTimeBeforeProjectile);
-        else
-            yield return null;
-
+        PlayState(_fireStateName, _fireCrossFade);
+        yield return null;
         FireProjectile();
 
         _state = TurretState.Focus;
@@ -338,7 +333,7 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     {
         StopChargeVfx();
 
-        GameObject chargePrefab = GetChargeSequencePrefab();
+        GameObject chargePrefab = _plasmaChargePrefab != null ? _plasmaChargePrefab : _plasmaBurstPrefab;
         if (chargePrefab == null || _firePoint == null)
             return;
 
@@ -354,17 +349,6 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
 
         float fallbackLifetime = Mathf.Max(_fallbackChargeLifetime, _chargeToFireSeconds + 0.25f);
         _chargeCleanupRoutine = StartCoroutine(DestroyAfterParticlesOrFallback(_activeChargeInstance, fallbackLifetime, isCharge: true));
-    }
-
-    private GameObject GetChargeSequencePrefab()
-    {
-        if (_plasmaChargePrefab != null)
-            return _plasmaChargePrefab;
-
-        if (_useBurstPrefabAsSingleChargeSequence && _plasmaBurstPrefab != null)
-            return _plasmaBurstPrefab;
-
-        return _plasmaBurstPrefab;
     }
 
     private void StopChargeVfx()
@@ -559,22 +543,63 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
         if (_player == null)
             return false;
 
-        Vector3 toPlayer = _player.transform.position - transform.position;
-        float sqrDistance = toPlayer.sqrMagnitude;
+        Vector3 targetPosition = GetTargetPosition();
+        Vector3 toTarget = targetPosition - transform.position;
+        float sqrDistance = toTarget.sqrMagnitude;
         if (sqrDistance > _detectionRange * _detectionRange)
             return false;
 
-        Vector3 flatToPlayer = Vector3.ProjectOnPlane(toPlayer, Vector3.up);
-        if (flatToPlayer.sqrMagnitude < 0.0001f)
+        if (_useUpperHemisphereDetection && Vector3.Dot(toTarget, Vector3.up) < 0f)
+            return false;
+
+        if (!IsInsideBroadScanSector(toTarget))
+            return false;
+
+        return IsInsideCurrentLookZone(targetPosition);
+    }
+
+    private bool IsInsideBroadScanSector(Vector3 toTarget)
+    {
+        Vector3 flatToTarget = Vector3.ProjectOnPlane(toTarget, Vector3.up);
+        if (flatToTarget.sqrMagnitude < 0.0001f)
             return true;
 
-        float signedYaw = Vector3.SignedAngle(YawBaseForward(), flatToPlayer.normalized, Vector3.up);
+        float signedYaw = Vector3.SignedAngle(YawBaseForward(), flatToTarget.normalized, Vector3.up);
         return signedYaw >= _scanMinYaw && signedYaw <= _scanMaxYaw;
+    }
+
+    private bool IsInsideCurrentLookZone(Vector3 targetPosition)
+    {
+        Transform originTransform = _yawRoot != null ? _yawRoot : transform;
+        Vector3 toTarget = targetPosition - originTransform.position;
+        float maxRange = _lookZoneRange > 0f ? _lookZoneRange : _detectionRange;
+
+        if (toTarget.sqrMagnitude > maxRange * maxRange)
+            return false;
+
+        Vector3 flatToTarget = Vector3.ProjectOnPlane(toTarget, Vector3.up);
+        if (flatToTarget.sqrMagnitude < 0.0001f)
+            return true;
+
+        Vector3 lookForward = CurrentVisualLookForward();
+        Vector3 flatLookForward = Vector3.ProjectOnPlane(lookForward, Vector3.up);
+
+        if (flatLookForward.sqrMagnitude < 0.0001f)
+            flatLookForward = YawBaseForward();
+
+        float lookAngle = Vector3.Angle(flatLookForward.normalized, flatToTarget.normalized);
+        return lookAngle <= _lookZoneHalfAngle;
+    }
+
+    private Vector3 CurrentVisualLookForward()
+    {
+        Transform source = _yawRoot != null ? _yawRoot : transform;
+        return (source.rotation * Quaternion.Euler(0f, -_focusYawVisualOffset, 0f)) * Vector3.forward;
     }
 
     private Vector3 YawBaseForward()
     {
-        return Quaternion.Euler(0f, _baseYawWorld, 0f) * Vector3.forward;
+        return Quaternion.Euler(0f, _baseYawWorld - _focusYawVisualOffset, 0f) * Vector3.forward;
     }
 
     private bool CheckLineOfSight()
@@ -827,15 +852,28 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = new Color(1f, 0.75f, 0.1f, 0.65f);
         Vector3 origin = transform.position;
+        float baseYaw = Application.isPlaying ? _baseYawWorld : transform.eulerAngles.y;
+        Vector3 baseForward = Quaternion.Euler(0f, baseYaw - _focusYawVisualOffset, 0f) * Vector3.forward;
 
-        Quaternion left = Quaternion.Euler(0f, (Application.isPlaying ? _baseYawWorld : transform.eulerAngles.y) + _scanMinYaw, 0f);
-        Quaternion right = Quaternion.Euler(0f, (Application.isPlaying ? _baseYawWorld : transform.eulerAngles.y) + _scanMaxYaw, 0f);
+        Gizmos.color = new Color(1f, 0.75f, 0.1f, 0.8f);
+        DrawHorizontalRay(origin, baseForward, _scanMinYaw, _detectionRange);
+        DrawHorizontalRay(origin, baseForward, _scanMaxYaw, _detectionRange);
+        DrawHorizontalArc(origin, baseForward, _scanMinYaw, _scanMaxYaw, _detectionRange, 24);
 
-        Gizmos.DrawLine(origin, origin + left * Vector3.forward * _detectionRange);
-        Gizmos.DrawLine(origin, origin + right * Vector3.forward * _detectionRange);
-        Gizmos.DrawWireSphere(origin, _detectionRange);
+        if (_useUpperHemisphereDetection)
+        {
+            Gizmos.color = new Color(1f, 0.75f, 0.1f, 0.25f);
+            DrawUpperHemisphere(origin, _detectionRange, 16);
+        }
+
+        Vector3 currentLookForward = Application.isPlaying && _yawRoot != null ? CurrentVisualLookForward() : baseForward;
+
+        Gizmos.color = new Color(0.2f, 0.75f, 1f, 0.9f);
+        float lookRange = _lookZoneRange > 0f ? _lookZoneRange : _detectionRange;
+        DrawHorizontalRay(origin, currentLookForward, -_lookZoneHalfAngle, lookRange);
+        DrawHorizontalRay(origin, currentLookForward, _lookZoneHalfAngle, lookRange);
+        DrawHorizontalArc(origin, currentLookForward, -_lookZoneHalfAngle, _lookZoneHalfAngle, lookRange, 18);
 
         if (_firePoint != null && _player != null)
         {
@@ -843,4 +881,55 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
             Gizmos.DrawLine(_firePoint.position, GetTargetPosition());
         }
     }
+
+    private void DrawHorizontalRay(Vector3 origin, Vector3 forward, float yawOffset, float length)
+    {
+        Vector3 flatForward = Vector3.ProjectOnPlane(forward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            flatForward = Vector3.forward;
+
+        Vector3 direction = Quaternion.Euler(0f, yawOffset, 0f) * flatForward.normalized;
+        Gizmos.DrawLine(origin, origin + direction * length);
+    }
+
+    private void DrawHorizontalArc(Vector3 origin, Vector3 forward, float minAngle, float maxAngle, float radius, int segments)
+    {
+        Vector3 flatForward = Vector3.ProjectOnPlane(forward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            flatForward = Vector3.forward;
+
+        Vector3 previous = origin + (Quaternion.Euler(0f, minAngle, 0f) * flatForward.normalized) * radius;
+        for (int i = 1; i <= segments; i++)
+        {
+            float t = i / (float)segments;
+            float angle = Mathf.Lerp(minAngle, maxAngle, t);
+            Vector3 next = origin + (Quaternion.Euler(0f, angle, 0f) * flatForward.normalized) * radius;
+            Gizmos.DrawLine(previous, next);
+            previous = next;
+        }
+    }
+
+    private void DrawUpperHemisphere(Vector3 origin, float radius, int segments)
+    {
+        DrawUpperArc(origin, Vector3.forward, Vector3.up, radius, segments);
+        DrawUpperArc(origin, Vector3.right, Vector3.up, radius, segments);
+        DrawUpperArc(origin, (Vector3.forward + Vector3.right).normalized, Vector3.up, radius, segments);
+        DrawUpperArc(origin, (Vector3.forward - Vector3.right).normalized, Vector3.up, radius, segments);
+    }
+
+    private void DrawUpperArc(Vector3 origin, Vector3 horizontalDirection, Vector3 verticalDirection, float radius, int segments)
+    {
+        Vector3 previous = origin + horizontalDirection.normalized * radius;
+        for (int i = 1; i <= segments; i++)
+        {
+            float t = i / (float)segments;
+            float angle = Mathf.Lerp(0f, 180f, t);
+            Vector3 direction = Quaternion.AngleAxis(angle, Vector3.Cross(horizontalDirection, verticalDirection).normalized) * horizontalDirection.normalized;
+            Vector3 next = origin + direction * radius;
+            if (previous.y >= origin.y - 0.001f && next.y >= origin.y - 0.001f)
+                Gizmos.DrawLine(previous, next);
+            previous = next;
+        }
+    }
+
 }
