@@ -3,7 +3,42 @@ guid: 44b291aeb13fb5047a2ee9ce6f28cfd1
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Barril
+    second: {fileID: 2100000, guid: e9269ed58f28b2342acfb8d1c9965ea5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Fogata
+    second: {fileID: 2100000, guid: b17ba6fda2bafba4697b09ea540d41f4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Pantalla
+    second: {fileID: 2100000, guid: e80791d6be54e5e4ebc160a79011c395, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Soporte
+    second: {fileID: 2100000, guid: 8618ca75b4dd1f04d9ed9f2059f6ce40, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Tubo
+    second: {fileID: 2100000, guid: 8041444cb4ce4e945956c9cc8f0570a5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: valvula
+    second: {fileID: 2100000, guid: 00c20e45a83eba24192e23d83496be89, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: varas
+    second: {fileID: 2100000, guid: 2b10adcee6e9b5040b3b1b85d9527bd8, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

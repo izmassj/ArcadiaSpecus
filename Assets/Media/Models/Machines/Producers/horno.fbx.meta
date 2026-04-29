@@ -3,7 +3,52 @@ guid: 926638f4ab44b9f48839c641bcc98afb
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: botones
+    second: {fileID: 2100000, guid: 0329c50204cd5254fbb70ae968a1a229, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: caja
+    second: {fileID: 2100000, guid: 92b5153af1b05424eb45d47118357567, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: extractor
+    second: {fileID: 2100000, guid: 098ccd956e282af4b9076ba1549ea2b2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: gancho
+    second: {fileID: 2100000, guid: df7b6850069c6234fb7eea28977abf05, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: horno.001
+    second: {fileID: 2100000, guid: 48d63e0bd52c4b844af2ed22a9260b47, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mesa
+    second: {fileID: 2100000, guid: 0bafdb336e2a5fc4eb57628e8a34d914, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: palanca
+    second: {fileID: 2100000, guid: 5160bcd410fece342b5fb2c0ce7f85a7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: palanca1
+    second: {fileID: 2100000, guid: 67599a9da80b88b418b7578a958c3b3c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: palanca_horno
+    second: {fileID: 2100000, guid: 3e628340604f5ba4fba2d121b08385c2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -3,7 +3,17 @@ guid: 6f7417e63e03c874ebefb2f80a70b066
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: horno
+    second: {fileID: -7003618295152862012, guid: ca96319777967ed48b98ca97594934b3, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat2.001
+    second: {fileID: -7003618295152862012, guid: ca96319777967ed48b98ca97594934b3, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

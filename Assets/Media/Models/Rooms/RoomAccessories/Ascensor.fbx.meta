@@ -3,7 +3,27 @@ guid: ca96319777967ed48b98ca97594934b3
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Ascensor
+    second: {fileID: 2100000, guid: cc407a2efd0240942981445031e5df6b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Barandilla
+    second: {fileID: 2100000, guid: d41800ade2deb954d8de3a89f373e9dd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Puerta1
+    second: {fileID: 2100000, guid: 6cbb8db5a89e9f942be788b98ff2da6b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Puerta2
+    second: {fileID: 2100000, guid: 68c0cec8e96059d4a85e2bc39a2d5bc9, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
