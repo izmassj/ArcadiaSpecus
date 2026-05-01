@@ -109,3 +109,8 @@ InitTestScene*.unity*
 !/[Aa]ssets/**/*.prefab
 !/[Aa]ssets/**/*.mat
 !/[Aa]ssets/**/*.meta
+Assets/_Recovery.meta
+Assets/_Recovery/0.unity
+Assets/_Recovery/0.unity.meta
+Assets/SettingsPSX/README_ARCADIA_PSX_SETUP.txt
+Assets/SettingsPSX/README_ARCADIA_PSX_SETUP.txt.meta
