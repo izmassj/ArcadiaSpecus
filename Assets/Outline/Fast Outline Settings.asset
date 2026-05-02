@@ -81,9 +81,9 @@ MonoBehaviour:
   occludedColor: {r: 1, g: 0, b: 0, a: 1}
   blendMode: 0
   gpuInstancing: 0
-  extrusionMethod: 6
+  extrusionMethod: 4
   scaling: 0
-  width: 2.25
+  width: 6.1
   minWidth: 0
   materialType: 0
   customMaterial: {fileID: 0}
