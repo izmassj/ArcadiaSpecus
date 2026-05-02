@@ -73,7 +73,7 @@ MonoBehaviour:
   layerMask:
     serializedVersion: 2
     m_Bits: 3072
-  renderQueue: 0
+  renderQueue: 2
   occlusion: 2
   maskingStrategy: 0
   color: {r: 1, g: 1, b: 1, a: 1}
