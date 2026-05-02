@@ -13,6 +13,13 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
         Firing
     }
 
+    private enum ParticlePathAxis
+    {
+        X,
+        Y,
+        Z
+    }
+
     [Header("Scene References")]
     [SerializeField] private RobotController _player;
     [SerializeField] private LevelDeathManager _deathManager;
@@ -86,6 +93,22 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
     [SerializeField] private float _projectileLifetime = 4f;
     [SerializeField] private LayerMask _projectileHitMask = ~0;
     [SerializeField] private bool _destroyProjectileOnObstacleHit = true;
+
+    [Header("Projectile Particle Path")]
+    [SerializeField] private bool _keepShotVisualRootAtStart = true;
+    [SerializeField] private bool _configureShotShapePath = true;
+    [SerializeField] private bool _useTargetAsShotPathEnd = true;
+    [SerializeField] private float _shotPathMaxDistance = 40f;
+    [SerializeField] private bool _overrideShotShapePosition = true;
+    [SerializeField] private Vector3 _shotShapeLocalStart = Vector3.zero;
+    [SerializeField] private bool _overrideShotShapeRotation = true;
+    [SerializeField] private Vector3 _shotShapeRotationOffsetEuler = Vector3.zero;
+    [SerializeField] private bool _overrideShotShapeScale = true;
+    [SerializeField] private ParticlePathAxis _shotShapeLengthAxis = ParticlePathAxis.Z;
+    [SerializeField] private Vector3 _shotShapeBaseScale = Vector3.one;
+    [SerializeField] private float _shotShapeDistanceMultiplier = 1f;
+    [SerializeField] private bool _overrideShotShapeLength = true;
+    [SerializeField] private bool _fitShotLifetimeToPathDistance;
 
     [Header("Debug")]
     [SerializeField] private TurretState _state = TurretState.Vigilant;
@@ -402,14 +425,21 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
         if (_plasmaShotPrefab == null || _firePoint == null)
             return;
 
+        Vector3 startPosition = _firePoint.position;
         Vector3 targetPosition = GetTargetPosition();
-        Vector3 direction = (targetPosition - _firePoint.position).normalized;
+        Vector3 direction = targetPosition - startPosition;
 
         if (direction.sqrMagnitude < 0.0001f)
             direction = _firePoint.forward;
 
+        direction.Normalize();
+
+        Vector3 endPosition = ResolveShotPathEnd(startPosition, targetPosition, direction);
         Quaternion shotRotation = Quaternion.LookRotation(direction, Vector3.up) * Quaternion.Euler(_shotRotationOffsetEuler);
-        GameObject shot = Instantiate(_plasmaShotPrefab, _firePoint.position, shotRotation);
+        GameObject shot = Instantiate(_plasmaShotPrefab, startPosition, shotRotation);
+
+        if (_configureShotShapePath)
+            ConfigureShotParticlePath(shot, startPosition, endPosition);
 
         TurretPlasmaProjectile projectile = shot.GetComponent<TurretPlasmaProjectile>();
         if (projectile == null)
@@ -425,7 +455,100 @@ public class TurretEnemyController : MonoBehaviour, ILevelResettable
             player: _player,
             deathManager: _deathManager,
             explosionPrefab: _explosionPrefab,
-            destroyOnObstacleHit: _destroyProjectileOnObstacleHit);
+            destroyOnObstacleHit: _destroyProjectileOnObstacleHit,
+            moveVisualRoot: !_keepShotVisualRootAtStart);
+    }
+
+    private Vector3 ResolveShotPathEnd(Vector3 startPosition, Vector3 targetPosition, Vector3 direction)
+    {
+        float targetDistance = Vector3.Distance(startPosition, targetPosition);
+        float fallbackDistance = Mathf.Max(0.01f, _projectileSpeed * _projectileLifetime);
+        float maxDistance = _useTargetAsShotPathEnd && targetDistance > 0.01f ? targetDistance : fallbackDistance;
+
+        if (_shotPathMaxDistance > 0f)
+            maxDistance = Mathf.Min(maxDistance, _shotPathMaxDistance);
+
+        Vector3 endPosition = startPosition + direction * maxDistance;
+        RaycastHit[] hits = Physics.SphereCastAll(startPosition, _projectileHitRadius, direction, maxDistance, _projectileHitMask, QueryTriggerInteraction.Ignore);
+
+        float nearestDistance = float.MaxValue;
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider hitCollider = hits[i].collider;
+            if (hitCollider == null)
+                continue;
+
+            Transform hitTransform = hitCollider.transform;
+            if (hitTransform != null && hitTransform.IsChildOf(transform))
+                continue;
+
+            if (hits[i].distance < nearestDistance)
+            {
+                nearestDistance = hits[i].distance;
+                endPosition = hits[i].point;
+            }
+        }
+
+        return endPosition;
+    }
+
+    private void ConfigureShotParticlePath(GameObject shot, Vector3 startPosition, Vector3 endPosition)
+    {
+        if (shot == null)
+            return;
+
+        float distance = Mathf.Max(0.01f, Vector3.Distance(startPosition, endPosition));
+        float scaledDistance = Mathf.Max(0.01f, distance * Mathf.Max(0.0001f, _shotShapeDistanceMultiplier));
+        ParticleSystem[] particleSystems = shot.GetComponentsInChildren<ParticleSystem>(true);
+
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            ParticleSystem ps = particleSystems[i];
+            if (ps == null)
+                continue;
+
+            ParticleSystem.ShapeModule shape = ps.shape;
+            if (shape.enabled)
+            {
+                if (_overrideShotShapePosition)
+                    shape.position = _shotShapeLocalStart;
+
+                if (_overrideShotShapeRotation)
+                    shape.rotation = _shotShapeRotationOffsetEuler;
+
+                if (_overrideShotShapeScale)
+                    shape.scale = GetShotShapeScale(scaledDistance);
+
+                if (_overrideShotShapeLength)
+                    shape.length = scaledDistance;
+            }
+
+            if (_fitShotLifetimeToPathDistance)
+            {
+                ParticleSystem.MainModule main = ps.main;
+                main.startLifetime = Mathf.Max(0.05f, distance / Mathf.Max(0.01f, _projectileSpeed));
+            }
+        }
+    }
+
+    private Vector3 GetShotShapeScale(float distance)
+    {
+        Vector3 scale = _shotShapeBaseScale;
+
+        switch (_shotShapeLengthAxis)
+        {
+            case ParticlePathAxis.X:
+                scale.x = distance;
+                break;
+            case ParticlePathAxis.Y:
+                scale.y = distance;
+                break;
+            default:
+                scale.z = distance;
+                break;
+        }
+
+        return scale;
     }
 
     private void ReturnToVigilant(bool playCloseAnimation)

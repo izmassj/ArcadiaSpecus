@@ -7,11 +7,13 @@ public class TurretPlasmaProjectile : MonoBehaviour
     private LevelDeathManager _deathManager;
     private GameObject _explosionPrefab;
     private Vector3 _direction;
+    private Vector3 _virtualPosition;
     private float _speed;
     private float _hitRadius;
     private float _lifetime;
     private LayerMask _hitMask;
     private bool _destroyOnObstacleHit;
+    private bool _moveVisualRoot;
 
     private float _lifeTimer;
     private bool _initialized;
@@ -26,10 +28,12 @@ public class TurretPlasmaProjectile : MonoBehaviour
         RobotController player,
         LevelDeathManager deathManager,
         GameObject explosionPrefab,
-        bool destroyOnObstacleHit)
+        bool destroyOnObstacleHit,
+        bool moveVisualRoot)
     {
         _ownerRoot = ownerRoot;
         _direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
+        _virtualPosition = transform.position;
         _speed = Mathf.Max(0.01f, speed);
         _hitRadius = Mathf.Max(0.01f, hitRadius);
         _lifetime = Mathf.Max(0.01f, lifetime);
@@ -38,7 +42,34 @@ public class TurretPlasmaProjectile : MonoBehaviour
         _deathManager = deathManager;
         _explosionPrefab = explosionPrefab;
         _destroyOnObstacleHit = destroyOnObstacleHit;
+        _moveVisualRoot = moveVisualRoot;
         _initialized = true;
+    }
+
+    public void Initialize(
+        Transform ownerRoot,
+        Vector3 direction,
+        float speed,
+        float hitRadius,
+        float lifetime,
+        LayerMask hitMask,
+        RobotController player,
+        LevelDeathManager deathManager,
+        GameObject explosionPrefab,
+        bool destroyOnObstacleHit)
+    {
+        Initialize(
+            ownerRoot,
+            direction,
+            speed,
+            hitRadius,
+            lifetime,
+            hitMask,
+            player,
+            deathManager,
+            explosionPrefab,
+            destroyOnObstacleHit,
+            true);
     }
 
     private void Update()
@@ -47,7 +78,7 @@ public class TurretPlasmaProjectile : MonoBehaviour
             return;
 
         float step = _speed * Time.deltaTime;
-        Vector3 start = transform.position;
+        Vector3 start = _virtualPosition;
         Vector3 end = start + _direction * step;
         Vector3 sweepDirection = end - start;
         float sweepDistance = sweepDirection.magnitude;
@@ -60,7 +91,7 @@ public class TurretPlasmaProjectile : MonoBehaviour
 
                 if (_ownerRoot != null && hitTransform.IsChildOf(_ownerRoot))
                 {
-                    transform.position = end;
+                    SetVirtualPosition(end);
                 }
                 else
                 {
@@ -83,16 +114,26 @@ public class TurretPlasmaProjectile : MonoBehaviour
                         Destroy(gameObject);
                         return;
                     }
+
+                    SetVirtualPosition(end);
                 }
             }
         }
         else
         {
-            transform.position = end;
+            SetVirtualPosition(end);
         }
 
         _lifeTimer += Time.deltaTime;
         if (_lifeTimer >= _lifetime)
             Destroy(gameObject);
+    }
+
+    private void SetVirtualPosition(Vector3 position)
+    {
+        _virtualPosition = position;
+
+        if (_moveVisualRoot)
+            transform.position = position;
     }
 }
