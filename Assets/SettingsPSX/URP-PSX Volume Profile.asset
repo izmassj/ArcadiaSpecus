@@ -97,7 +97,7 @@ MonoBehaviour:
     m_Value: 512
   heightPixelation:
     m_OverrideState: 1
-    m_Value: 256
+    m_Value: 284
   colorPrecision:
     m_OverrideState: 0
     m_Value: 16
@@ -119,10 +119,10 @@ MonoBehaviour:
     m_Value: 0
   ditherThreshold:
     m_OverrideState: 1
-    m_Value: 1.53
+    m_Value: 3.6
   ditherStrength:
     m_OverrideState: 1
-    m_Value: 6
+    m_Value: 8.03
   ditherScale:
     m_OverrideState: 1
     m_Value: 4
