@@ -53330,6 +53330,15 @@ MonoBehaviour:
   _rotationAxis: {x: 0, y: 1, z: 0}
   _rotationSpace: 1
   _resetRotationOnLevelReset: 1
+  _rotationTargetMode: 1
+  _rotateInLateUpdate: 1
+  _autoUseFirePointParentAsRotationRoot: 1
+  _rotationPivot: {fileID: 237905572}
+  _separateRotatingParts:
+  - {fileID: 8879528566880596597}
+  - {fileID: 5094988295631065841}
+  - {fileID: 3745622628200561038}
+  - {fileID: 6738450968521938897}
   _fireDamageEnabled: 1
   _fireLength: 9.5
   _fireRadius: 1.51

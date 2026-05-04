@@ -1,7 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
 {
+    private enum RotationTargetMode
+    {
+        SingleRoot,
+        SeparatePartsAroundPivot,
+        SeparatePartsSelfRotation
+    }
+
     [Header("Scene References")]
     [SerializeField] private RobotController _player;
     [SerializeField] private LevelDeathManager _deathManager;
@@ -24,6 +32,13 @@ public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
     [SerializeField] private Vector3 _rotationAxis = Vector3.up;
     [SerializeField] private Space _rotationSpace = Space.Self;
     [SerializeField] private bool _resetRotationOnLevelReset = true;
+
+    [Header("Rotation Target")]
+    [SerializeField] private RotationTargetMode _rotationTargetMode = RotationTargetMode.SingleRoot;
+    [SerializeField] private bool _rotateInLateUpdate = true;
+    [SerializeField] private bool _autoUseFirePointParentAsRotationRoot = true;
+    [SerializeField] private Transform _rotationPivot;
+    [SerializeField] private Transform[] _separateRotatingParts;
 
     [Header("Fire Damage")]
     [SerializeField] private bool _fireDamageEnabled = true;
@@ -48,8 +63,13 @@ public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
 
     private readonly Collider[] _overlapHits = new Collider[24];
     private readonly RaycastHit[] _rayHits = new RaycastHit[24];
+    private readonly List<Transform> _runtimeRotatingParts = new List<Transform>(8);
 
     private Quaternion _initialRotationRootLocalRotation;
+    private Vector3 _initialRotationRootLocalPosition;
+    private Vector3[] _initialPartLocalPositions;
+    private Quaternion[] _initialPartLocalRotations;
+
     private float _damageTimer;
     private float _nextAllowedKillTime;
     private GameObject _spawnedFireVfx;
@@ -70,7 +90,13 @@ public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
         if (_firePoint == null)
             _firePoint = _rotationRoot;
 
-        _initialRotationRootLocalRotation = _rotationRoot.localRotation;
+        if (_rotationPivot == null)
+            _rotationPivot = _firePoint != null ? _firePoint : _rotationRoot;
+
+        if (_autoUseFirePointParentAsRotationRoot && _rotationTargetMode == RotationTargetMode.SingleRoot)
+            TryUseFirePointParentAsRotationRoot();
+
+        CacheInitialRotationState();
     }
 
     private void Start()
@@ -81,18 +107,91 @@ public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
 
     private void Update()
     {
-        RotateRobot();
+        if (_rotateInLateUpdate)
+            return;
+
+        TickFlamethrower();
+    }
+
+    private void LateUpdate()
+    {
+        if (!_rotateInLateUpdate)
+            return;
+
+        TickFlamethrower();
+    }
+
+    private void TickFlamethrower()
+    {
+        RotateFlamethrower();
         UpdateFireVfxTransform();
         UpdateFireDamage();
     }
 
-    private void RotateRobot()
+    private void RotateFlamethrower()
     {
-        if (!_rotateContinuously || _rotationRoot == null)
+        if (!_rotateContinuously)
             return;
 
         Vector3 axis = _rotationAxis.sqrMagnitude > 0.0001f ? _rotationAxis.normalized : Vector3.up;
-        _rotationRoot.Rotate(axis, _rotationSpeed * Time.deltaTime, _rotationSpace);
+        float angle = _rotationSpeed * Time.deltaTime;
+
+        switch (_rotationTargetMode)
+        {
+            case RotationTargetMode.SingleRoot:
+                RotateSingleRoot(axis, angle);
+                break;
+
+            case RotationTargetMode.SeparatePartsAroundPivot:
+                RotateSeparatePartsAroundPivot(axis, angle);
+                break;
+
+            case RotationTargetMode.SeparatePartsSelfRotation:
+                RotateSeparatePartsSelf(axis, angle);
+                break;
+        }
+    }
+
+    private void RotateSingleRoot(Vector3 axis, float angle)
+    {
+        if (_rotationRoot == null)
+            return;
+
+        _rotationRoot.Rotate(axis, angle, _rotationSpace);
+    }
+
+    private void RotateSeparatePartsAroundPivot(Vector3 axis, float angle)
+    {
+        Transform pivot = _rotationPivot != null ? _rotationPivot : _rotationRoot;
+        if (pivot == null)
+            return;
+
+        Vector3 worldAxis = _rotationSpace == Space.Self ? pivot.TransformDirection(axis) : axis;
+        if (worldAxis.sqrMagnitude < 0.0001f)
+            worldAxis = Vector3.up;
+
+        worldAxis.Normalize();
+
+        for (int i = 0; i < _runtimeRotatingParts.Count; i++)
+        {
+            Transform part = _runtimeRotatingParts[i];
+            if (part == null || part == pivot)
+                continue;
+
+            part.RotateAround(pivot.position, worldAxis, angle);
+        }
+    }
+
+    private void RotateSeparatePartsSelf(Vector3 axis, float angle)
+    {
+        for (int i = 0; i < _runtimeRotatingParts.Count; i++)
+        {
+            Transform part = _runtimeRotatingParts[i];
+            if (part == null)
+                continue;
+
+            part.Rotate(axis, angle, _rotationSpace);
+        }
     }
 
     private void UpdateFireDamage()
@@ -282,6 +381,64 @@ public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
         }
     }
 
+    private void TryUseFirePointParentAsRotationRoot()
+    {
+        if (_firePoint == null || _firePoint.parent == null)
+            return;
+
+        if (_rotationRoot == null || _rotationRoot == transform || _rotationRoot.name == "Root")
+            _rotationRoot = _firePoint.parent;
+    }
+
+    private void CacheInitialRotationState()
+    {
+        if (_rotationRoot != null)
+        {
+            _initialRotationRootLocalPosition = _rotationRoot.localPosition;
+            _initialRotationRootLocalRotation = _rotationRoot.localRotation;
+        }
+
+        RebuildRuntimeRotatingParts();
+
+        _initialPartLocalPositions = new Vector3[_runtimeRotatingParts.Count];
+        _initialPartLocalRotations = new Quaternion[_runtimeRotatingParts.Count];
+
+        for (int i = 0; i < _runtimeRotatingParts.Count; i++)
+        {
+            Transform part = _runtimeRotatingParts[i];
+            if (part == null)
+                continue;
+
+            _initialPartLocalPositions[i] = part.localPosition;
+            _initialPartLocalRotations[i] = part.localRotation;
+        }
+    }
+
+    private void RebuildRuntimeRotatingParts()
+    {
+        _runtimeRotatingParts.Clear();
+
+        if (_separateRotatingParts != null)
+        {
+            for (int i = 0; i < _separateRotatingParts.Length; i++)
+                AddRuntimeRotatingPart(_separateRotatingParts[i]);
+        }
+
+        if (_runtimeRotatingParts.Count == 0 && _rotationRoot != null)
+            AddRuntimeRotatingPart(_rotationRoot);
+    }
+
+    private void AddRuntimeRotatingPart(Transform part)
+    {
+        if (part == null)
+            return;
+
+        if (_runtimeRotatingParts.Contains(part))
+            return;
+
+        _runtimeRotatingParts.Add(part);
+    }
+
     public void ResetLevelState()
     {
         _damageTimer = 0f;
@@ -289,8 +446,27 @@ public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
         _playerInsideFire = false;
         _lineBlocked = false;
 
-        if (_resetRotationOnLevelReset && _rotationRoot != null)
-            _rotationRoot.localRotation = _initialRotationRootLocalRotation;
+        if (_resetRotationOnLevelReset)
+        {
+            if (_rotationRoot != null)
+            {
+                _rotationRoot.localPosition = _initialRotationRootLocalPosition;
+                _rotationRoot.localRotation = _initialRotationRootLocalRotation;
+            }
+
+            if (_initialPartLocalPositions != null && _initialPartLocalRotations != null)
+            {
+                for (int i = 0; i < _runtimeRotatingParts.Count; i++)
+                {
+                    Transform part = _runtimeRotatingParts[i];
+                    if (part == null || i >= _initialPartLocalPositions.Length || i >= _initialPartLocalRotations.Length)
+                        continue;
+
+                    part.localPosition = _initialPartLocalPositions[i];
+                    part.localRotation = _initialPartLocalRotations[i];
+                }
+            }
+        }
 
         if (_fireVfxRoot != null)
         {
@@ -316,5 +492,30 @@ public class FlamethrowerRobotController : MonoBehaviour, ILevelResettable
         Gizmos.DrawLine(start, end);
         Gizmos.DrawWireSphere(start, _fireRadius);
         Gizmos.DrawWireSphere(end, _fireRadius);
+
+        DrawRotationDebugGizmos();
+    }
+
+    private void DrawRotationDebugGizmos()
+    {
+        Vector3 axis = _rotationAxis.sqrMagnitude > 0.0001f ? _rotationAxis.normalized : Vector3.up;
+
+        if (_rotationTargetMode == RotationTargetMode.SingleRoot)
+        {
+            Transform root = _rotationRoot != null ? _rotationRoot : transform;
+            Vector3 worldAxis = _rotationSpace == Space.Self ? root.TransformDirection(axis) : axis;
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(root.position, worldAxis.normalized * 1.5f);
+            return;
+        }
+
+        Transform pivot = _rotationPivot != null ? _rotationPivot : _rotationRoot;
+        if (pivot == null)
+            return;
+
+        Vector3 pivotAxis = _rotationSpace == Space.Self ? pivot.TransformDirection(axis) : axis;
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(pivot.position, 0.18f);
+        Gizmos.DrawRay(pivot.position, pivotAxis.normalized * 1.5f);
     }
 }
