@@ -56,6 +56,23 @@ public class RobotController : MonoBehaviour
     [SerializeField] private float _gravity = -25f;
     [SerializeField] private float _groundedVerticalVelocity = -2f;
 
+    [Header("Particles")]
+    [SerializeField] private Transform _particlesRoot;
+    [SerializeField] private ParticleSystem[] _movementTrailParticles = new ParticleSystem[2];
+    [SerializeField] private GameObject _jumpParticleTemplate;
+    [SerializeField] private GameObject _landingParticleTemplate;
+    [SerializeField] private float _trailMinForwardSpeed = 0.25f;
+    [SerializeField] private bool _trailRequiresMovingPlatformSurface;
+    [SerializeField] private float _trailStopGraceTime = 0.12f;
+    [SerializeField] private bool _forceTrailWorldSimulationSpace = true;
+    [SerializeField] private bool _forceTrailLooping = true;
+    [SerializeField] private bool _disableTrailAutoDestroy = true;
+    [SerializeField] private float _landingEffectMinFallHeight = 1.2f;
+    [SerializeField] private float _landingEffectMaxFallHeight = 10f;
+    [SerializeField] private float _landingEffectMinSizeMultiplier = 0.75f;
+    [SerializeField] private float _landingEffectMaxSizeMultiplier = 2.25f;
+    [SerializeField] private float _particleAutoDestroyPadding = 0.75f;
+
     [Header("Jump Animation")]
     [SerializeField] private bool _useAnimatedJumpFlow = true;
     [SerializeField] private LayerMask _nearGroundMask = ~0;
@@ -104,6 +121,12 @@ public class RobotController : MonoBehaviour
     private float _mostNegativeFallVelocity;
     private Vector3 _previousPosition;
     private float _pitch;
+    private bool _particleReferencesCached;
+    private bool _movementTrailsPlaying;
+    private float _lastTrailWantedTime = -999f;
+    private bool _hasAirborneHeightSample;
+    private float _airborneMaxHeight;
+    private float _lastLandingFallHeight;
 
     private JumpAnimationPhase _jumpAnimationPhase;
     private float _jumpPhaseTimer;
@@ -123,6 +146,7 @@ public class RobotController : MonoBehaviour
     public float Speed01 => Mathf.Clamp01(Mathf.Abs(_forwardSpeed) / Mathf.Max(0.01f, _moveSpeed));
     public float JumpImpulse01 { get; private set; }
     public float LandingImpulse01 { get; private set; }
+    public float LastLandingFallHeight => _lastLandingFallHeight;
     public CinemachineCamera ThirdPersonCamera => _thirdPersonCamera;
     public CinemachineCamera FirstPersonCamera => _firstPersonCamera;
 
@@ -137,6 +161,7 @@ public class RobotController : MonoBehaviour
         if (_animator == null)
             _animator = GetComponentInChildren<Animator>(true);
 
+        CacheParticleReferences();
         CacheAnimatorData();
     }
 
@@ -148,12 +173,16 @@ public class RobotController : MonoBehaviour
     private void Start()
     {
         _previousPosition = transform.position;
+        _isGrounded = _characterController != null && _characterController.isGrounded;
+        _wasGrounded = _isGrounded;
 
         if (_firstPersonPitchPivot != null)
             _pitch = NormalizePitch(_firstPersonPitchPivot.localEulerAngles.x);
 
         ApplyPerspectiveState(true);
         SyncAnimatorToIdle();
+        SetMovementTrailsPlaying(false, true);
+        SetParticleTemplatesActive(false);
     }
 
     private void OnDisable()
@@ -163,6 +192,8 @@ public class RobotController : MonoBehaviour
 
         if (_animator != null && _hasJumpingBool)
             _animator.SetBool(_jumpingBoolName, false);
+
+        SetMovementTrailsPlaying(false, true);
 
         if (!_lockCursorInFirstPerson)
             return;
@@ -179,6 +210,7 @@ public class RobotController : MonoBehaviour
             _lookInput = Vector2.zero;
             _forwardSpeed = Mathf.MoveTowards(_forwardSpeed, 0f, _deceleration * Time.deltaTime);
             UpdateRuntimeState();
+            UpdateParticleState();
             FadeImpulses();
             return;
         }
@@ -198,6 +230,7 @@ public class RobotController : MonoBehaviour
 
         HandleMovement();
         UpdateRuntimeState();
+        UpdateParticleState();
         FadeImpulses();
         _currentJumpPhase = _jumpAnimationPhase.ToString();
     }
@@ -317,7 +350,23 @@ public class RobotController : MonoBehaviour
         {
             float landing01 = Mathf.InverseLerp(2f, 14f, Mathf.Abs(_mostNegativeFallVelocity));
             LandingImpulse01 = Mathf.Max(LandingImpulse01, landing01);
+            _lastLandingFallHeight = _hasAirborneHeightSample ? Mathf.Max(0f, _airborneMaxHeight - transform.position.y) : 0f;
+            SpawnLandingParticles(_lastLandingFallHeight);
+            _hasAirborneHeightSample = false;
             _mostNegativeFallVelocity = 0f;
+        }
+
+        if (!_isGrounded)
+        {
+            if (_wasGrounded || !_hasAirborneHeightSample)
+            {
+                _hasAirborneHeightSample = true;
+                _airborneMaxHeight = transform.position.y;
+            }
+            else
+            {
+                _airborneMaxHeight = Mathf.Max(_airborneMaxHeight, transform.position.y);
+            }
         }
 
         if (!_isGrounded && _wasGrounded)
@@ -444,11 +493,366 @@ public class RobotController : MonoBehaviour
 
     private void DoTakeoff()
     {
+        SpawnJumpParticles();
+
         _verticalVelocity = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
         JumpImpulse01 = 1f;
 
         if (_platformMotor != null)
             _platformMotor.ClearPlatform();
+    }
+
+    private void CacheParticleReferences()
+    {
+        if (_particleReferencesCached)
+            return;
+
+        _particleReferencesCached = true;
+
+        if (_particlesRoot == null)
+            _particlesRoot = FindDirectChildByName(transform, "Particles");
+
+        if (_particlesRoot == null)
+            return;
+
+        if (_movementTrailParticles == null || _movementTrailParticles.Length < 2)
+            _movementTrailParticles = new ParticleSystem[2];
+
+        System.Collections.Generic.List<ParticleSystem> foundTrails = new System.Collections.Generic.List<ParticleSystem>();
+        System.Collections.Generic.List<ParticleSystem> orderedParticles = new System.Collections.Generic.List<ParticleSystem>();
+        System.Collections.Generic.List<GameObject> orderedParticleObjects = new System.Collections.Generic.List<GameObject>();
+
+        for (int i = 0; i < _particlesRoot.childCount; i++)
+        {
+            Transform child = _particlesRoot.GetChild(i);
+            ParticleSystem childParticle = child.GetComponentInChildren<ParticleSystem>(true);
+
+            if (childParticle != null)
+            {
+                orderedParticles.Add(childParticle);
+                orderedParticleObjects.Add(child.gameObject);
+            }
+
+            string childName = child.name.ToLowerInvariant();
+
+            if (childParticle != null && childName.Contains("trail"))
+                foundTrails.Add(childParticle);
+
+            if (_jumpParticleTemplate == null && childName.Contains("jump"))
+                _jumpParticleTemplate = child.gameObject;
+
+            if (_landingParticleTemplate == null && (childName.Contains("land") || childName.Contains("fall")))
+                _landingParticleTemplate = child.gameObject;
+        }
+
+        for (int i = 0; i < _movementTrailParticles.Length && i < foundTrails.Count; i++)
+        {
+            if (_movementTrailParticles[i] == null)
+                _movementTrailParticles[i] = foundTrails[i];
+        }
+
+        if (orderedParticles.Count >= 4)
+        {
+            for (int i = 0; i < _movementTrailParticles.Length && i < orderedParticles.Count; i++)
+            {
+                if (_movementTrailParticles[i] == null)
+                    _movementTrailParticles[i] = orderedParticles[i];
+            }
+        }
+
+        RemoveTemplateParticlesFromMovementTrails();
+        ConfigureMovementTrailParticles();
+
+        if (_jumpParticleTemplate == null && orderedParticleObjects.Count >= 3)
+            _jumpParticleTemplate = orderedParticleObjects[2];
+
+        if (_landingParticleTemplate == null && orderedParticleObjects.Count >= 4)
+            _landingParticleTemplate = orderedParticleObjects[3];
+    }
+
+    private Transform FindDirectChildByName(Transform root, string childName)
+    {
+        if (root == null)
+            return null;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+
+            if (child.name == childName)
+                return child;
+
+            Transform nested = FindDirectChildByName(child, childName);
+            if (nested != null)
+                return nested;
+        }
+
+        return null;
+    }
+
+    private void UpdateParticleState()
+    {
+        CacheParticleReferences();
+
+        bool movingOnGround = _isGrounded && Mathf.Abs(_forwardSpeed) >= _trailMinForwardSpeed;
+        bool validPlatform = !_trailRequiresMovingPlatformSurface || (_platformMotor != null && _platformMotor.HasCurrentPlatform);
+        bool wantsTrail = movingOnGround && validPlatform;
+
+        if (wantsTrail)
+            _lastTrailWantedTime = Time.time;
+
+        bool keepTrailActive = wantsTrail || Time.time - _lastTrailWantedTime <= _trailStopGraceTime;
+        SetMovementTrailsPlaying(keepTrailActive, false);
+    }
+
+    private void ConfigureMovementTrailParticles()
+    {
+        if (_movementTrailParticles == null)
+            return;
+
+        for (int i = 0; i < _movementTrailParticles.Length; i++)
+        {
+            ParticleSystem trail = _movementTrailParticles[i];
+
+            if (trail == null)
+                continue;
+
+            ConfigureSingleMovementTrailParticle(trail);
+        }
+    }
+
+    private void SetMovementTrailsPlaying(bool play, bool force)
+    {
+        CacheParticleReferences();
+
+        if (!force && _movementTrailsPlaying == play)
+            return;
+
+        _movementTrailsPlaying = play;
+
+        if (_movementTrailParticles == null)
+            return;
+
+        for (int i = 0; i < _movementTrailParticles.Length; i++)
+        {
+            ParticleSystem trail = _movementTrailParticles[i];
+
+            if (trail == null)
+                continue;
+
+            GameObject trailObject = trail.gameObject;
+
+            if (!trailObject.activeSelf)
+                trailObject.SetActive(true);
+
+            ConfigureSingleMovementTrailParticle(trail);
+
+            ParticleSystem.EmissionModule emission = trail.emission;
+
+            if (play)
+            {
+                emission.enabled = true;
+
+                if (!trail.isPlaying)
+                    trail.Play(true);
+            }
+            else
+            {
+                emission.enabled = false;
+
+                if (!trail.isPlaying)
+                    trail.Play(true);
+
+                if (force && trail.particleCount > 0)
+                    trail.Clear(true);
+            }
+        }
+    }
+
+    private void ConfigureSingleMovementTrailParticle(ParticleSystem trail)
+    {
+        if (trail == null)
+            return;
+
+        ParticleSystem.MainModule main = trail.main;
+
+        if (_forceTrailWorldSimulationSpace)
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+        if (_forceTrailLooping)
+            main.loop = true;
+
+        if (_disableTrailAutoDestroy)
+            DisableAutoDestroyOnTrail(trail);
+    }
+
+    private void DisableAutoDestroyOnTrail(ParticleSystem trail)
+    {
+        if (trail == null)
+            return;
+
+        MonoBehaviour[] behaviours = trail.GetComponents<MonoBehaviour>();
+
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            MonoBehaviour behaviour = behaviours[i];
+
+            if (behaviour == null)
+                continue;
+
+            System.Type behaviourType = behaviour.GetType();
+
+            if (behaviourType.FullName != "CartoonFX.CFXR_Effect")
+                continue;
+
+            System.Reflection.FieldInfo clearBehaviorField = behaviourType.GetField(
+                "clearBehavior",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic
+            );
+
+            if (clearBehaviorField == null || !clearBehaviorField.FieldType.IsEnum)
+                continue;
+
+            object noneValue = System.Enum.ToObject(clearBehaviorField.FieldType, 0);
+            clearBehaviorField.SetValue(behaviour, noneValue);
+        }
+    }
+
+    private void RemoveTemplateParticlesFromMovementTrails()
+    {
+        if (_movementTrailParticles == null)
+            return;
+
+        for (int i = 0; i < _movementTrailParticles.Length; i++)
+        {
+            ParticleSystem trail = _movementTrailParticles[i];
+
+            if (trail == null)
+                continue;
+
+            GameObject trailObject = trail.gameObject;
+
+            if (_jumpParticleTemplate != null && IsSameOrChildOf(trailObject.transform, _jumpParticleTemplate.transform))
+            {
+                _movementTrailParticles[i] = null;
+                continue;
+            }
+
+            if (_landingParticleTemplate != null && IsSameOrChildOf(trailObject.transform, _landingParticleTemplate.transform))
+                _movementTrailParticles[i] = null;
+        }
+    }
+
+    private bool IsSameOrChildOf(Transform child, Transform possibleParent)
+    {
+        if (child == null || possibleParent == null)
+            return false;
+
+        Transform current = child;
+
+        while (current != null)
+        {
+            if (current == possibleParent)
+                return true;
+
+            current = current.parent;
+        }
+
+        return false;
+    }
+
+    private void SetParticleTemplatesActive(bool active)
+    {
+        CacheParticleReferences();
+
+        if (_jumpParticleTemplate != null)
+            _jumpParticleTemplate.SetActive(active);
+
+        if (_landingParticleTemplate != null)
+            _landingParticleTemplate.SetActive(active);
+    }
+
+    private void SpawnJumpParticles()
+    {
+        SpawnParticleInstance(_jumpParticleTemplate, 1f);
+    }
+
+    private void SpawnLandingParticles(float fallHeight)
+    {
+        if (fallHeight < _landingEffectMinFallHeight)
+            return;
+
+        float height01 = Mathf.InverseLerp(_landingEffectMinFallHeight, _landingEffectMaxFallHeight, fallHeight);
+        float sizeMultiplier = Mathf.Lerp(_landingEffectMinSizeMultiplier, _landingEffectMaxSizeMultiplier, height01);
+        SpawnParticleInstance(_landingParticleTemplate, sizeMultiplier);
+    }
+
+    private void SpawnParticleInstance(GameObject template, float sizeMultiplier)
+    {
+        CacheParticleReferences();
+
+        if (template == null)
+            return;
+
+        Vector3 position = template.transform.position;
+        Quaternion rotation = template.transform.rotation;
+        GameObject instance = Instantiate(template, position, rotation);
+        instance.name = template.name;
+        instance.transform.SetParent(null, true);
+        instance.SetActive(true);
+
+        if (!Mathf.Approximately(sizeMultiplier, 1f))
+            ScaleParticleInstance(instance, sizeMultiplier);
+
+        ParticleSystem[] particleSystems = instance.GetComponentsInChildren<ParticleSystem>(true);
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            ParticleSystem particle = particleSystems[i];
+            particle.Clear(true);
+            particle.Play(true);
+        }
+
+        Destroy(instance, GetParticleInstanceLifetime(instance) + _particleAutoDestroyPadding);
+    }
+
+    private void ScaleParticleInstance(GameObject instance, float sizeMultiplier)
+    {
+        if (instance == null)
+            return;
+
+        instance.transform.localScale *= sizeMultiplier;
+
+        ParticleSystem[] particleSystems = instance.GetComponentsInChildren<ParticleSystem>(true);
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            ParticleSystem particle = particleSystems[i];
+            ParticleSystem.MainModule main = particle.main;
+            main.startSizeMultiplier *= sizeMultiplier;
+        }
+    }
+
+    private float GetParticleInstanceLifetime(GameObject instance)
+    {
+        if (instance == null)
+            return 3f;
+
+        float maxLifetime = 0f;
+        ParticleSystem[] particleSystems = instance.GetComponentsInChildren<ParticleSystem>(true);
+
+        for (int i = 0; i < particleSystems.Length; i++)
+        {
+            ParticleSystem particle = particleSystems[i];
+            ParticleSystem.MainModule main = particle.main;
+            float simulationSpeed = Mathf.Max(0.01f, main.simulationSpeed);
+            float lifetime = main.duration + main.startLifetime.constantMax;
+
+            if (main.loop)
+                lifetime = 4f;
+
+            maxLifetime = Mathf.Max(maxLifetime, lifetime / simulationSpeed);
+        }
+
+        return Mathf.Max(0.25f, maxLifetime);
     }
 
     private void CacheAnimatorData()

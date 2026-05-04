@@ -23,6 +23,8 @@ public class CharacterControllerPlatformMotor : MonoBehaviour
     private float _lastSupportedTime = -999f;
 
     public Vector3 FrameDisplacement => _frameDisplacement;
+    public MovingPlatformSurface CurrentPlatform => _currentPlatform;
+    public bool HasCurrentPlatform => _currentPlatform != null;
 
     private void Awake()
     {
