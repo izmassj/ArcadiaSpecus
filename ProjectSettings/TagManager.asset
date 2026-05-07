@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - ObjectPlacement
+  - FxTemporaire
   layers:
   - Default
   - TransparentFX
@@ -19,7 +20,7 @@ TagManager:
   - Entity
   - OverlayTarget
   - OverlayParticle
-  - 
+  - etts
   - 
   - 
   - 
