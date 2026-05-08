@@ -56,6 +56,10 @@ public class RobotController : MonoBehaviour
     [SerializeField] private float _gravity = -25f;
     [SerializeField] private float _groundedVerticalVelocity = -2f;
 
+    [Header("External Forces")]
+    [SerializeField] private float _externalPlanarDrag = 7.5f;
+    [SerializeField] private float _externalPlanarMaxSpeed = 24f;
+
     [Header("Particles")]
     [SerializeField] private Transform _particlesRoot;
     [SerializeField] private ParticleSystem[] _movementTrailParticles = new ParticleSystem[2];
@@ -119,6 +123,9 @@ public class RobotController : MonoBehaviour
     private float _verticalVelocity;
     private bool _wasGrounded;
     private float _mostNegativeFallVelocity;
+    private Vector3 _externalPlanarVelocity;
+    private float _temporaryExternalPlanarDrag;
+    private float _temporaryExternalPlanarDragTimer;
     private Vector3 _previousPosition;
     private float _pitch;
     private bool _particleReferencesCached;
@@ -142,6 +149,7 @@ public class RobotController : MonoBehaviour
     public bool IsFirstPerson => _isFirstPerson;
     public Vector3 WorldVelocity => _worldVelocity;
     public Vector3 LocalPlanarVelocity => _localPlanarVelocity;
+    public Vector3 ExternalPlanarVelocity => _externalPlanarVelocity;
     public float MaxMoveSpeed => _moveSpeed;
     public float Speed01 => Mathf.Clamp01(Mathf.Abs(_forwardSpeed) / Mathf.Max(0.01f, _moveSpeed));
     public float JumpImpulse01 { get; private set; }
@@ -209,6 +217,7 @@ public class RobotController : MonoBehaviour
             _moveInput = Vector2.zero;
             _lookInput = Vector2.zero;
             _forwardSpeed = Mathf.MoveTowards(_forwardSpeed, 0f, _deceleration * Time.deltaTime);
+            DecayExternalPlanarVelocity();
             UpdateRuntimeState();
             UpdateParticleState();
             FadeImpulses();
@@ -330,7 +339,7 @@ public class RobotController : MonoBehaviour
 
         _verticalVelocity += _gravity * Time.deltaTime;
 
-        Vector3 motion = transform.forward * _forwardSpeed;
+        Vector3 motion = transform.forward * _forwardSpeed + _externalPlanarVelocity;
         motion.y = _verticalVelocity;
 
         Vector3 frameDisplacement = motion * Time.deltaTime;
@@ -339,6 +348,7 @@ public class RobotController : MonoBehaviour
             frameDisplacement += _platformMotor.FrameDisplacement;
 
         _characterController.Move(frameDisplacement);
+        DecayExternalPlanarVelocity();
 
         if (_platformMotor != null)
             _platformMotor.PostCharacterMove();
@@ -1007,6 +1017,54 @@ public class RobotController : MonoBehaviour
         LandingImpulse01 = Mathf.MoveTowards(LandingImpulse01, 0f, 6f * Time.deltaTime);
     }
 
+    private void DecayExternalPlanarVelocity()
+    {
+        if (_externalPlanarVelocity.sqrMagnitude <= 0.000001f)
+        {
+            _externalPlanarVelocity = Vector3.zero;
+            return;
+        }
+
+        float drag = Mathf.Max(0f, _externalPlanarDrag);
+
+        if (_temporaryExternalPlanarDragTimer > 0f)
+        {
+            drag += Mathf.Max(0f, _temporaryExternalPlanarDrag);
+            _temporaryExternalPlanarDragTimer -= Time.deltaTime;
+
+            if (_temporaryExternalPlanarDragTimer <= 0f)
+            {
+                _temporaryExternalPlanarDragTimer = 0f;
+                _temporaryExternalPlanarDrag = 0f;
+            }
+        }
+
+        _externalPlanarVelocity = Vector3.MoveTowards(
+            _externalPlanarVelocity,
+            Vector3.zero,
+            drag * Time.deltaTime
+        );
+    }
+
+    private Vector3 GetPlanarVector(Vector3 value)
+    {
+        value.y = 0f;
+        return value;
+    }
+
+    private void ClampExternalPlanarVelocity(float requestedMaxSpeed)
+    {
+        float maxSpeed = _externalPlanarMaxSpeed;
+
+        if (requestedMaxSpeed > 0f)
+            maxSpeed = maxSpeed > 0f ? Mathf.Min(maxSpeed, requestedMaxSpeed) : requestedMaxSpeed;
+
+        if (maxSpeed <= 0f)
+            return;
+
+        _externalPlanarVelocity = Vector3.ClampMagnitude(_externalPlanarVelocity, maxSpeed);
+    }
+
     private float NormalizePitch(float angle)
     {
         if (angle > 180f)
@@ -1027,6 +1085,43 @@ public class RobotController : MonoBehaviour
         _forwardSpeed = 0f;
     }
 
+    public void AddExternalPlanarImpulse(Vector3 impulse, float maxPlanarSpeed = -1f)
+    {
+        impulse = GetPlanarVector(impulse);
+
+        if (impulse.sqrMagnitude <= 0.000001f)
+            return;
+
+        _externalPlanarVelocity += impulse;
+        ClampExternalPlanarVelocity(maxPlanarSpeed);
+    }
+
+    public void AddExternalPlanarAcceleration(Vector3 acceleration, float maxPlanarSpeed = -1f)
+    {
+        AddExternalPlanarImpulse(acceleration * Time.deltaTime, maxPlanarSpeed);
+    }
+
+    public void ScaleExternalPlanarVelocity(float multiplier)
+    {
+        _externalPlanarVelocity *= Mathf.Clamp01(multiplier);
+    }
+
+    public void AddTemporaryExternalPlanarDrag(float extraDrag, float duration)
+    {
+        if (extraDrag <= 0f || duration <= 0f)
+            return;
+
+        _temporaryExternalPlanarDrag = Mathf.Max(_temporaryExternalPlanarDrag, extraDrag);
+        _temporaryExternalPlanarDragTimer = Mathf.Max(_temporaryExternalPlanarDragTimer, duration);
+    }
+
+    public void ClearExternalPlanarVelocity()
+    {
+        _externalPlanarVelocity = Vector3.zero;
+        _temporaryExternalPlanarDrag = 0f;
+        _temporaryExternalPlanarDragTimer = 0f;
+    }
+
     public void SetMovementLocked(bool locked, bool snapVelocity)
     {
         _hardMovementLocked = locked;
@@ -1038,6 +1133,9 @@ public class RobotController : MonoBehaviour
         _lookInput = Vector2.zero;
         _forwardSpeed = 0f;
         _verticalVelocity = _characterController != null && _characterController.isGrounded ? _groundedVerticalVelocity : 0f;
+        _externalPlanarVelocity = Vector3.zero;
+        _temporaryExternalPlanarDrag = 0f;
+        _temporaryExternalPlanarDragTimer = 0f;
         _worldVelocity = Vector3.zero;
         _localPlanarVelocity = Vector3.zero;
     }
