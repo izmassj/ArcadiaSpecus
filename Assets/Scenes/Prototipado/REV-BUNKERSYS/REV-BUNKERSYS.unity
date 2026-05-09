@@ -1603,11 +1603,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CornerTrigger
   type: 6
---- !u!95 &229677962 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 7327486789589809277, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-  m_PrefabInstance: {fileID: 699479610}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &232246379
 GameObject:
   m_ObjectHideFlags: 0
@@ -2356,7 +2351,7 @@ PrefabInstance:
     - target: {fileID: 7605623858886695632, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: _doorAnimator
       value: 
-      objectReference: {fileID: 407782679}
+      objectReference: {fileID: 0}
     - target: {fileID: 8490692111720510110, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: 'm_BlendShapeWeights.Array.data[0]'
       value: 0
@@ -2370,17 +2365,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f329d2f603416e94784afedaca3cda38, type: 3}
---- !u!114 &271932733 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7605623858886695632, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-  m_PrefabInstance: {fileID: 271932732}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 358ed134ba479764aa37d1396f7460e9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::IntersectionElevator
 --- !u!4 &271932734 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3529660315552019889, guid: f329d2f603416e94784afedaca3cda38, type: 3}
@@ -3890,11 +3874,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 402358817}
   m_CullTransparentMesh: 1
---- !u!95 &407782679 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 7327486789589809277, guid: f329d2f603416e94784afedaca3cda38, type: 3}
-  m_PrefabInstance: {fileID: 271932732}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &432050399
 GameObject:
   m_ObjectHideFlags: 0
@@ -5887,6 +5866,85 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CornerTrigger
   type: 2
+--- !u!1 &639343051
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 639343054}
+  - component: {fileID: 639343053}
+  - component: {fileID: 639343052}
+  m_Layer: 0
+  m_Name: GameAnalytics
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &639343052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639343051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44f8ee8738f093042ab2930afbbde15b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BunkerAnalyticsHooks
+  _resourceManager: {fileID: 1034711830}
+--- !u!114 &639343053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639343051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0277ced9a6361cd4dac6f28a0c5b4beb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameAnalyticsManager
+  _currentData:
+    sessionId: 
+    slotId: 
+    gameVersion: 
+    startedAtUtc: 
+    endedAtUtc: 
+    startSceneName: 
+    endSceneName: 
+    durationSeconds: 0
+    bunkerDaysEnded: 0
+    levelsStarted: 0
+    levelsCompleted: 0
+    playerDeaths: 0
+    gameOvers: 0
+    machineCollections: 0
+    joinedInhabitantsGained: 0
+    resourcesCollected: []
+    machinesCollectedByType: []
+    levelRuns: []
+    events: []
+  _lastSavedJsonPath: 
+--- !u!4 &639343054
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639343051}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &665126222
 GameObject:
   m_ObjectHideFlags: 0
@@ -6396,7 +6454,7 @@ PrefabInstance:
     - target: {fileID: 7605623858886695632, guid: f329d2f603416e94784afedaca3cda38, type: 3}
       propertyPath: _doorAnimator
       value: 
-      objectReference: {fileID: 229677962}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -10885,7 +10943,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f19f6e8099d10dd449615abdb53e5ca9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BunkerNpcArrivalManager
-  _entryElevator: {fileID: 271932733}
+  _entryElevator: {fileID: 0}
   _spawnPointInsideElevator: {fileID: 271932734}
   _railHandoffPoint: {fileID: 271932734}
   _handoffRoom: {fileID: 0}
@@ -16678,6 +16736,7 @@ SceneRoots:
   - {fileID: 1407862792}
   - {fileID: 1521008662}
   - {fileID: 2004328270}
+  - {fileID: 639343054}
   - {fileID: 1034711831}
   - {fileID: 87171821}
   - {fileID: 1145165335}

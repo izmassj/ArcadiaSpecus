@@ -81,6 +81,9 @@ public class LevelDeathManager : MonoBehaviour
 
         _player.SetInputLocked(true, true);
 
+        if (GameAnalyticsManager.Instance != null)
+            GameAnalyticsManager.Instance.RegisterPlayerDeath(SceneManager.GetActiveScene().name);
+
         if (!_wasFirstPersonBeforeDeath)
         {
             DetachThirdPersonCamera();
@@ -110,6 +113,9 @@ public class LevelDeathManager : MonoBehaviour
         }
 
         bool gameOver = ConsumeLife();
+        
+        if (gameOver && GameAnalyticsManager.Instance != null)
+            GameAnalyticsManager.Instance.RegisterGameOver(SceneManager.GetActiveScene().name);
 
         if (gameOver)
         {

@@ -61,6 +61,9 @@ public class MachineCollectButtonUI : MonoBehaviour
         if (_machine == null || _resourceManager == null)
             return;
 
+        if (GameAnalyticsManager.Instance != null)
+            GameAnalyticsManager.Instance.RegisterMachineCollected(_machine.typeOfMachine.ToString());
+
         _machine.CollectProducedResources(_resourceManager);
     }
 }

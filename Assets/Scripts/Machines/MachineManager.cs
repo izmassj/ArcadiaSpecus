@@ -74,6 +74,12 @@ public class MachineManager : MonoBehaviour
         return _recoveredNeedType;
     }
 
+    public int GetPendingResourceAmount()
+    {
+        return _pendingResourceAmount;
+    }
+    
+
     public int GetAssignedWorkerCount()
     {
         int count = 0;

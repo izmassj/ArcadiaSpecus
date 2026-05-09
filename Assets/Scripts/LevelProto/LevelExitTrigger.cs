@@ -101,13 +101,25 @@ public class LevelExitTrigger : MonoBehaviour
 
     private void QueueRandomRewards()
     {
-        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Scrap, GetRandomAmount(_scrapRewardRange));
-        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Electricity, GetRandomAmount(_electricityRewardRange));
-        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Water, GetRandomAmount(_waterRewardRange));
-        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Food, GetRandomAmount(_foodRewardRange));
+        int scrap = GetRandomAmount(_scrapRewardRange);
+        int electricity = GetRandomAmount(_electricityRewardRange);
+        int water = GetRandomAmount(_waterRewardRange);
+        int food = GetRandomAmount(_foodRewardRange);
+        int joinedInhabitants = 0;
+
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Scrap, scrap);
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Electricity, electricity);
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Water, water);
+        BunkerSessionLaunch.AddPendingReward(BunkerResourceType.Food, food);
 
         if (_allowJoinedInhabitantsReward && Random.value <= _joinedInhabitantsChance)
-            BunkerSessionLaunch.AddPendingJoinedInhabitants(GetRandomAmount(_joinedInhabitantsRange));
+        {
+            joinedInhabitants = GetRandomAmount(_joinedInhabitantsRange);
+            BunkerSessionLaunch.AddPendingJoinedInhabitants(joinedInhabitants);
+        }
+
+        if (GameAnalyticsManager.Instance != null)
+            GameAnalyticsManager.Instance.RegisterLevelCompleted(SceneManager.GetActiveScene().name, scrap, electricity, water, food, joinedInhabitants);
     }
 
     private int GetRandomAmount(Vector2Int range)

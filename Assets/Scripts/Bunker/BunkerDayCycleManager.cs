@@ -143,6 +143,9 @@ public class BunkerDayCycleManager : MonoBehaviour
         _isWaitingForNextDay = true;
         _pendingSummaryData = new BunkerDailySummaryData(_currentDay, _todayCollectedAmounts);
 
+        if (GameAnalyticsManager.Instance != null)
+            GameAnalyticsManager.Instance.RegisterBunkerDayEnded(_currentDay);
+
         if (_transition != null)
             yield return _transition.PlayCoverRoutine();
 

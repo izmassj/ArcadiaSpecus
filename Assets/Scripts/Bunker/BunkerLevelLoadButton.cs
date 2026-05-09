@@ -32,6 +32,9 @@ public class BunkerLevelLoadButton : MonoBehaviour
         // Seguridad: no dejar que el nivel herede un Time.timeScale pausado del bunker.
         Time.timeScale = 1f;
 
+        if (GameAnalyticsManager.Instance != null)
+            GameAnalyticsManager.Instance.RegisterLevelStarted(_levelSceneName);    
+
         if (!string.IsNullOrWhiteSpace(_levelSceneName))
             SceneManager.LoadScene(_levelSceneName);
     }
