@@ -5877,6 +5877,7 @@ GameObject:
   - component: {fileID: 639343054}
   - component: {fileID: 639343053}
   - component: {fileID: 639343052}
+  - component: {fileID: 639343055}
   m_Layer: 0
   m_Name: GameAnalytics
   m_TagString: Untagged
@@ -5945,6 +5946,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &639343055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639343051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48cd19f111f4d134b85b5db1ca31543e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MongoAnalyticsUploader
+  _connectionString: mongodb+srv://a24ismsaajdi_db_user:5EtcmevqNTEZBCez@arcadiaanalytics.rrmb4nx.mongodb.net/?appName=ArcadiaAnalytics
+  _databaseName: ArcadiaAnalytics
+  _sessionsCollectionName: sessions
 --- !u!1 &665126222
 GameObject:
   m_ObjectHideFlags: 0

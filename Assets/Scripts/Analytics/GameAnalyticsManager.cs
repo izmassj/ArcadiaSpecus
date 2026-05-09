@@ -157,6 +157,9 @@ public class GameAnalyticsManager : MonoBehaviour
         string json = JsonUtility.ToJson(_currentData, true);
         File.WriteAllText(_lastSavedJsonPath, json);
 
+        if (MongoAnalyticsUploader.Instance != null)
+            _ = MongoAnalyticsUploader.Instance.UploadSessionAsync(_currentData);
+
         Debug.Log("Analytics JSON saved: " + _lastSavedJsonPath);
         return _lastSavedJsonPath;
     }
