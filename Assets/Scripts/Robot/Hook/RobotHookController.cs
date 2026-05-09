@@ -17,9 +17,14 @@ public class RobotHookController : MonoBehaviour
     [SerializeField] private Transform _hookOriginPoint;
     [SerializeField] private Camera _aimCamera;
     [SerializeField] private HookRopeSegmentsRenderer _ropeRenderer;
-    [SerializeField] private GameObject _hookHeadPrefab;
+    [SerializeField] private Transform _hookHeadVisual;
     [SerializeField] private GameObject _targetIndicatorPrefab;
     [SerializeField] private Transform _runtimeVisualParent;
+
+    [Header("Existing Hook Visual")]
+    [SerializeField] private bool _restoreHookVisualToOriginalPose = true;
+    [SerializeField] private bool _carryObjectOnHookVisual = true;
+    [SerializeField] private bool _hideHookVisualWhenDisabled = false;
 
     [Header("Input")]
     [SerializeField] private InputActionAsset _inputActions;
@@ -76,7 +81,6 @@ public class RobotHookController : MonoBehaviour
     private InputActionMap _gameplayMap;
     private InputAction _hookAction;
     private HookTargetIndicator _indicatorInstance;
-    private GameObject _hookHeadInstance;
     private float _targetRefreshTimer;
     private float _stateTimer;
     private float _cooldownTimer;
@@ -85,6 +89,13 @@ public class RobotHookController : MonoBehaviour
     private float _stuckTimer;
     private Vector3 _hookHeadPosition;
     private bool _robotLockedByHook;
+
+    private Transform _hookVisualOriginalParent;
+    private Vector3 _hookVisualOriginalLocalPosition;
+    private Quaternion _hookVisualOriginalLocalRotation;
+    private Vector3 _hookVisualOriginalLocalScale;
+    private bool _hookVisualOriginalActive;
+    private bool _hasStoredHookVisualPose;
 
     private void Reset()
     {
@@ -105,13 +116,15 @@ public class RobotHookController : MonoBehaviour
         if (_runtimeVisualParent == null)
             _runtimeVisualParent = transform;
 
+        StoreHookVisualOriginalPose();
         CreateIndicatorInstance();
-        CreateHookHeadInstance();
+        ResetHookVisualToOrigin();
     }
 
     private void OnEnable()
     {
         StartInputActions();
+        ResetHookVisualToOrigin();
     }
 
     private void Update()
@@ -132,8 +145,10 @@ public class RobotHookController : MonoBehaviour
         if (_ropeRenderer != null)
             _ropeRenderer.Hide();
 
-        if (_hookHeadInstance != null)
-            _hookHeadInstance.SetActive(false);
+        ResetHookVisualToOrigin();
+
+        if (_hideHookVisualWhenDisabled && _hookHeadVisual != null)
+            _hookHeadVisual.gameObject.SetActive(false);
     }
 
     private void StartInputActions()
@@ -343,12 +358,7 @@ public class RobotHookController : MonoBehaviour
         if (_forceThirdPersonWhenUsingHook && _robotController != null)
             _robotController.ForceThirdPerson(false);
 
-        if (_hookHeadInstance != null)
-        {
-            _hookHeadInstance.transform.SetParent(_runtimeVisualParent, true);
-            _hookHeadInstance.transform.position = _hookHeadPosition;
-            _hookHeadInstance.SetActive(true);
-        }
+        MoveHookVisualToWorldPose(_hookHeadPosition, _hookOriginPoint.rotation);
 
         if (_shootVfxPrefab != null)
             Instantiate(_shootVfxPrefab, _hookOriginPoint.position, _hookOriginPoint.rotation);
@@ -365,13 +375,8 @@ public class RobotHookController : MonoBehaviour
         Vector3 targetPoint = _currentTarget.GetTargetPoint();
         _hookHeadPosition = Vector3.MoveTowards(_hookHeadPosition, targetPoint, _shootSpeed * Time.deltaTime);
 
-        if (_hookHeadInstance != null)
-        {
-            _hookHeadInstance.transform.position = _hookHeadPosition;
-            Vector3 dir = targetPoint - _hookHeadPosition;
-            if (dir.sqrMagnitude > 0.0001f)
-                _hookHeadInstance.transform.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
-        }
+        Quaternion hookRotation = GetHookRotation(targetPoint - _hookHeadPosition, _hookOriginPoint.rotation);
+        MoveHookVisualToWorldPose(_hookHeadPosition, hookRotation);
 
         if (Vector3.Distance(_hookHeadPosition, targetPoint) <= _attachDistance)
         {
@@ -457,13 +462,8 @@ public class RobotHookController : MonoBehaviour
         _currentTarget.Rigidbody.linearVelocity = direction * speed;
         _hookHeadPosition = targetPoint;
 
-        if (_hookHeadInstance != null)
-        {
-            _hookHeadInstance.transform.position = targetPoint;
-            Vector3 hookDir = origin - targetPoint;
-            if (hookDir.sqrMagnitude > 0.0001f)
-                _hookHeadInstance.transform.rotation = Quaternion.LookRotation(hookDir.normalized, Vector3.up);
-        }
+        Quaternion hookRotation = GetHookRotation(origin - targetPoint, _hookOriginPoint.rotation);
+        MoveHookVisualToWorldPose(targetPoint, hookRotation);
     }
 
     private void UpdateStuckTimer(float distance)
@@ -486,20 +486,15 @@ public class RobotHookController : MonoBehaviour
             return;
         }
 
+        ResetHookVisualToOrigin();
+
         _carriedObject = _currentTarget;
         _currentTarget = null;
         _state = HookState.Carrying;
         _stateTimer = 0f;
 
-        _carriedObject.BeginCarried(_hookOriginPoint, _detectCollisionsWhileCarried);
-
-        if (_hookHeadInstance != null)
-        {
-            _hookHeadInstance.transform.SetParent(_hookOriginPoint, false);
-            _hookHeadInstance.transform.localPosition = Vector3.zero;
-            _hookHeadInstance.transform.localRotation = Quaternion.identity;
-            _hookHeadInstance.SetActive(true);
-        }
+        Transform carryParent = _carryObjectOnHookVisual && _hookHeadVisual != null ? _hookHeadVisual : _hookOriginPoint;
+        _carriedObject.BeginCarried(carryParent, _detectCollisionsWhileCarried);
 
         if (_ropeRenderer != null)
             _ropeRenderer.Hide();
@@ -537,9 +532,7 @@ public class RobotHookController : MonoBehaviour
         if (_releaseVfxPrefab != null)
             Instantiate(_releaseVfxPrefab, releasePosition, Quaternion.identity);
 
-        if (_hookHeadInstance != null)
-            _hookHeadInstance.SetActive(false);
-
+        ResetHookVisualToOrigin();
         UnlockRobotMovement();
         StartCooldown();
     }
@@ -552,8 +545,7 @@ public class RobotHookController : MonoBehaviour
             _currentTarget = null;
         }
 
-        if (_hookHeadInstance != null)
-            _hookHeadInstance.SetActive(false);
+        ResetHookVisualToOrigin();
 
         if (_ropeRenderer != null)
             _ropeRenderer.Hide();
@@ -636,15 +628,6 @@ public class RobotHookController : MonoBehaviour
         _indicatorInstance.SetTarget(null);
     }
 
-    private void CreateHookHeadInstance()
-    {
-        if (_hookHeadPrefab == null || _hookHeadInstance != null)
-            return;
-
-        _hookHeadInstance = Instantiate(_hookHeadPrefab, _runtimeVisualParent != null ? _runtimeVisualParent : transform);
-        _hookHeadInstance.SetActive(false);
-    }
-
     private void SetIndicatorTarget(HookGrabbableObject target)
     {
         if (_indicatorInstance == null)
@@ -652,6 +635,68 @@ public class RobotHookController : MonoBehaviour
 
         if (_indicatorInstance != null)
             _indicatorInstance.SetTarget(target);
+    }
+
+    private void StoreHookVisualOriginalPose()
+    {
+        if (_hookHeadVisual == null || _hasStoredHookVisualPose)
+            return;
+
+        _hookVisualOriginalParent = _hookHeadVisual.parent;
+        _hookVisualOriginalLocalPosition = _hookHeadVisual.localPosition;
+        _hookVisualOriginalLocalRotation = _hookHeadVisual.localRotation;
+        _hookVisualOriginalLocalScale = _hookHeadVisual.localScale;
+        _hookVisualOriginalActive = _hookHeadVisual.gameObject.activeSelf;
+        _hasStoredHookVisualPose = true;
+    }
+
+    private void MoveHookVisualToWorldPose(Vector3 position, Quaternion rotation)
+    {
+        if (_hookHeadVisual == null)
+            return;
+
+        StoreHookVisualOriginalPose();
+
+        Transform parent = _runtimeVisualParent != null ? _runtimeVisualParent : null;
+        if (_hookHeadVisual.parent != parent)
+            _hookHeadVisual.SetParent(parent, true);
+
+        if (!_hookHeadVisual.gameObject.activeSelf)
+            _hookHeadVisual.gameObject.SetActive(true);
+
+        _hookHeadVisual.position = position;
+        _hookHeadVisual.rotation = rotation;
+    }
+
+    private void ResetHookVisualToOrigin()
+    {
+        if (_hookHeadVisual == null)
+            return;
+
+        StoreHookVisualOriginalPose();
+
+        if (_restoreHookVisualToOriginalPose && _hasStoredHookVisualPose)
+        {
+            _hookHeadVisual.SetParent(_hookVisualOriginalParent, false);
+            _hookHeadVisual.localPosition = _hookVisualOriginalLocalPosition;
+            _hookHeadVisual.localRotation = _hookVisualOriginalLocalRotation;
+            _hookHeadVisual.localScale = _hookVisualOriginalLocalScale;
+            _hookHeadVisual.gameObject.SetActive(_hookVisualOriginalActive);
+            return;
+        }
+
+        _hookHeadVisual.SetParent(_hookOriginPoint, false);
+        _hookHeadVisual.localPosition = Vector3.zero;
+        _hookHeadVisual.localRotation = Quaternion.identity;
+        _hookHeadVisual.gameObject.SetActive(true);
+    }
+
+    private Quaternion GetHookRotation(Vector3 direction, Quaternion fallback)
+    {
+        if (direction.sqrMagnitude <= 0.0001f)
+            return fallback;
+
+        return Quaternion.LookRotation(direction.normalized, Vector3.up);
     }
 
     private void OnDrawGizmosSelected()
