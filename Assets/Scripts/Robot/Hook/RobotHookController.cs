@@ -398,15 +398,15 @@ public class RobotHookController : MonoBehaviour
             return;
         }
 
-        _currentTarget.BeginHooked();
+        _currentTarget.BeginHooked(_hookHeadPosition);
         _state = HookState.Pulling;
         _stateTimer = 0f;
         _stuckTimer = 0f;
-        _pullStartDistance = Vector3.Distance(_hookOriginPoint.position, _currentTarget.GetTargetPoint());
+        _pullStartDistance = Vector3.Distance(_hookOriginPoint.position, _currentTarget.GetRopePoint());
         _lastBestPullDistance = _pullStartDistance;
 
         if (_attachVfxPrefab != null)
-            Instantiate(_attachVfxPrefab, _currentTarget.GetTargetPoint(), Quaternion.identity);
+            Instantiate(_attachVfxPrefab, _currentTarget.GetRopePoint(), Quaternion.identity);
     }
 
     private void UpdatePulling()
@@ -417,7 +417,7 @@ public class RobotHookController : MonoBehaviour
             return;
         }
 
-        Vector3 targetPoint = _currentTarget.GetTargetPoint();
+        Vector3 targetPoint = _currentTarget.GetRopePoint();
         Vector3 origin = _hookOriginPoint.position;
         Vector3 toOrigin = origin - targetPoint;
         float distance = toOrigin.magnitude;
@@ -606,7 +606,7 @@ public class RobotHookController : MonoBehaviour
 
         if (_state == HookState.Pulling && _currentTarget != null)
         {
-            _ropeRenderer.SetRope(_hookOriginPoint.position, _currentTarget.GetTargetPoint(), true);
+            _ropeRenderer.SetRope(_hookOriginPoint.position, _currentTarget.GetRopePoint(), true);
             return;
         }
 

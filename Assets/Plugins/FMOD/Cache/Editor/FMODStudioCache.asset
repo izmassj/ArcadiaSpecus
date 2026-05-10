@@ -22,7 +22,7 @@ MonoBehaviour:
   StringsBanks:
   - {fileID: 6644189762693444393}
   cacheVersion: 131858
-  cacheTime: 639125683400000000
+  cacheTime: 639082465643073243
   SerializableEventsDict: []
 --- !u!114 &1290566917152440120
 MonoBehaviour:
@@ -39,7 +39,7 @@ MonoBehaviour:
   Path: Assets/FMOD/ArcadiaSpecusFMOD/Build/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639125683400000000
+  lastModified: 639082465643053085
   FileSizes:
   - Name: Desktop
     Value: 1074
@@ -59,7 +59,7 @@ MonoBehaviour:
   Path: Assets/FMOD/ArcadiaSpecusFMOD/Build/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639125683400000000
+  lastModified: 639082465643073243
   FileSizes:
   - Name: Desktop
     Value: 724

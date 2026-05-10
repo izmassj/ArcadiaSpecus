@@ -3,11 +3,19 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class HookGrabbableObject : MonoBehaviour
 {
+    private enum HookedRopeAnchorMode
+    {
+        StableWorldOffsetFromCenter,
+        CenterOfMass,
+        TargetPoint
+    }
+
     [Header("Grab")]
     [SerializeField] private bool _canBeGrabbed = true;
     [SerializeField] private Rigidbody _rigidbody;
     [SerializeField] private Collider[] _colliders;
     [SerializeField] private Vector3 _targetOffset = Vector3.zero;
+    [SerializeField] private HookedRopeAnchorMode _hookedRopeAnchorMode = HookedRopeAnchorMode.StableWorldOffsetFromCenter;
     [SerializeField] private Transform _connectPoint;
     [SerializeField] private bool _useConnectPointAsHookTarget = true;
     [SerializeField] private bool _alignConnectPointToCarryPoint = true;
@@ -29,6 +37,7 @@ public class HookGrabbableObject : MonoBehaviour
     private Vector3 _connectLocalPosition;
     private Quaternion _connectLocalRotation = Quaternion.identity;
     private bool _hasConnectPose;
+    private Vector3 _stableRopeAnchorOffsetFromCenter;
 
     public bool CanBeGrabbed => _canBeGrabbed && !_isHooked && !_isCarried;
     public bool IsHooked => _isHooked;
@@ -76,15 +85,55 @@ public class HookGrabbableObject : MonoBehaviour
         return transform.position + transform.TransformVector(_targetOffset);
     }
 
+    public Vector3 GetRopePoint()
+    {
+        if (!_isHooked)
+            return GetTargetPoint();
+
+        switch (_hookedRopeAnchorMode)
+        {
+            case HookedRopeAnchorMode.CenterOfMass:
+                return GetRopeAnchorCenter();
+
+            case HookedRopeAnchorMode.TargetPoint:
+                return GetTargetPoint();
+
+            default:
+                return GetRopeAnchorCenter() + _stableRopeAnchorOffsetFromCenter;
+        }
+    }
+
+    private Vector3 GetRopeAnchorCenter()
+    {
+        if (_rigidbody != null)
+            return _rigidbody.worldCenterOfMass;
+
+        return transform.position;
+    }
+
     public Vector3 GetIndicatorPoint()
     {
-        return GetTargetPoint() + Vector3.up * _indicatorHeight;
+        return GetIndicatorBasePoint() + Vector3.up * _indicatorHeight;
+    }
+
+    private Vector3 GetIndicatorBasePoint()
+    {
+        if (_rigidbody != null)
+            return _rigidbody.worldCenterOfMass;
+
+        return transform.position;
     }
 
     public void BeginHooked()
     {
+        BeginHooked(GetTargetPoint());
+    }
+
+    public void BeginHooked(Vector3 hookAttachWorldPoint)
+    {
         _isHooked = true;
         _isCarried = false;
+        _stableRopeAnchorOffsetFromCenter = hookAttachWorldPoint - GetRopeAnchorCenter();
 
         if (_rigidbody == null)
             return;
