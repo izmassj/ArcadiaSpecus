@@ -67,6 +67,7 @@
         #pragma multi_compile_local _ FADE_BY_DISTANCE
         #pragma multi_compile_local _ FADE_BY_HEIGHT
         #pragma multi_compile_local _ SECTIONS_MASK
+        #pragma multi_compile_local _ GAME_OBJECT_LAYER_MASK
         #pragma multi_compile_local _ DEPTH_MASK
         #pragma multi_compile_local _ NORMALS_MASK
         #pragma multi_compile_local _ LUMINANCE_MASK
@@ -102,6 +103,8 @@
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             float4 _BackgroundColor, _OutlineColor, _FillColor, _OutlineColorShadow, _DistanceFadeColor, _HeightFadeColor;
+            float4 _OutlineColors[16];
+            float _OutlineColorCount;
             float _OverrideOutlineColorShadow;
             float _OutlineThickness;
             float _ReferenceResolution;
@@ -191,6 +194,13 @@
                 if (section == 1.0) fill = true;
                 if (section == 0.0) mask = true;
                 half color_lut_value = section_rgba.g;
+
+                #if defined(GAME_OBJECT_LAYER_MASK)
+                if (section <= 0.0001)
+                {
+                    return _BackgroundColor;
+                }
+                #endif
 
                 float4 line_color = _OutlineColor;
                 
@@ -308,9 +318,12 @@
                     luminance_samples[i] = SampleSceneLuminance(uvs[i]);
                 #endif
                     
-                    section_samples[i] = SampleSceneSection(uvs[i]).r;
+                    float4 sectionRGBA = SampleSceneSection(uvs[i]);
+                    section_samples[i] = sectionRGBA.r;
                     if(section_samples[i] == 1) fill = true;
                     if(section_samples[i] == 0) mask = true;
+
+                    if(sectionRGBA.g > 0) color_lut_value = sectionRGBA.g;
                 }
                 
                 #if defined(DEPTH)
@@ -423,23 +436,10 @@
 
                 // if (fill) return _FillColor;
 
-                half4 colorLUT[5] = {
-    _OutlineColor,  // Red
-    half4(0.0, 1.0, 0.0, 1.0),  // Green
-    half4(0.0, 0.0, 1.0, 1.0),  // Blue
-    half4(1.0, 1.0, 0.0, 1.0),  // Yellow
-    half4(1.0, 0.0, 1.0, 1.0)   // Magenta
-};
-
-// Ensure the index is within bounds
-int index = clamp(int(color_lut_value * 5), 0, 4);
-
-half4 c = colorLUT[index];
-                
-
-             //   half4 c = half4(color_lut_value, color_lut_value, color_lut_value, 1.0);
-               // if (section_rgba.g != 0)
-                    line_color = c;
+                int outline_color_index = clamp((int)round(color_lut_value * 255.0), 0, 15);
+                int outline_color_count = max((int)_OutlineColorCount, 1);
+                if (outline_color_index >= outline_color_count) outline_color_index = 0;
+                line_color = _OutlineColors[outline_color_index];
                 
                 // Shadows.
                 #if defined(OVERRIDE_SHADOW)

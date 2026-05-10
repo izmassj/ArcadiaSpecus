@@ -9,6 +9,14 @@ using UnityEngine;
 
 namespace Linework.EdgeDetection
 {
+    [Serializable]
+    public class OutlineLayerColor
+    {
+        public string name = "Outline Color";
+        public LayerMask layerMask = 0;
+        [ColorUsage(true, true)] public Color color = Color.black;
+    }
+
     [CreateAssetMenu(fileName = "Edge Detection Settings", menuName = "Linework/Edge Detection Settings")]
     [Icon("Packages/dev.ameye.linework/Editor/Common/Icons/d_EdgeDetection.png")]
     public class EdgeDetectionSettings : ScriptableObject
@@ -31,6 +39,8 @@ namespace Linework.EdgeDetection
         public bool particles = false;
         public bool sectionsMask, depthMask, normalsMask, luminanceMask;
         public SectionMapInput sectionMapInput = SectionMapInput.None;
+        public bool useGameObjectLayerMask;
+        public LayerMask layerMask = ~0;
         public Texture2D sectionTexture;
         public UVSet sectionTextureUvSet;
         public Channel sectionTextureChannel;
@@ -44,6 +54,7 @@ namespace Linework.EdgeDetection
         public float customResolution;
         [ColorUsage(true, true)] public Color backgroundColor = Color.clear;
         [ColorUsage(true, true)] public Color outlineColor = Color.black;
+        public List<OutlineLayerColor> outlineLayerColors = new();
         public bool overrideColorInShadow;
         [ColorUsage(true, true)] public Color outlineColorShadow = Color.white;
         [ColorUsage(true, true)] public Color fillColor = Color.black;
@@ -71,6 +82,8 @@ namespace Linework.EdgeDetection
         public InjectionPoint InjectionPoint => injectionPoint;
         public bool ShowInSceneView => showInSceneView;
         public DebugView DebugView => debugView;
+        internal int EffectiveLayerMask => useGameObjectLayerMask ? layerMask.value : -1;
+        internal int EffectiveSectionMapClearValue => useGameObjectLayerMask ? 0 : sectionMapClearValue;
 
         public bool showSectionMapSection;
         public bool showDiscontinuitySection;
@@ -78,6 +91,11 @@ namespace Linework.EdgeDetection
 
         private void OnValidate()
         {
+            if (outlineLayerColors != null && outlineLayerColors.Count > 15)
+            {
+                outlineLayerColors.RemoveRange(15, outlineLayerColors.Count - 15);
+            }
+
 #if UNITY_EDITOR
             if (Application.isPlaying)
                 return;

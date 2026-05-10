@@ -42,6 +42,9 @@ namespace Linework.EdgeDetection
         public static readonly int BackgroundColor = Shader.PropertyToID("_BackgroundColor");
         public static readonly int OutlineColorShadow = Shader.PropertyToID("_OutlineColorShadow");
         public static readonly int FillColor = Shader.PropertyToID("_FillColor");
+        public static readonly int OutlineColorIndex = Shader.PropertyToID("_OutlineColorIndex");
+        public static readonly int OutlineColors = Shader.PropertyToID("_OutlineColors");
+        public static readonly int OutlineColorCount = Shader.PropertyToID("_OutlineColorCount");
         public static readonly int OutlineThickness = Shader.PropertyToID("_OutlineThickness");
         public static readonly int ReferenceResolution = Shader.PropertyToID("_ReferenceResolution");
         public static readonly int DistanceFadeStart = Shader.PropertyToID("_DistanceFadeStart");
@@ -136,6 +139,7 @@ namespace Linework.EdgeDetection
         public const string Particles = "PARTICLES";
         public const string InputVertexColor = "INPUT_VERTEX_COLOR";
         public const string InputTexture = "INPUT_TEXTURE";
+        public const string GameObjectLayerMask = "GAME_OBJECT_LAYER_MASK";
     }
     
     public enum SectionMapInput

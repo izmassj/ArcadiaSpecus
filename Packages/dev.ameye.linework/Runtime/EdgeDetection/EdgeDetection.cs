@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Linework.Common.Utils;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 #if UNITY_6000_0_OR_NEWER
-using System.Collections.Generic;
 using UnityEngine.Rendering.RenderGraphModule;
 #endif
 using UnityEngine.Rendering.Universal;
@@ -24,6 +24,8 @@ namespace Linework.EdgeDetection
         {
             private EdgeDetectionSettings settings;
             private Material outline, section;
+            private List<Material> outlineLayerSections;
+            private readonly Color[] outlineColors = new Color[16];
             private readonly ProfilingSampler sectionSampler, outlineSampler;
             
             public EdgeDetectionPass()
@@ -33,11 +35,12 @@ namespace Linework.EdgeDetection
                 outlineSampler = new ProfilingSampler(ShaderPassName.Outline);
             }
 
-            public bool Setup(ref EdgeDetectionSettings edgeDetectionSettings, ref Material sectionMaterial, ref Material outlineMaterial)
+            public bool Setup(ref EdgeDetectionSettings edgeDetectionSettings, ref Material sectionMaterial, ref Material outlineMaterial, List<Material> outlineLayerSectionMaterials)
             {
                 settings = edgeDetectionSettings;
                 section = sectionMaterial;
                 outline = outlineMaterial;
+                outlineLayerSections = outlineLayerSectionMaterials;
                 renderPassEvent = (RenderPassEvent) edgeDetectionSettings.InjectionPoint;
 
                 if (settings.objectId) section.EnableKeyword(ShaderFeature.ObjectId);
@@ -191,6 +194,11 @@ namespace Linework.EdgeDetection
                 if(edgeDetectionSettings.debugSectionsRaw) outline.EnableKeyword(ShaderFeature.DebugSectionsRawValues);
                 else outline.DisableKeyword(ShaderFeature.DebugSectionsRawValues);
 
+                if (edgeDetectionSettings.useGameObjectLayerMask) outline.EnableKeyword(ShaderFeature.GameObjectLayerMask);
+                else outline.DisableKeyword(ShaderFeature.GameObjectLayerMask);
+
+                ConfigureOutlineLayerSectionMaterials(edgeDetectionSettings);
+
                 if (edgeDetectionSettings.discontinuityInput.HasFlag(DiscontinuityInput.Depth)) outline.EnableKeyword(ShaderFeature.DepthDiscontinuity);
                 else outline.DisableKeyword(ShaderFeature.DepthDiscontinuity);
                 if (edgeDetectionSettings.discontinuityInput.HasFlag(DiscontinuityInput.Normals)) outline.EnableKeyword(ShaderFeature.NormalDiscontinuity);
@@ -265,6 +273,7 @@ namespace Linework.EdgeDetection
                 
                 outline.SetColor(ShaderPropertyId.BackgroundColor, edgeDetectionSettings.backgroundColor);
                 outline.SetColor(CommonShaderPropertyId.OutlineColor, edgeDetectionSettings.outlineColor);
+                SetOutlineColorArray(edgeDetectionSettings);
                 outline.SetColor(ShaderPropertyId.OutlineColorShadow, edgeDetectionSettings.outlineColorShadow);
                 if (edgeDetectionSettings.overrideColorInShadow) outline.EnableKeyword(ShaderFeature.OverrideShadow);
                 else outline.DisableKeyword(ShaderFeature.OverrideShadow);
@@ -276,10 +285,50 @@ namespace Linework.EdgeDetection
 
                 return true;
             }
+
+            private void ConfigureOutlineLayerSectionMaterials(EdgeDetectionSettings edgeDetectionSettings)
+            {
+                section.SetFloat(ShaderPropertyId.OutlineColorIndex, 0.0f);
+
+                if (outlineLayerSections == null)
+                    return;
+
+                var count = Mathf.Min(edgeDetectionSettings.outlineLayerColors?.Count ?? 0, outlineLayerSections.Count, 15);
+                for (var i = 0; i < count; i++)
+                {
+                    var material = outlineLayerSections[i];
+                    if (material == null)
+                        continue;
+
+                    material.CopyPropertiesFromMaterial(section);
+                    material.SetFloat(ShaderPropertyId.OutlineColorIndex, (i + 1) / 255.0f);
+                }
+            }
+
+            private void SetOutlineColorArray(EdgeDetectionSettings edgeDetectionSettings)
+            {
+                outlineColors[0] = edgeDetectionSettings.outlineColor;
+
+                var count = Mathf.Min(edgeDetectionSettings.outlineLayerColors?.Count ?? 0, 15);
+                for (var i = 0; i < count; i++)
+                {
+                    outlineColors[i + 1] = edgeDetectionSettings.outlineLayerColors[i].color;
+                }
+
+                for (var i = count + 1; i < outlineColors.Length; i++)
+                {
+                    outlineColors[i] = edgeDetectionSettings.outlineColor;
+                }
+
+                outline.SetColorArray(ShaderPropertyId.OutlineColors, outlineColors);
+                outline.SetInt(ShaderPropertyId.OutlineColorCount, count + 1);
+            }
+
 #if UNITY_6000_0_OR_NEWER
             private class PassData
             {
                 internal RendererListHandle SectionRendererListHandle;
+                internal List<RendererListHandle> OutlineLayerRendererListHandles = new();
                 internal List<RendererListHandle> AdditionalSectionRendererListHandles = new();
             }
             
@@ -288,7 +337,7 @@ namespace Linework.EdgeDetection
                 var resourceData = frameData.Get<UniversalResourceData>();
                 var cameraData = frameData.Get<UniversalCameraData>();
 
-                CreateRenderGraphTextures(renderGraph, resourceData, out var sectionHandle, settings.sectionMapPrecision, settings.sectionMapClearValue);
+                CreateRenderGraphTextures(renderGraph, resourceData, out var sectionHandle, settings.sectionMapPrecision, settings.EffectiveSectionMapClearValue);
                 
                 // 1. Section.
                 // -> Render section map.
@@ -300,6 +349,10 @@ namespace Linework.EdgeDetection
 
                     InitSectionRendererList(renderGraph, frameData, ref passData);
                     builder.UseRendererList(passData.SectionRendererListHandle);
+                    foreach (var handle in passData.OutlineLayerRendererListHandles)
+                    {
+                        builder.UseRendererList(handle);
+                    }
                     foreach (var handle in passData.AdditionalSectionRendererListHandles)
                     {
                         builder.UseRendererList(handle);
@@ -323,6 +376,10 @@ namespace Linework.EdgeDetection
                         }
                         
                         context.cmd.DrawRendererList(data.SectionRendererListHandle);
+                        foreach (var handle in data.OutlineLayerRendererListHandles)
+                        {
+                            context.cmd.DrawRendererList(handle);   
+                        }
                         foreach (var handle in data.AdditionalSectionRendererListHandles)
                         {
                             context.cmd.DrawRendererList(handle);   
@@ -354,6 +411,7 @@ namespace Linework.EdgeDetection
 
             private void InitSectionRendererList(RenderGraph renderGraph, ContextContainer frameData, ref PassData passData)
             {
+                passData.OutlineLayerRendererListHandles.Clear();
                 passData.AdditionalSectionRendererListHandles.Clear();
                 
                 var universalRenderingData = frameData.Get<UniversalRenderingData>();
@@ -364,7 +422,7 @@ namespace Linework.EdgeDetection
                 var sortingCriteria = cameraData.defaultOpaqueSortFlags;
                 var renderQueueRange = RenderQueueRange.opaque;
                 var drawingSettings = RenderingUtils.CreateDrawingSettings(RenderUtils.DefaultShaderTagIds, universalRenderingData, cameraData, lightData, sortingCriteria);
-                var filteringSettings = new FilteringSettings(renderQueueRange, -1, settings.SectionRenderingLayer);
+                var filteringSettings = new FilteringSettings(renderQueueRange, settings.EffectiveLayerMask, settings.SectionRenderingLayer);
                 if (settings.sectionMapInput is SectionMapInput.None or SectionMapInput.SectionTexture or SectionMapInput.VertexColors)
                 {
                     drawingSettings.overrideMaterial = section;
@@ -372,6 +430,34 @@ namespace Linework.EdgeDetection
                 var renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
                 RenderUtils.CreateRendererListWithRenderStateBlock(renderGraph, ref universalRenderingData.cullResults, drawingSettings, filteringSettings, renderStateBlock,
                     ref passData.SectionRendererListHandle);
+
+
+
+                // Outline color layer passes.
+                var outlineColorOverrideCount = Mathf.Min(settings.outlineLayerColors?.Count ?? 0, outlineLayerSections?.Count ?? 0, 15);
+                for (var i = 0; i < outlineColorOverrideCount; i++)
+                {
+                    var outlineLayer = settings.outlineLayerColors[i];
+                    if (outlineLayer == null || outlineLayer.layerMask.value == 0)
+                        continue;
+
+                    var effectiveColorLayerMask = settings.useGameObjectLayerMask
+                        ? outlineLayer.layerMask.value & settings.layerMask.value
+                        : outlineLayer.layerMask.value;
+
+                    if (effectiveColorLayerMask == 0)
+                        continue;
+
+                    filteringSettings = new FilteringSettings(renderQueueRange, effectiveColorLayerMask, settings.SectionRenderingLayer);
+                    if (settings.sectionMapInput is SectionMapInput.None or SectionMapInput.SectionTexture or SectionMapInput.VertexColors)
+                    {
+                        drawingSettings.overrideMaterial = outlineLayerSections[i];
+                    }
+                    
+                    var handle = new RendererListHandle();
+                    RenderUtils.CreateRendererListWithRenderStateBlock(renderGraph, ref universalRenderingData.cullResults, drawingSettings, filteringSettings, renderStateBlock, ref handle);
+                    passData.OutlineLayerRendererListHandles.Add(handle);
+                }
 
                 // Additional section passes.
                 foreach (var additionalSectionPass in settings.additionalSectionPasses)
@@ -426,7 +512,7 @@ namespace Linework.EdgeDetection
                 handles[0] = sectionRTHandle;
                 
                 ConfigureTarget(handles, cameraDepthRTHandle);
-                ConfigureClear(ClearFlag.Color, new Color((float) settings.sectionMapClearValue / 256, 0.0f, 0.0f, 0.0f));
+                ConfigureClear(ClearFlag.Color, new Color((float) settings.EffectiveSectionMapClearValue / 256, 0.0f, 0.0f, 0.0f));
             }
             
             public void CreateHandles(RenderingData renderingData)
@@ -444,13 +530,13 @@ namespace Linework.EdgeDetection
                 switch (precision)
                 {
                     case SectionMapPrecision._8bit:
-                        return GraphicsFormat.R8_UNorm;
+                        return GraphicsFormat.R8G8_UNorm;
                     case SectionMapPrecision._16bit:
 #if UNITY_2023_2_OR_NEWER
                         // WebGPU does not support R16_UNorm.
-                        return SystemInfo.graphicsDeviceType == GraphicsDeviceType.WebGPU ? GraphicsFormat.R32_SFloat : GraphicsFormat.R16_UNorm;
+                        return SystemInfo.graphicsDeviceType == GraphicsDeviceType.WebGPU ? GraphicsFormat.R32G32_SFloat : GraphicsFormat.R16G16_UNorm;
 #else
-                        return GraphicsFormat.R16_UNorm;
+                        return GraphicsFormat.R16G16_UNorm;
 #endif
                     default:
                         throw new NotImplementedException();
@@ -476,7 +562,7 @@ namespace Linework.EdgeDetection
 
                         var drawingSettings = RenderingUtils.CreateDrawingSettings(RenderUtils.DefaultShaderTagIds, ref renderingData, sortingCriteria);
 
-                        var filteringSettings = new FilteringSettings(renderQueueRange, -1, settings.SectionRenderingLayer);
+                        var filteringSettings = new FilteringSettings(renderQueueRange, settings.EffectiveLayerMask, settings.SectionRenderingLayer);
 
                         if (settings.sectionMapInput is SectionMapInput.None or SectionMapInput.SectionTexture or SectionMapInput.VertexColors)
                         {
@@ -495,6 +581,28 @@ namespace Linework.EdgeDetection
 
                         // Render sections.
                         context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings, ref renderStateBlock);
+
+                        var outlineColorOverrideCount = Mathf.Min(settings.outlineLayerColors?.Count ?? 0, outlineLayerSections?.Count ?? 0, 15);
+                        for (var i = 0; i < outlineColorOverrideCount; i++)
+                        {
+                            var outlineLayer = settings.outlineLayerColors[i];
+                            if (outlineLayer == null || outlineLayer.layerMask.value == 0)
+                                continue;
+
+                            var effectiveColorLayerMask = settings.useGameObjectLayerMask
+                                ? outlineLayer.layerMask.value & settings.layerMask.value
+                                : outlineLayer.layerMask.value;
+
+                            if (effectiveColorLayerMask == 0)
+                                continue;
+
+                            filteringSettings = new FilteringSettings(renderQueueRange, effectiveColorLayerMask, settings.SectionRenderingLayer);
+                            if (settings.sectionMapInput is SectionMapInput.None or SectionMapInput.SectionTexture or SectionMapInput.VertexColors)
+                            {
+                                drawingSettings.overrideMaterial = outlineLayerSections[i];
+                            }
+                            context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings, ref renderStateBlock);
+                        }
 
                         // Disable section map.
                         if (settings.sectionMapInput == SectionMapInput.Custom)
@@ -555,6 +663,7 @@ namespace Linework.EdgeDetection
         [SerializeField] private EdgeDetectionSettings settings;
         [SerializeField] private ShaderResources shaders;
         private Material sectionMaterial, outlineMaterial;
+        private readonly List<Material> outlineLayerSectionMaterials = new();
         private EdgeDetectionPass edgeDetectionPass;
 
         /// <summary>
@@ -617,7 +726,7 @@ namespace Linework.EdgeDetection
             // NOTE: This is needed because the shader needs the current screen contents as input texture, but also needs to write to it, so a copy is needed.
             edgeDetectionPass.requiresIntermediateTexture = true;
 #endif
-            var render = edgeDetectionPass.Setup(ref settings, ref sectionMaterial, ref outlineMaterial);
+            var render = edgeDetectionPass.Setup(ref settings, ref sectionMaterial, ref outlineMaterial, outlineLayerSectionMaterials);
             if (render) renderer.EnqueuePass(edgeDetectionPass);
         }
         
@@ -654,6 +763,30 @@ namespace Linework.EdgeDetection
         {
             CoreUtils.Destroy(sectionMaterial);
             CoreUtils.Destroy(outlineMaterial);
+
+            foreach (var material in outlineLayerSectionMaterials)
+            {
+                CoreUtils.Destroy(material);
+            }
+            outlineLayerSectionMaterials.Clear();
+        }
+
+
+
+        private void EnsureOutlineLayerSectionMaterials()
+        {
+            var targetCount = Mathf.Min(settings?.outlineLayerColors?.Count ?? 0, 15);
+
+            while (outlineLayerSectionMaterials.Count < targetCount)
+            {
+                outlineLayerSectionMaterials.Add(CoreUtils.CreateEngineMaterial(shaders.section));
+            }
+
+            for (var i = outlineLayerSectionMaterials.Count - 1; i >= targetCount; i--)
+            {
+                CoreUtils.Destroy(outlineLayerSectionMaterials[i]);
+                outlineLayerSectionMaterials.RemoveAt(i);
+            }
         }
 
         private bool CreateMaterials()
@@ -667,6 +800,8 @@ namespace Linework.EdgeDetection
             {
                 outlineMaterial = CoreUtils.CreateEngineMaterial(shaders.outline);
             }
+
+            EnsureOutlineLayerSectionMaterials();
 
             return sectionMaterial != null && outlineMaterial != null;
         }

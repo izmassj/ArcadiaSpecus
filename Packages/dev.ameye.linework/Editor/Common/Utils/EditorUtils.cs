@@ -93,6 +93,7 @@ namespace Linework.Editor.Common.Utils
             public static readonly GUIContent Particles = EditorGUIUtility.TrTextContent("Particles", "Whether to render each object with a unique ID to the section map.");
             public static readonly GUIContent SectionMask = EditorGUIUtility.TrTextContent("Section Mask", "Use the section map to mask out regions where edges should not show up.");
             public static readonly GUIContent SectionMapInput = EditorGUIUtility.TrTextContent("Source", "The input used for the section map.");
+            public static readonly GUIContent UseGameObjectLayerMask = EditorGUIUtility.TrTextContent("Use GameObject Layer Mask", "Only GameObjects included in the Layer Mask can receive edge detection.");
             public static readonly GUIContent SectionMapPrecision = EditorGUIUtility.TrTextContent("Precision", "The precision of the section map.");
             public static readonly GUIContent SectionMapClearValue = EditorGUIUtility.TrTextContent("Clear Value", "The clear value of the section map.");
             public static readonly GUIContent SectionMapPasses = EditorGUIUtility.TrTextContent("Passes", "Any additional section map passes to execute.");

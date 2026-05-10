@@ -3,6 +3,7 @@ Shader "Hidden/Outlines/Edge Detection/Section"
     Properties
     {
         _SectionTexture ("Section Texture", 2D) = "white" {}
+        _OutlineColorIndex ("Outline Color Index", Float) = 0
         [Toggle(OBJECT_ID)] OBJECT_ID ("Object Id", Float) = 0
         [Toggle(PARTICLES)] PARTICLES ("Particles", Float) = 0
         [KeywordEnum(NONE, VERTEX_COLOR, TEXTURE)] INPUT("Input", Float) = 0
@@ -96,6 +97,7 @@ Shader "Hidden/Outlines/Edge Detection/Section"
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _SectionTexture_ST;
+                float _OutlineColorIndex;
             CBUFFER_END
 
             Varyings vert(Attributes IN)
@@ -176,7 +178,7 @@ Shader "Hidden/Outlines/Edge Detection/Section"
                 #endif
 
                 if (sample == 1) id = 1;
-                return half4(id, 0.0, 0.0, 1.0);
+                return half4(id, _OutlineColorIndex, 0.0, 1.0);
             }
             ENDHLSL
         }

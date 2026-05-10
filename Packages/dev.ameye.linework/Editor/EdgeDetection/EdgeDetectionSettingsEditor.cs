@@ -23,6 +23,8 @@ namespace Linework.Editor.EdgeDetection
         private SerializedProperty objectId;
         private SerializedProperty particles;
         private SerializedProperty sectionMapInput;
+        private SerializedProperty useGameObjectLayerMask;
+        private SerializedProperty layerMask;
         private SerializedProperty sectionTexture;
         private SerializedProperty sectionTextureUvSet;
         private SerializedProperty vertexColorChannel;
@@ -50,6 +52,8 @@ namespace Linework.Editor.EdgeDetection
         private SerializedProperty customReferenceResolution;
         private SerializedProperty backgroundColor;
         private SerializedProperty outlineColor;
+        private SerializedProperty outlineLayerColors;
+        private ReorderableList outlineLayerColorsList;
         private SerializedProperty overrideColorInShadow;
         private SerializedProperty outlineColorShadow;
         private SerializedProperty fillColor;
@@ -83,6 +87,8 @@ namespace Linework.Editor.EdgeDetection
             objectId = serializedObject.FindProperty(nameof(EdgeDetectionSettings.objectId));
             particles = serializedObject.FindProperty(nameof(EdgeDetectionSettings.particles));
             sectionMapInput = serializedObject.FindProperty(nameof(EdgeDetectionSettings.sectionMapInput));
+            useGameObjectLayerMask = serializedObject.FindProperty(nameof(EdgeDetectionSettings.useGameObjectLayerMask));
+            layerMask = serializedObject.FindProperty(nameof(EdgeDetectionSettings.layerMask));
             sectionTexture = serializedObject.FindProperty(nameof(EdgeDetectionSettings.sectionTexture));
             sectionTextureUvSet = serializedObject.FindProperty(nameof(EdgeDetectionSettings.sectionTextureUvSet));
             vertexColorChannel = serializedObject.FindProperty(nameof(EdgeDetectionSettings.vertexColorChannel));
@@ -122,6 +128,20 @@ namespace Linework.Editor.EdgeDetection
             customReferenceResolution = serializedObject.FindProperty(nameof(EdgeDetectionSettings.customResolution));
             backgroundColor = serializedObject.FindProperty(nameof(EdgeDetectionSettings.backgroundColor));
             outlineColor = serializedObject.FindProperty(nameof(EdgeDetectionSettings.outlineColor));
+            outlineLayerColors = serializedObject.FindProperty(nameof(EdgeDetectionSettings.outlineLayerColors));
+            outlineLayerColorsList = new ReorderableList(serializedObject, outlineLayerColors, true, true, true, true)
+            {
+                drawHeaderCallback = rect =>
+                {
+                    EditorGUI.LabelField(rect, "Outline Color Overrides by Layer");
+                },
+                drawElementCallback = (rect, index, _, _) =>
+                {
+                    var element = outlineLayerColors.GetArrayElementAtIndex(index);
+                    DrawOutlineLayerColor(rect, element);
+                },
+                elementHeightCallback = _ => EditorGUIUtility.singleLineHeight + 4
+            };
             overrideColorInShadow = serializedObject.FindProperty(nameof(EdgeDetectionSettings.overrideColorInShadow));
             outlineColorShadow = serializedObject.FindProperty(nameof(EdgeDetectionSettings.outlineColorShadow));
             fillColor = serializedObject.FindProperty(nameof(EdgeDetectionSettings.fillColor));
@@ -189,6 +209,13 @@ namespace Linework.Editor.EdgeDetection
                 EditorGUILayout.PropertyField(sectionMapPrecision, EditorUtils.CommonStyles.SectionMapPrecision);
                 EditorGUILayout.PropertyField(sectionMapClearValue, EditorUtils.CommonStyles.SectionMapClearValue);
                 EditorGUILayout.PropertyField(sectionRenderingLayer, EditorUtils.CommonStyles.SectionLayer);
+                EditorGUILayout.PropertyField(useGameObjectLayerMask, EditorUtils.CommonStyles.UseGameObjectLayerMask);
+                if (useGameObjectLayerMask.boolValue)
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.PropertyField(layerMask, EditorUtils.CommonStyles.LayerMask);
+                    EditorGUI.indentLevel--;
+                }
                 EditorGUILayout.PropertyField(sectionMapInput, EditorUtils.CommonStyles.SectionMapInput);
                 EditorGUI.indentLevel++;
                 if ((SectionMapInput) sectionMapInput.intValue == SectionMapInput.VertexColors)
@@ -284,6 +311,8 @@ namespace Linework.Editor.EdgeDetection
 
                 EditorGUILayout.LabelField("Colors", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(outlineColor, EditorUtils.CommonStyles.EdgeColor);
+                outlineLayerColorsList.DoLayoutList();
+                EditorGUILayout.HelpBox("Each entry gives a different outline color to GameObjects on the selected Unity Layer(s). The base Edge Color is used for everything not matched by this list. Maximum: 15 override colors.", MessageType.Info);
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PropertyField(overrideColorInShadow, EditorUtils.CommonStyles.OverrideShadow);
                 if (overrideColorInShadow.boolValue) EditorGUILayout.PropertyField(outlineColorShadow, GUIContent.none);
@@ -313,6 +342,26 @@ namespace Linework.Editor.EdgeDetection
             }, serializedObject);
             
             serializedObject.ApplyModifiedProperties();
+        }
+        
+
+        private static void DrawOutlineLayerColor(Rect rect, SerializedProperty element)
+        {
+            var nameProperty = element.FindPropertyRelative(nameof(OutlineLayerColor.name));
+            var layerMaskProperty = element.FindPropertyRelative(nameof(OutlineLayerColor.layerMask));
+            var colorProperty = element.FindPropertyRelative(nameof(OutlineLayerColor.color));
+
+            var nameWidth = rect.width * 0.28f;
+            var layerWidth = rect.width * 0.42f;
+            var colorWidth = rect.width * 0.30f;
+
+            var nameRect = new Rect(rect.x, rect.y, nameWidth - 4, EditorGUIUtility.singleLineHeight);
+            var layerRect = new Rect(rect.x + nameWidth, rect.y, layerWidth - 4, EditorGUIUtility.singleLineHeight);
+            var colorRect = new Rect(rect.x + nameWidth + layerWidth, rect.y, colorWidth, EditorGUIUtility.singleLineHeight);
+
+            EditorGUI.PropertyField(nameRect, nameProperty, GUIContent.none);
+            EditorGUI.PropertyField(layerRect, layerMaskProperty, GUIContent.none);
+            EditorGUI.PropertyField(colorRect, colorProperty, GUIContent.none);
         }
         
         private static void DrawOverride(Rect rect, SerializedProperty element)
