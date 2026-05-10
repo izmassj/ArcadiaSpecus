@@ -5210,7 +5210,7 @@ MonoBehaviour:
     floatValue: 0
     intValue: 0
     vectorValue: {x: 0, y: 0, z: 0, w: 0}
-    colorValue: {r: 0.41960785, g: 0.6509804, b: 0.23921569, a: 1}
+    colorValue: {r: 0.6509804, g: 0.23921567, b: 0.2557799, a: 1}
   applyOnEnable: 1
   clearWhenDisabled: 1
 --- !u!1 &7365082178904986105

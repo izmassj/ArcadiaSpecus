@@ -30,10 +30,10 @@ MonoBehaviour:
   normalsMask: 0
   luminanceMask: 0
   sectionMapInput: 2
-  useGameObjectLayerMask: 0
+  useGameObjectLayerMask: 1
   layerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 16384
   sectionTexture: {fileID: 0}
   sectionTextureUvSet: 0
   sectionTextureChannel: 0
@@ -45,7 +45,12 @@ MonoBehaviour:
   customResolution: 0
   backgroundColor: {r: 0, g: 0, b: 0, a: 0}
   outlineColor: {r: 0, g: 0, b: 0, a: 1}
-  outlineLayerColors: []
+  outlineLayerColors:
+  - name: 
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 16384
+    color: {r: 0.026241222, g: 0.0047769533, b: 0.0018211621, a: 1}
   overrideColorInShadow: 0
   outlineColorShadow: {r: 1, g: 1, b: 1, a: 1}
   fillColor: {r: 0, g: 0, b: 0, a: 1}
@@ -66,4 +71,4 @@ MonoBehaviour:
     m_Bits: 1
   showSectionMapSection: 1
   showDiscontinuitySection: 1
-  showOutlineSection: 0
+  showOutlineSection: 1
