@@ -166914,6 +166914,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3557226382463581187, guid: 184793469ea7bd64a9c9503dfec06d70, type: 3}
   m_PrefabInstance: {fileID: 1294697306}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1296706185
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1296706186}
+  m_Layer: 0
+  m_Name: WorldCenter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1296706186
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1296706185}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1296830559
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -192399,11 +192430,11 @@ MonoBehaviour:
   _breakWhenLineOfSightBlocked: 1
   _detectCollisionsWhileCarried: 0
   _carryWithoutParenting: 1
-  _lockMovementWhileShootingAndPulling: 1
+  _lockMovementWhileShootingAndPulling: 0
   _lockMovementWhileCarrying: 0
   _forceThirdPersonWhenUsingHook: 1
-  _shootVfxPrefab: {fileID: 0}
-  _attachVfxPrefab: {fileID: 0}
+  _shootVfxPrefab: {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}
+  _attachVfxPrefab: {fileID: 5880797563127281583, guid: 265d3a5ba69981a4698ceabcedf368b0, type: 3}
   _releaseVfxPrefab: {fileID: 0}
   _state: 0
   _currentTarget: {fileID: 0}
@@ -233887,6 +233918,7 @@ MonoBehaviour:
   _colliders:
   - {fileID: 1839542321}
   _targetOffset: {x: 0, y: 0, z: 0}
+  _hookedRopeAnchorMode: 0
   _connectPoint: {fileID: 1271551194}
   _useConnectPointAsHookTarget: 1
   _alignConnectPointToCarryPoint: 1
@@ -235454,7 +235486,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1846027591}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -257226,6 +257258,7 @@ MonoBehaviour:
   _colliders:
   - {fileID: 1990412422}
   _targetOffset: {x: 0, y: 0, z: 0}
+  _hookedRopeAnchorMode: 0
   _connectPoint: {fileID: 1846027592}
   _useConnectPointAsHookTarget: 1
   _alignConnectPointToCarryPoint: 1
@@ -277045,3 +277078,4 @@ SceneRoots:
   - {fileID: 1704667884}
   - {fileID: 1990412425}
   - {fileID: 1839542324}
+  - {fileID: 1296706186}
