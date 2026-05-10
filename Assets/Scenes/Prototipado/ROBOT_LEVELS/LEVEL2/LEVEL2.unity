@@ -89203,6 +89203,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6703135837664759001, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1903879456}
+    - targetCorrespondingSourceObject: {fileID: 6703135837664759001, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 750357080}
     - targetCorrespondingSourceObject: {fileID: 7253543286456830302, guid: e72963a6049e20a4393b2586618c3a5d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1997573469}
@@ -99864,6 +99867,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3557226382463581187, guid: 184793469ea7bd64a9c9503dfec06d70, type: 3}
   m_PrefabInstance: {fileID: 749141824}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &750357079
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 750357080}
+  m_Layer: 10
+  m_Name: HookCarry
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &750357080
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 750357079}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.0057, y: 0.0644, z: -0.0008}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 663476069}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &750650810
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -163981,6 +164015,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3557226382463581187, guid: 184793469ea7bd64a9c9503dfec06d70, type: 3}
   m_PrefabInstance: {fileID: 1271434710}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1271551193
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1271551194}
+  m_Layer: 13
+  m_Name: ConnectPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1271551194
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1271551193}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1839542324}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1271639099
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -192295,6 +192360,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RobotHookController
   _robotController: {fileID: 663476067}
   _hookOriginPoint: {fileID: 1903879456}
+  _carryPoint: {fileID: 750357080}
   _aimCamera: {fileID: 581160732}
   _ropeRenderer: {fileID: 1903879457}
   _hookHeadVisual: {fileID: 663476070}
@@ -192332,6 +192398,7 @@ MonoBehaviour:
   _stuckMinProgress: 0.08
   _breakWhenLineOfSightBlocked: 1
   _detectCollisionsWhileCarried: 0
+  _carryWithoutParenting: 1
   _lockMovementWhileShootingAndPulling: 1
   _lockMovementWhileCarrying: 0
   _forceThirdPersonWhenUsingHook: 1
@@ -233820,6 +233887,9 @@ MonoBehaviour:
   _colliders:
   - {fileID: 1839542321}
   _targetOffset: {x: 0, y: 0, z: 0}
+  _connectPoint: {fileID: 1271551194}
+  _useConnectPointAsHookTarget: 1
+  _alignConnectPointToCarryPoint: 1
   _carriedLocalPosition: {x: 0, y: 0, z: 0}
   _carriedLocalEuler: {x: 0, y: 0, z: 0}
   _indicatorHeight: 0
@@ -233940,7 +234010,8 @@ Transform:
   m_LocalPosition: {x: -3.67895, y: 3.59174, z: -4.65687}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1271551194}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1839607382
@@ -235359,6 +235430,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3557226382463581187, guid: 184793469ea7bd64a9c9503dfec06d70, type: 3}
   m_PrefabInstance: {fileID: 1845797242}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1846027591
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1846027592}
+  m_Layer: 13
+  m_Name: ConnectPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1846027592
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1846027591}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1990412425}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1846759551
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -242243,7 +242345,7 @@ Transform:
   m_GameObject: {fileID: 1903879455}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.00291, y: 0.03285, z: -0.00041}
+  m_LocalPosition: {x: 0.0059, y: 0.0674, z: -0.0009}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -242307,6 +242409,13 @@ MonoBehaviour:
     m_Bits: 4294967295
   _groundCheckHeight: 1.5
   _minimumHeightAboveGround: 0.06
+  _outlineOverride: {fileID: 0}
+  _autoFindOutlineOverride: 1
+  _registerSegmentsInOutlineOverride: 1
+  _forceSegmentLayer: 1
+  _entityLayerName: Entity
+  _fallbackEntityLayer: 10
+  _useParentLayerIfEntityLayerMissing: 1
 --- !u!1001 &1903879782
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -257096,7 +257205,8 @@ Transform:
   m_LocalPosition: {x: -3.03, y: 2.84, z: -6.71405}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1846027592}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1990412426
@@ -257116,6 +257226,9 @@ MonoBehaviour:
   _colliders:
   - {fileID: 1990412422}
   _targetOffset: {x: 0, y: 0, z: 0}
+  _connectPoint: {fileID: 1846027592}
+  _useConnectPointAsHookTarget: 1
+  _alignConnectPointToCarryPoint: 1
   _carriedLocalPosition: {x: 0, y: 0, z: 0}
   _carriedLocalEuler: {x: 0, y: 0, z: 0}
   _indicatorHeight: 0

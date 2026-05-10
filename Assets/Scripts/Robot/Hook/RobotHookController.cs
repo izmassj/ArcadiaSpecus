@@ -15,6 +15,7 @@ public class RobotHookController : MonoBehaviour
     [Header("References")]
     [SerializeField] private RobotController _robotController;
     [SerializeField] private Transform _hookOriginPoint;
+    [SerializeField] private Transform _carryPoint;
     [SerializeField] private Camera _aimCamera;
     [SerializeField] private HookRopeSegmentsRenderer _ropeRenderer;
     [SerializeField] private Transform _hookHeadVisual;
@@ -60,6 +61,7 @@ public class RobotHookController : MonoBehaviour
 
     [Header("Carrying")]
     [SerializeField] private bool _detectCollisionsWhileCarried = false;
+    [SerializeField] private bool _carryWithoutParenting = true;
     [SerializeField] private bool _lockMovementWhileShootingAndPulling = true;
     [SerializeField] private bool _lockMovementWhileCarrying = false;
     [SerializeField] private bool _forceThirdPersonWhenUsingHook = true;
@@ -493,8 +495,9 @@ public class RobotHookController : MonoBehaviour
         _state = HookState.Carrying;
         _stateTimer = 0f;
 
-        Transform carryParent = _carryObjectOnHookVisual && _hookHeadVisual != null ? _hookHeadVisual : _hookOriginPoint;
-        _carriedObject.BeginCarried(carryParent, _detectCollisionsWhileCarried);
+        Transform carryTarget = GetCarryTarget();
+        _carriedObject.BeginCarried(carryTarget, _detectCollisionsWhileCarried, !_carryWithoutParenting);
+        _carriedObject.UpdateCarriedPose();
 
         if (_ropeRenderer != null)
             _ropeRenderer.Hide();
@@ -513,8 +516,25 @@ public class RobotHookController : MonoBehaviour
             return;
         }
 
+        if (_carriedObject != null)
+            _carriedObject.UpdateCarriedPose();
+
         if (_lockMovementWhileCarrying)
             LockRobotMovement();
+    }
+
+    private Transform GetCarryTarget()
+    {
+        if (_carryPoint != null)
+            return _carryPoint;
+
+        if (_carryObjectOnHookVisual && _hookHeadVisual != null)
+            return _hookHeadVisual;
+
+        if (_hookOriginPoint != null)
+            return _hookOriginPoint;
+
+        return transform;
     }
 
     private void ReleaseCarriedObject()

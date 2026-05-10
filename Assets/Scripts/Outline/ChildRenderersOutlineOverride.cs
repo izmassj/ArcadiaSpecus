@@ -94,47 +94,7 @@ public class ChildRenderersOutlineOverride : MonoBehaviour
             return;
         }
 
-        if (propertyBlock == null)
-        {
-            propertyBlock = new MaterialPropertyBlock();
-        }
-
-        propertyBlock.Clear();
-
-        for (int i = 0; i < overrides.Count; i++)
-        {
-            ShaderPropertyOverride propertyOverride = overrides[i];
-
-            if (propertyOverride == null || string.IsNullOrWhiteSpace(propertyOverride.propertyName))
-            {
-                continue;
-            }
-
-            propertyOverride.CachePropertyID();
-
-            switch (propertyOverride.type)
-            {
-                case ShaderPropertyType.Float:
-                    propertyBlock.SetFloat(propertyOverride.propertyId, propertyOverride.floatValue);
-                    break;
-
-                case ShaderPropertyType.Int:
-                    propertyBlock.SetInt(propertyOverride.propertyId, propertyOverride.intValue);
-                    break;
-
-                case ShaderPropertyType.Vector:
-                    propertyBlock.SetVector(propertyOverride.propertyId, propertyOverride.vectorValue);
-                    break;
-
-                case ShaderPropertyType.Color:
-                    propertyBlock.SetColor(propertyOverride.propertyId, propertyOverride.colorValue);
-                    break;
-
-                default:
-                    Debug.LogWarning("Unsupported shader property type: " + propertyOverride.type, this);
-                    break;
-            }
-        }
+        MaterialPropertyBlock block = GetConfiguredPropertyBlock();
 
         for (int i = 0; i < targetRenderers.Count; i++)
         {
@@ -142,7 +102,7 @@ public class ChildRenderersOutlineOverride : MonoBehaviour
 
             if (targetRenderer != null)
             {
-                targetRenderer.SetPropertyBlock(propertyBlock);
+                targetRenderer.SetPropertyBlock(block);
             }
         }
 
@@ -165,6 +125,79 @@ public class ChildRenderersOutlineOverride : MonoBehaviour
             {
                 targetRenderer.SetPropertyBlock(null);
             }
+        }
+    }
+
+    public void RegisterRenderer(Renderer targetRenderer, bool applyImmediately = true)
+    {
+        if (targetRenderer == null)
+        {
+            return;
+        }
+
+        if (!targetRenderers.Contains(targetRenderer))
+        {
+            targetRenderers.Add(targetRenderer);
+        }
+
+        if (applyImmediately && enabled)
+        {
+            ApplyOverridesToRenderer(targetRenderer);
+        }
+    }
+
+    public void RegisterRenderers(IEnumerable<Renderer> renderers, bool applyImmediately = true)
+    {
+        if (renderers == null)
+        {
+            return;
+        }
+
+        bool changed = false;
+
+        foreach (Renderer targetRenderer in renderers)
+        {
+            if (targetRenderer == null)
+            {
+                continue;
+            }
+
+            if (!targetRenderers.Contains(targetRenderer))
+            {
+                targetRenderers.Add(targetRenderer);
+                changed = true;
+            }
+        }
+
+        if (applyImmediately && enabled && changed)
+        {
+            ApplyOverrides();
+        }
+    }
+
+    public void RegisterChildRenderers(Transform targetRoot, bool includeInactive = true, bool applyImmediately = true)
+    {
+        if (targetRoot == null)
+        {
+            return;
+        }
+
+        Renderer[] renderers = targetRoot.GetComponentsInChildren<Renderer>(includeInactive);
+        RegisterRenderers(renderers, applyImmediately);
+    }
+
+    public void UnregisterRenderer(Renderer targetRenderer, bool clearPropertyBlock = true)
+    {
+        if (targetRenderer == null)
+        {
+            return;
+        }
+
+        targetRenderers.Remove(targetRenderer);
+
+        if (clearPropertyBlock)
+        {
+            targetRenderer.SetPropertyBlock(null);
         }
     }
 
@@ -214,6 +247,64 @@ public class ChildRenderersOutlineOverride : MonoBehaviour
         });
 
         ApplyOverrides();
+    }
+
+    private MaterialPropertyBlock GetConfiguredPropertyBlock()
+    {
+        if (propertyBlock == null)
+        {
+            propertyBlock = new MaterialPropertyBlock();
+        }
+
+        propertyBlock.Clear();
+
+        for (int i = 0; i < overrides.Count; i++)
+        {
+            ShaderPropertyOverride propertyOverride = overrides[i];
+
+            if (propertyOverride == null || string.IsNullOrWhiteSpace(propertyOverride.propertyName))
+            {
+                continue;
+            }
+
+            propertyOverride.CachePropertyID();
+
+            switch (propertyOverride.type)
+            {
+                case ShaderPropertyType.Float:
+                    propertyBlock.SetFloat(propertyOverride.propertyId, propertyOverride.floatValue);
+                    break;
+
+                case ShaderPropertyType.Int:
+                    propertyBlock.SetInt(propertyOverride.propertyId, propertyOverride.intValue);
+                    break;
+
+                case ShaderPropertyType.Vector:
+                    propertyBlock.SetVector(propertyOverride.propertyId, propertyOverride.vectorValue);
+                    break;
+
+                case ShaderPropertyType.Color:
+                    propertyBlock.SetColor(propertyOverride.propertyId, propertyOverride.colorValue);
+                    break;
+
+                default:
+                    Debug.LogWarning("Unsupported shader property type: " + propertyOverride.type, this);
+                    break;
+            }
+        }
+
+        return propertyBlock;
+    }
+
+    private void ApplyOverridesToRenderer(Renderer targetRenderer)
+    {
+        if (targetRenderer == null)
+        {
+            return;
+        }
+
+        MaterialPropertyBlock block = GetConfiguredPropertyBlock();
+        targetRenderer.SetPropertyBlock(block);
     }
 
     private void ClearChildRenderersNotInTargetList()

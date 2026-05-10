@@ -28,16 +28,27 @@ public class HookRopeSegmentsRenderer : MonoBehaviour
     [SerializeField] private float _groundCheckHeight = 1.5f;
     [SerializeField] private float _minimumHeightAboveGround = 0.06f;
 
+    [Header("Outline Integration")]
+    [SerializeField] private ChildRenderersOutlineOverride _outlineOverride;
+    [SerializeField] private bool _autoFindOutlineOverride = true;
+    [SerializeField] private bool _registerSegmentsInOutlineOverride = true;
+    [SerializeField] private bool _forceSegmentLayer = true;
+    [SerializeField] private string _entityLayerName = "Entity";
+    [SerializeField] private int _fallbackEntityLayer = 10;
+    [SerializeField] private bool _useParentLayerIfEntityLayerMissing = true;
+
     private readonly List<Transform> _segments = new List<Transform>();
     private readonly List<Vector3> _baseScales = new List<Vector3>();
     private readonly RaycastHit[] _groundHits = new RaycastHit[4];
     private bool _visible;
+    private int _cachedRuntimeLayer = -1;
 
     private void Awake()
     {
         if (_segmentParent == null)
             _segmentParent = transform;
 
+        ResolveOutlineOverride();
         Hide();
     }
 
@@ -110,8 +121,14 @@ public class HookRopeSegmentsRenderer : MonoBehaviour
         {
             GameObject instance = Instantiate(_segmentPrefab, _segmentParent);
             instance.SetActive(false);
+
+            if (_forceSegmentLayer)
+                SetLayerRecursively(instance, GetRuntimeLayer());
+
             _segments.Add(instance.transform);
             _baseScales.Add(instance.transform.localScale);
+
+            RegisterSegmentForOutline(instance.transform);
         }
     }
 
@@ -198,6 +215,65 @@ public class HookRopeSegmentsRenderer : MonoBehaviour
         }
 
         segment.localScale = scale;
+    }
+
+    private void ResolveOutlineOverride()
+    {
+        if (_outlineOverride != null || !_autoFindOutlineOverride)
+            return;
+
+        Transform searchRoot = _segmentParent != null ? _segmentParent : transform;
+        _outlineOverride = searchRoot.GetComponentInParent<ChildRenderersOutlineOverride>();
+
+        if (_outlineOverride == null && transform != searchRoot)
+            _outlineOverride = GetComponentInParent<ChildRenderersOutlineOverride>();
+    }
+
+    private void RegisterSegmentForOutline(Transform segmentRoot)
+    {
+        if (!_registerSegmentsInOutlineOverride || segmentRoot == null)
+            return;
+
+        ResolveOutlineOverride();
+
+        if (_outlineOverride == null)
+            return;
+
+        _outlineOverride.RegisterChildRenderers(segmentRoot, true, true);
+    }
+
+    private int GetRuntimeLayer()
+    {
+        if (_cachedRuntimeLayer >= 0)
+            return _cachedRuntimeLayer;
+
+        int entityLayer = string.IsNullOrWhiteSpace(_entityLayerName) ? -1 : LayerMask.NameToLayer(_entityLayerName);
+        if (entityLayer >= 0)
+        {
+            _cachedRuntimeLayer = entityLayer;
+            return _cachedRuntimeLayer;
+        }
+
+        if (_useParentLayerIfEntityLayerMissing && _segmentParent != null)
+        {
+            _cachedRuntimeLayer = _segmentParent.gameObject.layer;
+            return _cachedRuntimeLayer;
+        }
+
+        _cachedRuntimeLayer = Mathf.Clamp(_fallbackEntityLayer, 0, 31);
+        return _cachedRuntimeLayer;
+    }
+
+    private void SetLayerRecursively(GameObject target, int layer)
+    {
+        if (target == null)
+            return;
+
+        target.layer = layer;
+
+        Transform targetTransform = target.transform;
+        for (int i = 0; i < targetTransform.childCount; i++)
+            SetLayerRecursively(targetTransform.GetChild(i).gameObject, layer);
     }
 
     private void OnDisable()
