@@ -1,7 +1,8 @@
-﻿Shader "Custom/ASCIIShader_OK"
+Shader "Custom/ASCIIShader_UI"
 {
     Properties
     {
+        _MainTex("Raw Image Texture", 2D) = "white" {}
         _CharTex("Character Map", 2D) = "white" {}
         _tilesX("X Characters", Float) = 64
         _tilesY("Y Characters", Float) = 36
@@ -12,15 +13,21 @@
 
     SubShader
     {
-        Tags { "RenderPipeline"="UniversalPipeline" }
+        Tags
+        {
+            "RenderPipeline"="UniversalPipeline"
+            "Queue"="Transparent"
+            "RenderType"="Transparent"
+        }
 
         Pass
         {
-            Name "ASCII"
+            Name "ASCII_UI"
+
             ZWrite Off
             ZTest Always
             Cull Off
-            Blend Off
+            Blend SrcAlpha OneMinusSrcAlpha
 
             HLSLPROGRAM
             #pragma target 3.0
@@ -29,8 +36,8 @@
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            TEXTURE2D(_BlitTexture);
-            SAMPLER(sampler_LinearClamp);
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
 
             TEXTURE2D(_CharTex);
             SAMPLER(sampler_CharTex);
@@ -43,20 +50,24 @@
 
             struct Attributes
             {
-                uint vertexID : SV_VertexID;
+                float4 positionOS : POSITION;
+                float2 uv : TEXCOORD0;
+                float4 color : COLOR;
             };
 
             struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                float4 color : COLOR;
             };
 
             Varyings Vert(Attributes IN)
             {
                 Varyings OUT;
-                OUT.positionHCS = GetFullScreenTriangleVertexPosition(IN.vertexID);
-                OUT.uv = GetFullScreenTriangleTexCoord(IN.vertexID);
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv = IN.uv;
+                OUT.color = IN.color;
                 return OUT;
             }
 
@@ -69,7 +80,7 @@
                     floor(uv.y * _tilesY) / _tilesY
                 );
 
-                float4 src = SAMPLE_TEXTURE2D(_BlitTexture, sampler_LinearClamp, cellUV);
+                float4 src = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, cellUV);
 
                 float gray = dot(src.rgb, float3(0.299, 0.587, 0.114));
                 gray = saturate(gray * _brightness);
@@ -87,11 +98,12 @@
 
                 if (_monochromatic > 0.5)
                 {
-                    return half4(0.0, glyph * gray, 0.0, 1.0);
+                    return half4(0.0, glyph * gray, 0.0, src.a) * IN.color;
                 }
 
-                return half4(src.rgb * glyph, 1.0);
+                return half4(src.rgb * glyph, src.a) * IN.color;
             }
+
             ENDHLSL
         }
     }

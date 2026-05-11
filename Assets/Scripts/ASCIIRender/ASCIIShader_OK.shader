@@ -30,7 +30,6 @@
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             TEXTURE2D(_BlitTexture);
-            SAMPLER(sampler_LinearClamp);
 
             TEXTURE2D(_CharTex);
             SAMPLER(sampler_CharTex);
