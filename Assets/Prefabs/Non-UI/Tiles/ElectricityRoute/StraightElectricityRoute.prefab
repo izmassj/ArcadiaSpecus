@@ -91,7 +91,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2218711946873909064}
@@ -174,7 +174,7 @@ MonoBehaviour:
   _disabled: 0
   _connectionPoints:
   - {fileID: 2218711946873909064}
-  - {fileID: 0}
+  - {fileID: 5198519646257025968}
   _localConnectionPoints:
   - {x: 0, y: 0, z: -0.5}
   - {x: 0, y: 0, z: 0.5}

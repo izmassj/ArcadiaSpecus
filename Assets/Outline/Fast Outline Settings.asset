@@ -35,6 +35,41 @@ MonoBehaviour:
   minWidth: 0
   materialType: 0
   customMaterial: {fileID: 0}
+--- !u!114 &-6297079602851033265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd4c5d02108346159439f7dd5b886a16, type: 3}
+  m_Name: Outline
+  m_EditorClassIdentifier: Linework::Linework.FastOutline.Outline
+  material: {fileID: 0}
+  materialInstanced: {fileID: 0}
+  isActive: 1
+  RenderingLayer:
+    serializedVersion: 0
+    m_Bits: 1
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 32768
+  renderQueue: 0
+  occlusion: 2
+  maskingStrategy: 0
+  color: {r: 0.050490014, g: 0.30458212, b: 0.050490014, a: 1}
+  enableOcclusion: 0
+  occludedColor: {r: 1, g: 0, b: 0, a: 1}
+  blendMode: 0
+  gpuInstancing: 0
+  extrusionMethod: 6
+  scaling: 0
+  width: 11.5
+  minWidth: 0
+  materialType: 0
+  customMaterial: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52,6 +87,7 @@ MonoBehaviour:
   outlines:
   - {fileID: 4832923020629987817}
   - {fileID: -9110696010929085618}
+  - {fileID: -6297079602851033265}
 --- !u!114 &4832923020629987817
 MonoBehaviour:
   m_ObjectHideFlags: 0
