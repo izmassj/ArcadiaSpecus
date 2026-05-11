@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ElectricBarrier : MonoBehaviour
 {
     [SerializeField] private bool _activeOnStart;
+    [SerializeField] private bool _autoFindTargetsWhenEmpty = true;
     [SerializeField] private GameObject _barrierRoot;
     [SerializeField] private Collider[] _colliders;
     [SerializeField] private Renderer[] _renderers;
@@ -11,18 +13,58 @@ public class ElectricBarrier : MonoBehaviour
 
     private void Awake()
     {
+        CacheTargetsIfNeeded();
         SetBarrierActive(_activeOnStart);
+    }
+
+    [ContextMenu("Cache Barrier Targets From Children")]
+    public void CacheTargetsFromChildren()
+    {
+        _barrierRoot = gameObject;
+        _colliders = GetComponentsInChildren<Collider>(true);
+        _renderers = GetComponentsInChildren<Renderer>(true);
+        _particles = GetComponentsInChildren<ParticleSystem>(true);
+
+        Behaviour[] behaviours = GetComponentsInChildren<Behaviour>(true);
+        List<Behaviour> filteredBehaviours = new List<Behaviour>();
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            Behaviour behaviour = behaviours[i];
+            if (behaviour == null || behaviour == this || behaviour is ElectricBarrier)
+                continue;
+
+            filteredBehaviours.Add(behaviour);
+        }
+
+        _behaviours = filteredBehaviours.ToArray();
     }
 
     public void SetBarrierActive(bool active)
     {
-        if (_barrierRoot != null)
+        CacheTargetsIfNeeded();
+
+        if (_barrierRoot != null && _barrierRoot != gameObject)
             _barrierRoot.SetActive(active);
 
         SetColliders(active);
         SetRenderers(active);
         SetBehaviours(active);
         SetParticles(active);
+    }
+
+    private void CacheTargetsIfNeeded()
+    {
+        if (!_autoFindTargetsWhenEmpty)
+            return;
+
+        bool empty = (_barrierRoot == null) &&
+                     (_colliders == null || _colliders.Length == 0) &&
+                     (_renderers == null || _renderers.Length == 0) &&
+                     (_particles == null || _particles.Length == 0) &&
+                     (_behaviours == null || _behaviours.Length == 0);
+
+        if (empty)
+            CacheTargetsFromChildren();
     }
 
     private void SetColliders(bool active)

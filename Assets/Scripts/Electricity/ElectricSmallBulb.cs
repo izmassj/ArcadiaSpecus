@@ -10,6 +10,7 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
     [SerializeField] private bool _onlyShockOnce = true;
 
     [Header("Visuals")]
+    [SerializeField] private bool _autoFindVisualsWhenEmpty = true;
     [SerializeField] private GameObject[] _enabledWhenAlive;
     [SerializeField] private GameObject[] _disabledWhenAlive;
     [SerializeField] private Light[] _lights;
@@ -31,6 +32,7 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
     private void Awake()
     {
         _node = GetComponent<ElectricNode>();
+        CacheAutoVisualsIfNeeded(false);
         ApplyAliveVisuals(!_isDisabledByShock);
         _node.SetDisabled(_isDisabledByShock);
     }
@@ -71,6 +73,24 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
         _node.SetDisabled(false);
         ApplyAliveVisuals(true);
         _onResetBulb?.Invoke();
+    }
+
+    public void RefreshAutoVisuals()
+    {
+        CacheAutoVisualsIfNeeded(true);
+        ApplyAliveVisuals(!_isDisabledByShock);
+    }
+
+    private void CacheAutoVisualsIfNeeded(bool force)
+    {
+        if (!_autoFindVisualsWhenEmpty && !force)
+            return;
+
+        if (force || _renderers == null || _renderers.Length == 0)
+            _renderers = GetComponentsInChildren<Renderer>(true);
+
+        if (force || _lights == null || _lights.Length == 0)
+            _lights = GetComponentsInChildren<Light>(true);
     }
 
     private void ApplyAliveVisuals(bool alive)

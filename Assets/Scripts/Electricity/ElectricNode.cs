@@ -20,6 +20,7 @@ public class ElectricNode : MonoBehaviour
 
     [Header("Visuals")]
     [SerializeField] private bool _applyVisuals = true;
+    [SerializeField] private bool _autoFindVisualsWhenEmpty = true;
     [SerializeField] private GameObject[] _enableWhenPowered;
     [SerializeField] private GameObject[] _disableWhenPowered;
     [SerializeField] private Light[] _lights;
@@ -51,6 +52,7 @@ public class ElectricNode : MonoBehaviour
 
     protected virtual void Awake()
     {
+        CacheAutoVisualsIfNeeded(false);
         CacheInitialMaterials();
         ApplyPoweredState(false, true);
     }
@@ -165,10 +167,30 @@ public class ElectricNode : MonoBehaviour
         ElectricityNetworkManager.RequestRecalculateAll();
     }
 
+    public void SetConnectionRadius(float radius)
+    {
+        _connectionRadius = Mathf.Max(0.01f, radius);
+        ElectricityNetworkManager.RequestRebuildAll();
+    }
+
+    public void SetApplyVisuals(bool applyVisuals)
+    {
+        _applyVisuals = applyVisuals;
+        ApplyVisualState(_isPowered);
+    }
+
     public void SetLocalConnectionPoints(Vector3[] points)
     {
         _localConnectionPoints = points;
+        _connectionPoints = null;
         ElectricityNetworkManager.RequestRebuildAll();
+    }
+
+    public void RefreshAutoVisuals()
+    {
+        CacheAutoVisualsIfNeeded(true);
+        CacheInitialMaterials();
+        ApplyVisualState(_isPowered);
     }
 
     internal void ClearRuntimeConnections()
@@ -254,6 +276,18 @@ public class ElectricNode : MonoBehaviour
             if (_renderers[i] != null)
                 _initialSharedMaterials[i] = _renderers[i].sharedMaterial;
         }
+    }
+
+    private void CacheAutoVisualsIfNeeded(bool force)
+    {
+        if (!_autoFindVisualsWhenEmpty && !force)
+            return;
+
+        if (force || _renderers == null || _renderers.Length == 0)
+            _renderers = GetComponentsInChildren<Renderer>(true);
+
+        if (force || _lights == null || _lights.Length == 0)
+            _lights = GetComponentsInChildren<Light>(true);
     }
 
     private static void SetObjectsActive(GameObject[] objects, bool active)

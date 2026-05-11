@@ -172,14 +172,13 @@ MonoBehaviour:
   _canReceivePower: 1
   _canOutputPower: 1
   _disabled: 0
-  _connectionPoints:
-  - {fileID: 2218711946873909064}
-  - {fileID: 5198519646257025968}
+  _connectionPoints: []
   _localConnectionPoints:
   - {x: 0, y: 0, z: -0.5}
   - {x: 0, y: 0, z: 0.5}
   _connectionRadius: 0.201
   _applyVisuals: 1
+  _autoFindVisualsWhenEmpty: 1
   _enableWhenPowered: []
   _disableWhenPowered: []
   _lights: []
