@@ -15,6 +15,11 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
     [SerializeField] private GameObject[] _disabledWhenAlive;
     [SerializeField] private Light[] _lights;
     [SerializeField] private Renderer[] _renderers;
+    [SerializeField] private ParticleSystem[] _particles;
+    [SerializeField] private bool _stopParticlesWhenDisabled = true;
+    [SerializeField] private bool _clearParticlesWhenDisabled = true;
+    [SerializeField] private bool _deactivateParticleObjectsWhenDisabled = true;
+    [SerializeField] private bool _playParticlesWhenReset = true;
     [SerializeField] private Material _aliveMaterial;
     [SerializeField] private Material _disabledMaterial;
 
@@ -34,7 +39,9 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
         _node = GetComponent<ElectricNode>();
         CacheAutoVisualsIfNeeded(false);
         ApplyAliveVisuals(!_isDisabledByShock);
-        _node.SetDisabled(_isDisabledByShock);
+
+        if (_node != null)
+            _node.SetDisabled(_isDisabledByShock);
     }
 
     public void OnShock(ShockInfo shockInfo)
@@ -48,6 +55,7 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
         DisableBulb();
     }
 
+    [ContextMenu("Disable Bulb")]
     public void DisableBulb()
     {
         if (_isDisabledByShock)
@@ -58,11 +66,18 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
         if (_node == null)
             _node = GetComponent<ElectricNode>();
 
-        _node.SetDisabled(true);
+        if (_node != null)
+        {
+            _node.SetDisabled(true);
+            _node.SetPowerSourceActive(false);
+        }
+
         ApplyAliveVisuals(false);
         _onDisabledByShock?.Invoke();
+        ElectricityNetworkManager.RequestRecalculateAll();
     }
 
+    [ContextMenu("Reset Bulb")]
     public void ResetBulb()
     {
         _isDisabledByShock = false;
@@ -70,9 +85,16 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
         if (_node == null)
             _node = GetComponent<ElectricNode>();
 
-        _node.SetDisabled(false);
+        if (_node != null)
+        {
+            _node.SetDisabled(false);
+            _node.SetStartsAsPowerSource(true);
+            _node.SetPowerSourceActive(true);
+        }
+
         ApplyAliveVisuals(true);
         _onResetBulb?.Invoke();
+        ElectricityNetworkManager.RequestRecalculateAll();
     }
 
     public void RefreshAutoVisuals()
@@ -91,6 +113,9 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
 
         if (force || _lights == null || _lights.Length == 0)
             _lights = GetComponentsInChildren<Light>(true);
+
+        if (force || _particles == null || _particles.Length == 0)
+            _particles = GetComponentsInChildren<ParticleSystem>(true);
     }
 
     private void ApplyAliveVisuals(bool alive)
@@ -117,6 +142,45 @@ public class ElectricSmallBulb : MonoBehaviour, IShockable
                     if (_renderers[i] != null)
                         _renderers[i].sharedMaterial = material;
                 }
+            }
+        }
+
+        ApplyParticleState(alive);
+    }
+
+    private void ApplyParticleState(bool alive)
+    {
+        if (_particles == null)
+            return;
+
+        for (int i = 0; i < _particles.Length; i++)
+        {
+            ParticleSystem particle = _particles[i];
+            if (particle == null)
+                continue;
+
+            if (alive)
+            {
+                if (_deactivateParticleObjectsWhenDisabled && !particle.gameObject.activeSelf)
+                    particle.gameObject.SetActive(true);
+
+                if (_playParticlesWhenReset && !particle.isPlaying)
+                    particle.Play(true);
+            }
+            else
+            {
+                if (_stopParticlesWhenDisabled)
+                {
+                    ParticleSystemStopBehavior stopBehavior = _clearParticlesWhenDisabled
+                        ? ParticleSystemStopBehavior.StopEmittingAndClear
+                        : ParticleSystemStopBehavior.StopEmitting;
+
+                    particle.Stop(true, stopBehavior);
+                    particle.Clear(true);
+                }
+
+                if (_deactivateParticleObjectsWhenDisabled)
+                    particle.gameObject.SetActive(false);
             }
         }
     }

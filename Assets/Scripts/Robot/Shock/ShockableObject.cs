@@ -14,6 +14,9 @@ public class ShockableObject : MonoBehaviour, IShockable
     [SerializeField] private Renderer[] _renderersToDisable;
     [SerializeField] private Light[] _lightsToDisable;
     [SerializeField] private Collider[] _collidersToDisable;
+    [SerializeField] private ParticleSystem[] _particlesToStop;
+    [SerializeField] private bool _clearParticles = true;
+    [SerializeField] private bool _deactivateParticleObjects;
 
     [Header("Optional VFX")]
     [SerializeField] private GameObject _shockedVfxPrefab;
@@ -56,52 +59,96 @@ public class ShockableObject : MonoBehaviour, IShockable
 
     private void ApplyDisableTargets()
     {
-        if (_objectsToDisable != null)
-        {
-            for (int i = 0; i < _objectsToDisable.Length; i++)
-            {
-                if (_objectsToDisable[i] != null)
-                    _objectsToDisable[i].SetActive(false);
-            }
-        }
-
-        if (_behavioursToDisable != null)
-        {
-            for (int i = 0; i < _behavioursToDisable.Length; i++)
-            {
-                if (_behavioursToDisable[i] != null)
-                    _behavioursToDisable[i].enabled = false;
-            }
-        }
-
-        if (_renderersToDisable != null)
-        {
-            for (int i = 0; i < _renderersToDisable.Length; i++)
-            {
-                if (_renderersToDisable[i] != null)
-                    _renderersToDisable[i].enabled = false;
-            }
-        }
-
-        if (_lightsToDisable != null)
-        {
-            for (int i = 0; i < _lightsToDisable.Length; i++)
-            {
-                if (_lightsToDisable[i] != null)
-                    _lightsToDisable[i].enabled = false;
-            }
-        }
-
-        if (_collidersToDisable != null)
-        {
-            for (int i = 0; i < _collidersToDisable.Length; i++)
-            {
-                if (_collidersToDisable[i] != null)
-                    _collidersToDisable[i].enabled = false;
-            }
-        }
+        SetObjectsActive(_objectsToDisable, false);
+        SetBehavioursEnabled(_behavioursToDisable, false);
+        SetRenderersEnabled(_renderersToDisable, false);
+        SetLightsEnabled(_lightsToDisable, false);
+        SetCollidersEnabled(_collidersToDisable, false);
+        StopParticles();
 
         if (_disableWholeObject)
             gameObject.SetActive(false);
+    }
+
+    private void StopParticles()
+    {
+        if (_particlesToStop == null)
+            return;
+
+        ParticleSystemStopBehavior stopBehavior = _clearParticles
+            ? ParticleSystemStopBehavior.StopEmittingAndClear
+            : ParticleSystemStopBehavior.StopEmitting;
+
+        for (int i = 0; i < _particlesToStop.Length; i++)
+        {
+            ParticleSystem particle = _particlesToStop[i];
+            if (particle == null)
+                continue;
+
+            particle.Stop(true, stopBehavior);
+
+            if (_deactivateParticleObjects)
+                particle.gameObject.SetActive(false);
+        }
+    }
+
+    private static void SetObjectsActive(GameObject[] objects, bool active)
+    {
+        if (objects == null)
+            return;
+
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (objects[i] != null)
+                objects[i].SetActive(active);
+        }
+    }
+
+    private static void SetBehavioursEnabled(Behaviour[] behaviours, bool enabled)
+    {
+        if (behaviours == null)
+            return;
+
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            if (behaviours[i] != null)
+                behaviours[i].enabled = enabled;
+        }
+    }
+
+    private static void SetRenderersEnabled(Renderer[] renderers, bool enabled)
+    {
+        if (renderers == null)
+            return;
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+                renderers[i].enabled = enabled;
+        }
+    }
+
+    private static void SetLightsEnabled(Light[] lights, bool enabled)
+    {
+        if (lights == null)
+            return;
+
+        for (int i = 0; i < lights.Length; i++)
+        {
+            if (lights[i] != null)
+                lights[i].enabled = enabled;
+        }
+    }
+
+    private static void SetCollidersEnabled(Collider[] colliders, bool enabled)
+    {
+        if (colliders == null)
+            return;
+
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null)
+                colliders[i].enabled = enabled;
+        }
     }
 }

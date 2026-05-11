@@ -24,6 +24,8 @@ public class ElectricRouteNode : ElectricNode
     [SerializeField] private float _connectionHeight;
     [SerializeField] private bool _applyPresetOnValidate = true;
 
+    public RouteShape Shape => _routeShape;
+
     private void Reset()
     {
         ApplyPreset();
@@ -36,6 +38,24 @@ public class ElectricRouteNode : ElectricNode
 
         if (_applyPresetOnValidate)
             ApplyPreset();
+    }
+
+    public void SetRouteShape(RouteShape shape)
+    {
+        _routeShape = shape;
+        ApplyPreset();
+    }
+
+    public void SetHalfLength(float halfLength)
+    {
+        _halfLength = Mathf.Max(0.01f, halfLength);
+        ApplyPreset();
+    }
+
+    public void SetConnectionHeight(float height)
+    {
+        _connectionHeight = height;
+        ApplyPreset();
     }
 
     [ContextMenu("Apply Route Connection Preset")]

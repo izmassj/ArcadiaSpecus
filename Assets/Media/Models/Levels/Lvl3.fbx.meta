@@ -3,7 +3,62 @@ guid: 9c84f1f64a009d64ebe6f4b8db262954
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Ascensor
+    second: {fileID: 2100000, guid: 7704e7fa0ae1ba945abd98a9bf264e43, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Lit
+    second: {fileID: 2100000, guid: 2548a95fddc5a3b4db26feddfcf15b3d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Lit.002
+    second: {fileID: 2100000, guid: 9b3708f5fa888804db4284312a8661e0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material_001
+    second: {fileID: 2100000, guid: a1e17c7a06c28a244be71cbf9ad20913, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material_002
+    second: {fileID: 2100000, guid: 8887ebd92dae09f4bb7298c72ebd51ab, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Puerta1
+    second: {fileID: 2100000, guid: 9f32592910eeeef4f9aa61ac8b392c6c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Puerta2
+    second: {fileID: 2100000, guid: c56ac585819c8a24b9295aed15238187, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ascensorlvl3
+    second: {fileID: 2100000, guid: 0ef22452f0faa5849a4f5ff3aad93e45, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: oxidado
+    second: {fileID: 2100000, guid: f67f68ac39b1b594a9bbb5f7ae55a599, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pistola agua
+    second: {fileID: 2100000, guid: 596175394e33a364088180ffab9c789c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tilemap
+    second: {fileID: 2100000, guid: 9625ad082f4f2614c98ae66f81665da2, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -188,8 +188,9 @@ public class LaserEnemyController : MonoBehaviour, ILevelResettable
         if (hitCount <= 0)
             return;
 
-        Transform nearestTransform = null;
-        float nearestDistance = float.MaxValue;
+        RobotController nearestRobot = null;
+        float nearestRobotDistance = float.MaxValue;
+        float nearestBlockingDistance = float.MaxValue;
 
         for (int i = 0; i < hitCount; i++)
         {
@@ -201,21 +202,31 @@ public class LaserEnemyController : MonoBehaviour, ILevelResettable
             if (hitTransform == null || hitTransform.IsChildOf(transform))
                 continue;
 
-            if (_hits[i].distance < nearestDistance)
+            float distance = _hits[i].distance;
+            RobotController robot = hitCollider.GetComponentInParent<RobotController>();
+
+            if (robot != null)
             {
-                nearestDistance = _hits[i].distance;
-                nearestTransform = hitTransform;
+                if (distance < nearestRobotDistance)
+                {
+                    nearestRobotDistance = distance;
+                    nearestRobot = robot;
+                }
+
+                continue;
             }
+
+            if (!hitCollider.isTrigger && distance < nearestBlockingDistance)
+                nearestBlockingDistance = distance;
         }
 
-        if (nearestTransform == null)
+        if (nearestRobot == null)
             return;
 
-        RobotController robot = nearestTransform.GetComponentInParent<RobotController>();
-        if (robot == null)
+        if (nearestRobotDistance > nearestBlockingDistance + 0.05f)
             return;
 
-        KillRobot(robot);
+        KillRobot(nearestRobot);
     }
 
     private void KillRobot(RobotController robot)
@@ -228,8 +239,17 @@ public class LaserEnemyController : MonoBehaviour, ILevelResettable
         if (_explosionPrefab != null)
             Instantiate(_explosionPrefab, robot.transform.position + _explosionOffset, Quaternion.identity);
 
+        if (_deathManager == null)
+            _deathManager = FindObjectOfType<LevelDeathManager>();
+
         if (_deathManager != null)
+        {
             _deathManager.KillPlayer();
+        }
+        else
+        {
+            Debug.LogWarning($"{nameof(LaserEnemyController)}: el láser ha detectado al robot, pero no hay LevelDeathManager en la escena.", this);
+        }
     }
 
     private Vector3 GetLaserDirection()

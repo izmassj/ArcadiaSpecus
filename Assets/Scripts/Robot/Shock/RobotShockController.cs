@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[DisallowMultipleComponent]
 public class RobotShockController : MonoBehaviour
 {
     [Header("References")]
@@ -10,10 +11,13 @@ public class RobotShockController : MonoBehaviour
     [SerializeField] private GameObject _shockEffectObject;
     [SerializeField] private ParticleSystem[] _shockParticles;
 
-    [Header("Input")]
+    [Header("Input Actions")]
     [SerializeField] private InputActionAsset _inputActions;
     [SerializeField] private string _gameplayMapName = "Gameplay";
     [SerializeField] private string _shockActionName = "Shock";
+    [SerializeField] private bool _useKeyboardFallback = true;
+    [SerializeField] private Key _keyboardFallbackKey = Key.Q;
+    [SerializeField] private bool _useGamepadFallback = true;
 
     [Header("Shock Area")]
     [SerializeField] private float _shockRadius = 3.5f;
@@ -21,6 +25,7 @@ public class RobotShockController : MonoBehaviour
     [SerializeField] private QueryTriggerInteraction _triggerInteraction = QueryTriggerInteraction.Collide;
     [SerializeField] private bool _requireLineOfSight;
     [SerializeField] private LayerMask _lineOfSightMask = ~0;
+    [SerializeField] private bool _alsoFindShockablesWithoutCollider = true;
 
     [Header("Timing")]
     [SerializeField] private float _cooldownSeconds = 2f;
@@ -37,13 +42,14 @@ public class RobotShockController : MonoBehaviour
     [SerializeField] private bool _disableCartoonFxAutoDestroy = true;
 
     [Header("Debug")]
+    [SerializeField] private bool _debugLogShockHits;
     [SerializeField] private bool _isShocking;
     [SerializeField] private float _cooldownTimer;
     [SerializeField] private float _shockTimer;
     [SerializeField] private float _currentActiveDuration;
     [SerializeField] private int _lastShockHitCount;
 
-    private const int MaxHits = 96;
+    private const int MaxHits = 128;
 
     private readonly Collider[] _hits = new Collider[MaxHits];
     private readonly HashSet<MonoBehaviour> _processedShockables = new HashSet<MonoBehaviour>();
@@ -56,6 +62,7 @@ public class RobotShockController : MonoBehaviour
     public bool IsShocking => _isShocking;
     public bool IsOnCooldown => _cooldownTimer > 0f;
     public float Cooldown01 => _cooldownSeconds <= 0f ? 0f : Mathf.Clamp01(_cooldownTimer / _cooldownSeconds);
+    public int LastShockHitCount => _lastShockHitCount;
 
     private void Reset()
     {
@@ -118,10 +125,16 @@ public class RobotShockController : MonoBehaviour
 
     private void HandleInput()
     {
-        if (_shockAction == null || !_shockAction.WasPressedThisFrame())
-            return;
+        bool pressed = _shockAction != null && _shockAction.WasPressedThisFrame();
 
-        TryShock();
+        if (!pressed && _useKeyboardFallback && Keyboard.current != null)
+            pressed = Keyboard.current[_keyboardFallbackKey].wasPressedThisFrame;
+
+        if (!pressed && _useGamepadFallback && Gamepad.current != null)
+            pressed = Gamepad.current.leftShoulder.wasPressedThisFrame;
+
+        if (pressed)
+            TryShock();
     }
 
     public bool TryShock()
@@ -213,50 +226,73 @@ public class RobotShockController : MonoBehaviour
 
             MonoBehaviour[] behaviours = hit.GetComponentsInParent<MonoBehaviour>(true);
             for (int j = 0; j < behaviours.Length; j++)
-            {
-                MonoBehaviour behaviour = behaviours[j];
-                if (behaviour == null || !(behaviour is IShockable shockable))
-                    continue;
-
-                if (_processedShockables.Contains(behaviour))
-                    continue;
-
-                Vector3 targetPoint = GetTargetPoint(hit, behaviour.transform);
-                if (_requireLineOfSight && IsLineOfSightBlocked(center, targetPoint, behaviour.transform))
-                    continue;
-
-                Vector3 direction = targetPoint - center;
-                float distance = direction.magnitude;
-                Vector3 normal = distance > 0.0001f ? direction / distance : Vector3.zero;
-                ShockInfo info = new ShockInfo(gameObject, transform, center, _shockRadius, distance, normal);
-
-                _processedShockables.Add(behaviour);
-                shockable.OnShock(info);
-                _lastShockHitCount++;
-            }
+                TryShockBehaviour(behaviours[j], center, hit.bounds.center, hit);
         }
+
+        if (_alsoFindShockablesWithoutCollider)
+            ShockAllBehavioursInRadius(center);
+
+        if (_debugLogShockHits)
+            Debug.Log($"RobotShockController hit {_lastShockHitCount} shockable object(s).", this);
+    }
+
+    private void ShockAllBehavioursInRadius(Vector3 center)
+    {
+#if UNITY_2023_1_OR_NEWER
+        MonoBehaviour[] behaviours = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+#else
+        MonoBehaviour[] behaviours = FindObjectsOfType<MonoBehaviour>();
+#endif
+        float radiusSqr = _shockRadius * _shockRadius;
+
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            MonoBehaviour behaviour = behaviours[i];
+            if (behaviour == null || !(behaviour is IShockable))
+                continue;
+
+            Vector3 targetPoint = behaviour.transform.position;
+            Collider collider = behaviour.GetComponentInChildren<Collider>();
+            if (collider != null)
+                targetPoint = collider.bounds.center;
+            else
+            {
+                Renderer renderer = behaviour.GetComponentInChildren<Renderer>();
+                if (renderer != null)
+                    targetPoint = renderer.bounds.center;
+            }
+
+            if ((targetPoint - center).sqrMagnitude > radiusSqr)
+                continue;
+
+            TryShockBehaviour(behaviour, center, targetPoint, collider);
+        }
+    }
+
+    private void TryShockBehaviour(MonoBehaviour behaviour, Vector3 center, Vector3 targetPoint, Collider hit)
+    {
+        if (behaviour == null || !(behaviour is IShockable shockable))
+            return;
+
+        if (_processedShockables.Contains(behaviour))
+            return;
+
+        if (_requireLineOfSight && IsLineOfSightBlocked(center, targetPoint, behaviour.transform))
+            return;
+
+        Vector3 direction = targetPoint - center;
+        float distance = direction.magnitude;
+        Vector3 normal = distance > 0.0001f ? direction / distance : Vector3.zero;
+        ShockInfo info = new ShockInfo(gameObject, transform, center, _shockRadius, distance, normal);
+
+        _processedShockables.Add(behaviour);
+        shockable.OnShock(info);
+        _lastShockHitCount++;
     }
 
     private Vector3 GetShockCenter()
     {
         return _shockCenter != null ? _shockCenter.position : transform.position;
-    }
-
-    private Vector3 GetTargetPoint(Collider hit, Transform fallback)
-    {
-        Vector3 center = GetShockCenter();
-        Vector3 point = hit.ClosestPoint(center);
-
-        if ((point - center).sqrMagnitude > 0.0001f)
-            return point;
-
-        if (hit.attachedRigidbody != null)
-            return hit.attachedRigidbody.worldCenterOfMass;
-
-        if (fallback != null)
-            return fallback.position;
-
-        return hit.bounds.center;
     }
 
     private bool IsLineOfSightBlocked(Vector3 start, Vector3 end, Transform targetRoot)

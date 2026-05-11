@@ -32,18 +32,7 @@ public class ElectricPowerSource : MonoBehaviour
         _node.SetPowerSourceActive(active);
     }
 
-    public void TurnOn()
-    {
-        SetActiveSource(true);
-    }
-
-    public void TurnOff()
-    {
-        SetActiveSource(false);
-    }
-
-    public void Toggle()
-    {
-        SetActiveSource(!IsActive);
-    }
+    public void TurnOn() => SetActiveSource(true);
+    public void TurnOff() => SetActiveSource(false);
+    public void Toggle() => SetActiveSource(!IsActive);
 }

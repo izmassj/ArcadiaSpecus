@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
@@ -8,6 +9,7 @@ public class LevelDeathManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private RobotController _player;
     [SerializeField] private CharacterController _playerCharacterController;
+    [SerializeField] private RobotDeathExplosion _robotDeathExplosion;
     [SerializeField] private Transform _respawnPoint;
     [SerializeField] private RectTransform _respawnMaskRect;
 
@@ -47,19 +49,38 @@ public class LevelDeathManager : MonoBehaviour
 
     private void Awake()
     {
+        ResolveRuntimeReferences();
+
+        _currentLives = _startingLives;
+        RefreshLivesImmediate();
+    }
+
+    private void ResolveRuntimeReferences()
+    {
+        if (_player == null)
+            _player = FindObjectOfType<RobotController>();
+
         if (_playerCharacterController == null && _player != null)
             _playerCharacterController = _player.GetComponent<CharacterController>();
 
-        if (_player != null && _player.ThirdPersonCamera != null)
+        if (_robotDeathExplosion == null && _player != null)
+        {
+            _robotDeathExplosion = _player.GetComponent<RobotDeathExplosion>();
+
+            if (_robotDeathExplosion == null)
+                _robotDeathExplosion = _player.GetComponentInChildren<RobotDeathExplosion>(true);
+
+            if (_robotDeathExplosion == null)
+                _robotDeathExplosion = _player.gameObject.AddComponent<RobotDeathExplosion>();
+        }
+
+        if (_player != null && _player.ThirdPersonCamera != null && _thirdPersonCameraTransform == null)
         {
             _thirdPersonCameraTransform = _player.ThirdPersonCamera.transform;
             _thirdPersonOriginalParent = _thirdPersonCameraTransform.parent;
             _thirdPersonOriginalLocalPosition = _thirdPersonCameraTransform.localPosition;
             _thirdPersonOriginalLocalRotation = _thirdPersonCameraTransform.localRotation;
         }
-
-        _currentLives = _startingLives;
-        RefreshLivesImmediate();
     }
 
     public void KillPlayer()
@@ -67,8 +88,19 @@ public class LevelDeathManager : MonoBehaviour
         if (_isRespawning)
             return;
 
-        if (_player == null || _respawnPoint == null)
+        ResolveRuntimeReferences();
+
+        if (_player == null)
+        {
+            Debug.LogWarning($"{nameof(LevelDeathManager)}: no se ha encontrado RobotController para matar al jugador.", this);
             return;
+        }
+
+        if (_respawnPoint == null)
+        {
+            Debug.LogWarning($"{nameof(LevelDeathManager)}: falta asignar Respawn Point.", this);
+            return;
+        }
 
         StartCoroutine(DeathSequence());
     }
@@ -80,6 +112,18 @@ public class LevelDeathManager : MonoBehaviour
         _detachedThirdPersonCameraThisDeath = false;
 
         _player.SetInputLocked(true, true);
+
+        if (_robotDeathExplosion != null)
+        {
+            try
+            {
+                _robotDeathExplosion.PlayDeathExplosion();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, _robotDeathExplosion);
+            }
+        }
 
         if (GameAnalyticsManager.Instance != null)
             GameAnalyticsManager.Instance.RegisterPlayerDeath(SceneManager.GetActiveScene().name);
@@ -207,6 +251,18 @@ public class LevelDeathManager : MonoBehaviour
             _playerCharacterController.enabled = false;
 
         _player.transform.SetPositionAndRotation(_respawnPoint.position, _respawnPoint.rotation);
+
+        if (_robotDeathExplosion != null)
+        {
+            try
+            {
+                _robotDeathExplosion.RestoreAliveModel();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, _robotDeathExplosion);
+            }
+        }
 
         if (_playerCharacterController != null)
             _playerCharacterController.enabled = true;

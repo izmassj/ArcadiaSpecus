@@ -20,11 +20,12 @@ public class ElectricNode : MonoBehaviour
 
     [Header("Visuals")]
     [SerializeField] private bool _applyVisuals = true;
-    [SerializeField] private bool _autoFindVisualsWhenEmpty = true;
+    [SerializeField] private bool _autoFindVisualsWhenEmpty;
     [SerializeField] private GameObject[] _enableWhenPowered;
     [SerializeField] private GameObject[] _disableWhenPowered;
     [SerializeField] private Light[] _lights;
     [SerializeField] private Renderer[] _renderers;
+    [SerializeField] private ParticleSystem[] _particles;
     [SerializeField] private Material _poweredMaterial;
     [SerializeField] private Material _unpoweredMaterial;
 
@@ -47,12 +48,13 @@ public class ElectricNode : MonoBehaviour
     public bool CanReceivePower => !_disabled && _canReceivePower && isActiveAndEnabled;
     public bool CanOutputPower => !_disabled && _canOutputPower && isActiveAndEnabled;
     public bool IsActivePowerSource => !_disabled && _startsAsPowerSource && _powerSourceActive && isActiveAndEnabled;
+    public bool StartsAsPowerSource => _startsAsPowerSource;
     public float ConnectionRadius => Mathf.Max(0.01f, _connectionRadius);
     public IReadOnlyList<ElectricNode> ConnectedNodes => _connectedNodes;
 
     protected virtual void Awake()
     {
-        CacheAutoVisualsIfNeeded(false);
+        RefreshAutoVisuals(false);
         CacheInitialMaterials();
         ApplyPoweredState(false, true);
     }
@@ -122,6 +124,19 @@ public class ElectricNode : MonoBehaviour
         return bestPoint;
     }
 
+    public Vector3 GetApproximateCenter()
+    {
+        Renderer renderer = GetComponentInChildren<Renderer>();
+        if (renderer != null)
+            return renderer.bounds.center;
+
+        Collider collider = GetComponentInChildren<Collider>();
+        if (collider != null)
+            return collider.bounds.center;
+
+        return transform.position;
+    }
+
     public void SetPowerSourceActive(bool active)
     {
         if (_powerSourceActive == active)
@@ -173,24 +188,36 @@ public class ElectricNode : MonoBehaviour
         ElectricityNetworkManager.RequestRebuildAll();
     }
 
+    public void SetLocalConnectionPoints(Vector3[] points)
+    {
+        _localConnectionPoints = points;
+        ElectricityNetworkManager.RequestRebuildAll();
+    }
+
     public void SetApplyVisuals(bool applyVisuals)
     {
         _applyVisuals = applyVisuals;
         ApplyVisualState(_isPowered);
     }
 
-    public void SetLocalConnectionPoints(Vector3[] points)
-    {
-        _localConnectionPoints = points;
-        _connectionPoints = null;
-        ElectricityNetworkManager.RequestRebuildAll();
-    }
-
     public void RefreshAutoVisuals()
     {
-        CacheAutoVisualsIfNeeded(true);
-        CacheInitialMaterials();
-        ApplyVisualState(_isPowered);
+        RefreshAutoVisuals(true);
+    }
+
+    public void RefreshAutoVisuals(bool force)
+    {
+        if (!_autoFindVisualsWhenEmpty && !force)
+            return;
+
+        if (force || _renderers == null || _renderers.Length == 0)
+            _renderers = GetComponentsInChildren<Renderer>(true);
+
+        if (force || _lights == null || _lights.Length == 0)
+            _lights = GetComponentsInChildren<Light>(true);
+
+        if (force || _particles == null || _particles.Length == 0)
+            _particles = GetComponentsInChildren<ParticleSystem>(true);
     }
 
     internal void ClearRuntimeConnections()
@@ -247,6 +274,21 @@ public class ElectricNode : MonoBehaviour
             }
         }
 
+        if (_particles != null)
+        {
+            for (int i = 0; i < _particles.Length; i++)
+            {
+                ParticleSystem particle = _particles[i];
+                if (particle == null)
+                    continue;
+
+                if (powered)
+                    particle.Play(true);
+                else
+                    particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+        }
+
         if (_renderers != null && (_poweredMaterial != null || _unpoweredMaterial != null))
         {
             for (int i = 0; i < _renderers.Length; i++)
@@ -276,18 +318,6 @@ public class ElectricNode : MonoBehaviour
             if (_renderers[i] != null)
                 _initialSharedMaterials[i] = _renderers[i].sharedMaterial;
         }
-    }
-
-    private void CacheAutoVisualsIfNeeded(bool force)
-    {
-        if (!_autoFindVisualsWhenEmpty && !force)
-            return;
-
-        if (force || _renderers == null || _renderers.Length == 0)
-            _renderers = GetComponentsInChildren<Renderer>(true);
-
-        if (force || _lights == null || _lights.Length == 0)
-            _lights = GetComponentsInChildren<Light>(true);
     }
 
     private static void SetObjectsActive(GameObject[] objects, bool active)
