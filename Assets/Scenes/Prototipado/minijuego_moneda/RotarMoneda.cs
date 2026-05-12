@@ -6,6 +6,7 @@ public class RotarMoneda : MonoBehaviour
 {
     [Header("UI")]
     public TMP_Text textoTokens;
+    public TMP_Text textoApuesta;
     public TMP_Text resultadoTexto;
 
     private int tokens = 500;
@@ -15,27 +16,35 @@ public class RotarMoneda : MonoBehaviour
 
     void Start()
     {
+        if (resultadoTexto != null)
+            resultadoTexto.gameObject.SetActive(false);
+
         ActualizarUI();
     }
 
- 
-
     public void Apostar50()
     {
+        if (jugando) return;
+
         apuesta = 50;
+        ActualizarUI();
     }
 
     public void Apostar100()
     {
+        if (jugando) return;
+
         apuesta = 100;
+        ActualizarUI();
     }
 
     public void Apostar200()
     {
-        apuesta = 200;
-    }
+        if (jugando) return;
 
-    
+        apuesta = 200;
+        ActualizarUI();
+    }
 
     public void Jugar()
     {
@@ -43,6 +52,7 @@ public class RotarMoneda : MonoBehaviour
 
         if (tokens < apuesta)
         {
+            resultadoTexto.gameObject.SetActive(true);
             resultadoTexto.text = "No tienes suficientes tokens";
             return;
         }
@@ -57,6 +67,7 @@ public class RotarMoneda : MonoBehaviour
     {
         jugando = true;
 
+        resultadoTexto.gameObject.SetActive(true);
         resultadoTexto.text = "Girando...";
 
         yield return new WaitForSeconds(2f);
@@ -83,5 +94,6 @@ public class RotarMoneda : MonoBehaviour
     void ActualizarUI()
     {
         textoTokens.text = "Tokens: " + tokens;
+        textoApuesta.text = "Apuesta: " + apuesta;
     }
 }
