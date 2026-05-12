@@ -99,6 +99,16 @@ public class RobotHookController : MonoBehaviour
     private bool _hookVisualOriginalActive;
     private bool _hasStoredHookVisualPose;
 
+    public bool IsHookReady => _state == HookState.Ready && _carriedObject == null && _cooldownTimer <= 0f;
+    public bool IsHookOnCooldown => _state == HookState.Cooldown && _cooldownTimer > 0f;
+    public bool IsHookBusy => _state == HookState.Shooting || _state == HookState.Pulling || _state == HookState.Carrying;
+    public bool IsCarryingHookObject => _carriedObject != null;
+
+    public float HookCooldownSecondsRemaining => Mathf.Max(0f, _cooldownTimer);
+    public float HookCooldownSecondsTotal => Mathf.Max(0f, _cooldownSeconds);
+    public float HookCooldown01 => _cooldownSeconds <= 0f ? 0f : Mathf.Clamp01(_cooldownTimer / _cooldownSeconds);
+    public float HookCooldownReady01 => 1f - HookCooldown01;
+
     private void Reset()
     {
         _robotController = GetComponent<RobotController>();

@@ -295,7 +295,7 @@ MonoBehaviour:
   _modelRenderer: {fileID: 5219325710763673767}
   _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
   _roomMats:
-  - {fileID: 2100000, guid: d76d5dba59c8a824a8170635648a356c, type: 2}
+  - {fileID: 2100000, guid: bfa9f28b8c977074eacfcc78f4d5479f, type: 2}
   _buildableColor: {r: 0.8191824, g: 1, b: 0.5990566, a: 1}
   _nonBuildableColor: {r: 1, g: 0.50251573, b: 0.43867922, a: 1}
   _staticColor: {r: 1, g: 1, b: 1, a: 1}
@@ -517,7 +517,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d76d5dba59c8a824a8170635648a356c, type: 2}
+  - {fileID: 2100000, guid: bfa9f28b8c977074eacfcc78f4d5479f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

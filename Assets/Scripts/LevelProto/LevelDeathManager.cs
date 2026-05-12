@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class LevelDeathManager : MonoBehaviour
 {
+
     [Header("References")]
     [SerializeField] private RobotController _player;
     [SerializeField] private CharacterController _playerCharacterController;
@@ -46,6 +47,12 @@ public class LevelDeathManager : MonoBehaviour
 
     private bool _wasFirstPersonBeforeDeath;
     private bool _detachedThirdPersonCameraThisDeath;
+
+    public event Action<int, int> LivesChanged;
+
+    public int CurrentLives => _currentLives;
+    public int StartingLives => _startingLives;
+    public bool IsRespawning => _isRespawning;
 
     private void Awake()
     {
@@ -283,6 +290,8 @@ public class LevelDeathManager : MonoBehaviour
             return true;
 
         _currentLives--;
+
+        LivesChanged?.Invoke(_currentLives, _startingLives);
 
         if (_lifeIcons != null && _currentLives >= 0 && _currentLives < _lifeIcons.Length && _lifeIcons[_currentLives] != null)
         {

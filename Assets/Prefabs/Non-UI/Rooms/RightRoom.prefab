@@ -97,7 +97,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 74117f645ca87544896e430b75e9a316, type: 2}
+  - {fileID: -3846018093981099296, guid: 2f7b1fc1b72bbf445b86545131fc8d0c, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -180,7 +180,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 134.5277, y: 157.1047, z: 125.5096}
+  m_Size: {x: 134.5277, y: 157.10474, z: 125.5096}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &8232397600155580249
 Rigidbody:
@@ -229,7 +229,7 @@ MonoBehaviour:
   _modelRenderer: {fileID: 4075378811539830109}
   _onRoomBuildMat: {fileID: 2100000, guid: 25da3e447f5bb9e41ae0fc5a30e9a52d, type: 2}
   _roomMats:
-  - {fileID: 2100000, guid: 74117f645ca87544896e430b75e9a316, type: 2}
+  - {fileID: -3846018093981099296, guid: 2f7b1fc1b72bbf445b86545131fc8d0c, type: 3}
   _buildableColor: {r: 0.8191824, g: 1, b: 0.5990566, a: 1}
   _nonBuildableColor: {r: 1, g: 0.50251573, b: 0.43867922, a: 1}
   _staticColor: {r: 1, g: 1, b: 1, a: 1}

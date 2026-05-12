@@ -18,15 +18,15 @@ MonoBehaviour:
   debugSectionsRaw: 0
   discontinuityInput: 15
   depthSensitivity: 1
-  depthDistanceModulation: 0.4
-  grazingAngleMaskPower: 0.2
+  depthDistanceModulation: 1
+  grazingAngleMaskPower: 0
   grazingAngleMaskHardness: 1
-  normalSensitivity: 0.301
-  luminanceSensitivity: 0.233
+  normalSensitivity: 0.137
+  luminanceSensitivity: 0
   objectId: 1
   particles: 0
   sectionsMask: 0
-  depthMask: 0
+  depthMask: 1
   normalsMask: 0
   luminanceMask: 0
   sectionMapInput: 2
@@ -39,7 +39,7 @@ MonoBehaviour:
   sectionTextureChannel: 0
   vertexColorChannel: 0
   kernel: 0
-  outlineThickness: 3
+  outlineThickness: 4
   scaleWithResolution: 0
   referenceResolution: 0
   customResolution: 0
@@ -50,7 +50,7 @@ MonoBehaviour:
     layerMask:
       serializedVersion: 2
       m_Bits: 16384
-    color: {r: 0.026241222, g: 0.0047769533, b: 0.0018211621, a: 1}
+    color: {r: 0, g: 0, b: 0, a: 1}
   overrideColorInShadow: 0
   outlineColorShadow: {r: 1, g: 1, b: 1, a: 1}
   fillColor: {r: 0, g: 0, b: 0, a: 1}

@@ -119,7 +119,7 @@ MonoBehaviour:
     m_Value: 0
   ditherThreshold:
     m_OverrideState: 1
-    m_Value: 3
+    m_Value: 9.67
   ditherStrength:
     m_OverrideState: 1
     m_Value: 8.03
@@ -155,13 +155,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32eb3b8fb939d9b41b04b5621e6d36dd, type: 3}
   m_Name: Fog
   m_EditorClassIdentifier: 
-  active: 0
+  active: 1
   fogDensity:
     m_OverrideState: 1
-    m_Value: -2.04
+    m_Value: 0.04
   fogDistance:
     m_OverrideState: 1
-    m_Value: 4
+    m_Value: -12
   fogColor:
     m_OverrideState: 1
     m_Value: {r: 0, g: 0, b: 0, a: 0}
@@ -173,16 +173,16 @@ MonoBehaviour:
     m_Value: 0
   fogFar:
     m_OverrideState: 1
-    m_Value: 81.3
+    m_Value: 54.92
   fogAltScale:
     m_OverrideState: 1
     m_Value: 10
   fogThinning:
     m_OverrideState: 1
-    m_Value: 458
+    m_Value: 406.8
   noiseScale:
     m_OverrideState: 1
-    m_Value: 840.29
+    m_Value: 826.8
   noiseStrength:
     m_OverrideState: 1
     m_Value: 0

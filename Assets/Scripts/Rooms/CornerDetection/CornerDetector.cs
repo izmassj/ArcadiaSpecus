@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
 [RequireComponent(typeof(BoxCollider))]
 public class CornerDetector : MonoBehaviour
@@ -37,10 +36,6 @@ public class CornerDetector : MonoBehaviour
     private void Awake()
     {
         BuildCorners();
-    }
-
-    private void Start()
-    {
         InitializeDetectedDictionary();
     }
 
@@ -124,12 +119,15 @@ public class CornerDetector : MonoBehaviour
             if (corner.DetectedCorner == null)
                 continue;
 
-            GameObject foreignRoom = corner.DetectedCorner.gameObject.transform.parent.gameObject.transform.parent.gameObject;
+            RoomManager foreignRoomManager = corner.DetectedCorner.GetComponentInParent<RoomManager>();
 
-            if (foreignRoom == gameObject)
+            if (foreignRoomManager == null)
                 continue;
 
-            _foreignRoom = foreignRoom;
+            if (foreignRoomManager.gameObject == gameObject)
+                continue;
+
+            _foreignRoom = foreignRoomManager.gameObject;
         }
     }
 
@@ -174,6 +172,9 @@ public class CornerDetector : MonoBehaviour
 
     public CornerInteractionType EvaluateDetectedCorners()
     {
+        if (_corners == null || _cornersDetected == null)
+            return CornerInteractionType.Static;
+
         bool isTouchingAnything = false;
 
         for (int i = 0; i < _corners.Length; i++)
@@ -200,7 +201,7 @@ public class CornerDetector : MonoBehaviour
                 return CornerInteractionType.NonBuildable;
 
             RoomManager ownRoomManager = GetComponent<RoomManager>();
-            RoomManager collidingRoomManager = corner.DetectedCorner.transform.root.GetComponent<RoomManager>();
+            RoomManager collidingRoomManager = corner.DetectedCorner.GetComponentInParent<RoomManager>();
 
             if (ownRoomManager != null && collidingRoomManager != null)
             {
@@ -243,7 +244,8 @@ public class CornerDetector : MonoBehaviour
     private Vector3[] GetCornerPositions()
     {
         Vector3 c = _mainBox.center;
-        Vector3 h = _mainBox.size * 0.5f;
+        Vector3 s = _mainBox.size;
+        Vector3 h = new Vector3(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z)) * 0.5f;
 
         return new Vector3[]
         {

@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -15,32 +14,36 @@ public class IntersectionManager : MonoBehaviour
 
     public void AddIntersection(GameObject intersection)
     {
-        if (intersection.GetComponent<RoomManager>().typeOfRoom != RoomKind.Intersection)
+        if (intersection == null)
             return;
 
-        if (_intersectionList.Count > 1)
+        RoomManager roomManager = intersection.GetComponent<RoomManager>();
+        if (roomManager == null || roomManager.typeOfRoom != RoomKind.Intersection)
+            return;
+
+        if (_intersectionsParent == null)
+            _intersectionsParent = transform;
+
+        if (_intersectionList == null)
+            _intersectionList = new List<GameObject>();
+
+        Vector3 position = intersection.transform.position;
+
+        if (_intersectionList.Count > 0 && _intersectionList[_intersectionList.Count - 1] != null)
         {
             GameObject lastIntersection = _intersectionList[_intersectionList.Count - 1];
-
-            GameObject newIntersection = intersection;
-
-            newIntersection.transform.position = new Vector3(lastIntersection.transform.position.x, lastIntersection.transform.position.y - _separationDistance, lastIntersection.transform.position.z);
-
-            Instantiate(newIntersection, _intersectionsParent);
-
-            _intersectionList.Add(newIntersection);
+            position = new Vector3(
+                lastIntersection.transform.position.x,
+                lastIntersection.transform.position.y - _separationDistance,
+                lastIntersection.transform.position.z
+            );
         }
-    }
+        else
+        {
+            position = _intersectionsParent.position;
+        }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        GameObject instance = Instantiate(intersection, position, intersection.transform.rotation, _intersectionsParent);
+        _intersectionList.Add(instance);
     }
 }

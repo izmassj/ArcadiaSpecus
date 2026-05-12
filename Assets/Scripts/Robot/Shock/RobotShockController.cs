@@ -63,6 +63,9 @@ public class RobotShockController : MonoBehaviour
     public bool IsOnCooldown => _cooldownTimer > 0f;
     public float Cooldown01 => _cooldownSeconds <= 0f ? 0f : Mathf.Clamp01(_cooldownTimer / _cooldownSeconds);
     public int LastShockHitCount => _lastShockHitCount;
+    public float CooldownSecondsRemaining => Mathf.Max(0f, _cooldownTimer);
+    public float CooldownSecondsTotal => Mathf.Max(0f, _cooldownSeconds);
+    public float CooldownReady01 => 1f - Cooldown01;
 
     private void Reset()
     {
