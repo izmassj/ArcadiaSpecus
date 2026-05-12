@@ -1,13 +1,9 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine.UI;
 
 public class RotarMoneda : MonoBehaviour
 {
-    [Header("Moneda")]
-    public Transform moneda;
-    public float velocidadRotacion = 800f;
-
     [Header("UI")]
     public TMP_Text textoTokens;
     public TMP_Text resultadoTexto;
@@ -15,22 +11,15 @@ public class RotarMoneda : MonoBehaviour
     private int tokens = 500;
     private int apuesta = 50;
 
-    private bool girando = false;
+    private bool jugando = false;
 
     void Start()
     {
         ActualizarUI();
     }
 
-    void Update()
-    {
-        if (girando)
-        {
-            moneda.Rotate(Vector3.right * velocidadRotacion * Time.deltaTime);
-        }
-    }
+ 
 
-    // BOTONES DE APUESTA
     public void Apostar50()
     {
         apuesta = 50;
@@ -46,10 +35,11 @@ public class RotarMoneda : MonoBehaviour
         apuesta = 200;
     }
 
-    // BOTON PLAY
+    
+
     public void Jugar()
     {
-        if (girando) return;
+        if (jugando) return;
 
         if (tokens < apuesta)
         {
@@ -65,13 +55,12 @@ public class RotarMoneda : MonoBehaviour
 
     System.Collections.IEnumerator TirarMoneda()
     {
-        girando = true;
+        jugando = true;
+
+        resultadoTexto.text = "Girando...";
 
         yield return new WaitForSeconds(2f);
 
-        girando = false;
-
-        
         int resultado = Random.Range(0, 2);
 
         if (resultado == 1)
@@ -87,6 +76,8 @@ public class RotarMoneda : MonoBehaviour
         }
 
         ActualizarUI();
+
+        jugando = false;
     }
 
     void ActualizarUI()
